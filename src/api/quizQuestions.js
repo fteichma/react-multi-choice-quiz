@@ -1,86 +1,40 @@
 var quizQuestions = [
   {
-      question: "What franchise would you rather play a game from?",
+      question: "Premier petit exemple : Quel type de protection utilisez-vous ?",
       answers: [
           {
-              type: "Microsoft",
-              content: "Halo"
+              image: "https://image.flaticon.com/icons/svg/3165/3165197.svg",
+              content: "Masque non-réutilisable"
           },
           {
-              type: "Nintendo",
-              content: "Pokemon"
+              image: "https://image.flaticon.com/icons/svg/3165/3165307.svg",
+              content: "Masque réutilisable"
           },
           {
-              type: "Sony",
-              content: "Uncharted"
+              image : "https://image.flaticon.com/icons/svg/3165/3165201.svg",
+              content: "Visière de protection"
           }
       ]
   },
   {
-      question: "Which console would you prefer to play with friends?",
+      question: "Quelle solution utilisez-vous pour gardez vos mains propres ?",
       answers: [
           {
-              type: "Microsoft",
-              content: "X-Box"
+              image : "https://image.flaticon.com/icons/svg/3165/3165257.svg",
+              content: "Savon traditionnelle"
           },
           {
-              type: "Nintendo",
-              content: "Nintendo 64"
-          },
-          {
-              type: "Sony",
-              content: "Playstation 1"
+            image: "https://image.flaticon.com/icons/svg/3165/3165219.svg",
+              content: "Gel hydroalcoolique"
           }
       ]
   },
   {
-      question: "Which of these racing franchises would you prefer to play a game from?",
+      question: "Je suis un exemple.",
       answers: [
           {
-              type: "Microsoft",
-              content: "Forza"
-          },
-          {
-              type: "Nintendo",
-              content: "Mario Kart"
-          },
-          {
-              type: "Sony",
-              content: "Gran Turismo"
-          }
-      ]
-  },
-  {
-      question: "Which of these games do you think is best?",
-      answers: [
-          {
-              type: "Microsoft",
-              content: "BioShock"
-          },
-          {
-              type: "Nintendo",
-              content: "The Legend of Zelda: Ocarina of Time"
-          },
-          {
-              type: "Sony",
-              content: "Final Fantasy VII"
-          }
-      ]
-  },
-  {
-      question: "What console would you prefer to own?",
-      answers: [
-          {
-              type: "Microsoft",
-              content: "X-Box One"
-          },
-          {
-              type: "Nintendo",
-              content: "Wii U"
-          },
-          {
-              type: "Sony",
-              content: "Playstation 4"
+              image : "https://image.flaticon.com/icons/svg/3165/3165245.svg",
+              content: "Je suis un test"
           }
       ]
   }

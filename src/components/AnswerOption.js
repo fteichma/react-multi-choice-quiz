@@ -8,13 +8,14 @@ function AnswerOption(props) {
         type="radio"
         className="radioCustomButton"
         name="radioGroup"
-        checked={props.answerType === props.answer}
-        id={props.answerType}
-        value={props.answerType}
+        checked={props.answerContent === props.answer}
+        id={props.answerContent}
+        value={props.answerContent}
         disabled={props.answer}
         onChange={props.onAnswerSelected}
       />
-      <label className="radioCustomLabel" htmlFor={props.answerType}>
+      <img src={props.answerImage} className="answerImage" alt="Answer" width="50%"/>
+      <label className="radioCustomLabel" htmlFor={props.answerContent}>
         {props.answerContent}
       </label>
     </li>
@@ -22,7 +23,7 @@ function AnswerOption(props) {
 }
 
 AnswerOption.propTypes = {
-  answerType: PropTypes.string.isRequired,
+  answerImage: PropTypes.string.isRequired,
   answerContent: PropTypes.string.isRequired,
   answer: PropTypes.string.isRequired,
   onAnswerSelected: PropTypes.func.isRequired
