@@ -1,0 +1,25 @@
+{
+  "files": {
+    "main.css": "/react-multi-choice-quiz/static/css/main.6137dafc.chunk.css",
+    "main.js": "/react-multi-choice-quiz/static/js/main.dcbfdf41.chunk.js",
+    "main.js.map": "/react-multi-choice-quiz/static/js/main.dcbfdf41.chunk.js.map",
+    "runtime-main.js": "/react-multi-choice-quiz/static/js/runtime-main.fd91f373.js",
+    "runtime-main.js.map": "/react-multi-choice-quiz/static/js/runtime-main.fd91f373.js.map",
+    "static/css/2.e2dd9b0a.chunk.css": "/react-multi-choice-quiz/static/css/2.e2dd9b0a.chunk.css",
+    "static/js/2.6861e55b.chunk.js": "/react-multi-choice-quiz/static/js/2.6861e55b.chunk.js",
+    "static/js/2.6861e55b.chunk.js.map": "/react-multi-choice-quiz/static/js/2.6861e55b.chunk.js.map",
+    "index.html": "/react-multi-choice-quiz/index.html",
+    "precache-manifest.4f7eb4e6684df28fd8c7675573a2fb27.js": "/react-multi-choice-quiz/precache-manifest.4f7eb4e6684df28fd8c7675573a2fb27.js",
+    "service-worker.js": "/react-multi-choice-quiz/service-worker.js",
+    "static/css/2.e2dd9b0a.chunk.css.map": "/react-multi-choice-quiz/static/css/2.e2dd9b0a.chunk.css.map",
+    "static/css/main.6137dafc.chunk.css.map": "/react-multi-choice-quiz/static/css/main.6137dafc.chunk.css.map",
+    "static/js/2.6861e55b.chunk.js.LICENSE.txt": "/react-multi-choice-quiz/static/js/2.6861e55b.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.fd91f373.js",
+    "static/css/2.e2dd9b0a.chunk.css",
+    "static/js/2.6861e55b.chunk.js",
+    "static/css/main.6137dafc.chunk.css",
+    "static/js/main.dcbfdf41.chunk.js"
+  ]
+}
