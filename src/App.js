@@ -25,7 +25,7 @@ class App extends Component {
   componentDidMount() {
     this.setState({
       question: quizQuestions[0].question,
-      answerOptions: quizQuestions[0].answers
+      answerOptions: quizQuestions[0].answers,
     });
   }
 
@@ -36,6 +36,21 @@ class App extends Component {
       setTimeout(() => this.setNextQuestion(), 300);
     } else {
       setTimeout(() => this.setState({ end: true }), 300);
+    }
+  }
+
+  handleKeyPressed(event) {
+    let keyCode = event.keyCode || event.charCode;
+    if(keyCode === 13) {
+      console.log(event.currentTarget.value);
+      //this.setUserAnswer(event.currentTarget.value);
+      /*
+      if (this.state.questionId < quizQuestions.length) {
+        setTimeout(() => this.setNextQuestion(), 300);
+      } else {
+        setTimeout(() => this.setState({ end: true }), 300);
+      }
+      */
     }
   }
 
@@ -71,7 +86,8 @@ class App extends Component {
         question={this.state.question}
         questionTotal={quizQuestions.length}
         onAnswerSelected={this.handleAnswerSelected}
-      />
+        onKeyPressed={this.handleKeyPressed}
+        />
     );
   }
 

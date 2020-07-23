@@ -120,6 +120,22 @@ a {
   position: relative;
 }
 
+.answerOptions input[type=text]{
+  width: 200px;
+  border:none;
+  height: 45px;
+  border-radius: 30px;
+  padding: 20px;
+  text-align: center;
+  font-size: 17px;
+}
+
+
+.answerOptions input[type=text]:focus {
+  border: none;
+  outline: none;
+}
+
 .answerOption:hover {
   background-color: #eefbfe;
 }

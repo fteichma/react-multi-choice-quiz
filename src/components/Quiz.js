@@ -10,10 +10,12 @@ function Quiz(props) {
       <AnswerOption
         key={key.content}
         answerContent={key.content}
+        answerType={key.type}
         answerImage={key.image}
         answer={props.answer}
         questionId={props.questionId}
         onAnswerSelected={props.onAnswerSelected}
+        onKeyPressed={props.onKeyPressed}
       />
     );
   }
@@ -37,7 +39,8 @@ Quiz.propTypes = {
   question: PropTypes.string.isRequired,
   questionId: PropTypes.number.isRequired,
   questionTotal: PropTypes.number.isRequired,
-  onAnswerSelected: PropTypes.func.isRequired
+  onAnswerSelected: PropTypes.func.isRequired,
+  onKeyPressed: PropTypes.func.isRequired
 };
 
 export default Quiz;

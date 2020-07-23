@@ -2,6 +2,18 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 function AnswerOption(props) {
+    switch(props.answerType) {
+      case 'text' :
+        return (
+          <li className="answerOption">
+            <input 
+            type="text" 
+            placeholder={props.answerContent} 
+            onKeyPress={props.onKeyPressed}
+            />
+          </li>
+        )
+      default : 
   return (
     <li className="answerOption">
       <input
@@ -14,19 +26,24 @@ function AnswerOption(props) {
         disabled={props.answer}
         onChange={props.onAnswerSelected}
       />
+      {props.answerImage &&
       <img src={props.answerImage} className="answerImage" alt="Answer" width="50%"/>
+      }
       <label className="radioCustomLabel" htmlFor={props.answerContent}>
         {props.answerContent}
       </label>
     </li>
   );
+  }
 }
 
 AnswerOption.propTypes = {
+  answerType: PropTypes.string.isRequired,
   answerImage: PropTypes.string.isRequired,
   answerContent: PropTypes.string.isRequired,
   answer: PropTypes.string.isRequired,
-  onAnswerSelected: PropTypes.func.isRequired
+  onAnswerSelected: PropTypes.func.isRequired,
+  onKeyPressed: PropTypes.func.isRequired,
 };
 
 export default AnswerOption;
