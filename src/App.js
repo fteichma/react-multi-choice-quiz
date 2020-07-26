@@ -18,8 +18,8 @@ class App extends Component {
       answersCount: {},
       end: false
     };
-
     this.handleAnswerSelected = this.handleAnswerSelected.bind(this);
+    this.handleKeyPressed = this.handleKeyPressed.bind(this);
   }
 
   componentDidMount() {
@@ -42,19 +42,12 @@ class App extends Component {
   handleKeyPressed(event) {
     let keyCode = event.keyCode || event.charCode;
     if(keyCode === 13) {
-      console.log(event.currentTarget.value);
-      //this.setUserAnswer(event.currentTarget.value);
-      /*
-      if (this.state.questionId < quizQuestions.length) {
-        setTimeout(() => this.setNextQuestion(), 300);
-      } else {
-        setTimeout(() => this.setState({ end: true }), 300);
-      }
-      */
+      this.handleAnswerSelected(event)
     }
   }
 
-  setUserAnswer(answer) {
+  setUserAnswer(answer){
+    console.log(answer);
     this.setState((state, props) => ({
       answersCount: {
         ...state.answersCount,

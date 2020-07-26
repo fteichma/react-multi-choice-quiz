@@ -6,7 +6,7 @@ function QuestionCount(props) {
     <div className="questionCount">
     {[...Array(props.total)].map((x, i) => {
     return(
-      <span className={`questionDot ${i+1 <= props.counter ? `active` : ``}`}/>
+      <span key={i} className={`questionDot ${i+1 <= props.counter ? `active` : ``}`}/>
       )})}
     </div>
   ); 

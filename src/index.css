@@ -104,11 +104,11 @@ a {
 /* Question Component */
 .question {
   margin: 0;
-  padding: 0.5rem 0 2.5rem;
+  padding: 0.5rem 0 1.5rem;
   text-align: center;
   line-height: 1.5;
   color: #000000bb;
-  font-size: 26px;
+  font-size: 28px;
 }
 
 /* AnswerOption Component */
@@ -120,7 +120,9 @@ a {
   position: relative;
 }
 
-.answerOptions input[type=text]{
+.answerOptions input[type=text], 
+.answerOptions input[type=email],
+.answerOptions input[type=number]{
   width: 200px;
   border:none;
   height: 45px;
@@ -131,7 +133,9 @@ a {
 }
 
 
-.answerOptions input[type=text]:focus {
+.answerOptions input[type=text]:focus,
+.answerOptions input[type=email]:focus,
+.answerOptions input[type=number]:focus {
   border: none;
   outline: none;
 }
@@ -219,4 +223,24 @@ body {
   .questionCount {
     bottom: 30px;
   }
+}
+
+
+.bodySelect {
+  width: 100%;
+  max-width: 270px;
+  padding: 1em 3em;
+}
+
+circle {
+  cursor: pointer;
+  pointer-events: all;
+}
+
+line {
+  display: none;
+}
+
+#Capa_1, #Capa_2 {
+  pointer-events: none;
 }

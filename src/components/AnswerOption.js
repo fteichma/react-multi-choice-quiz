@@ -1,5 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import {ReactComponent as BodyFront} from '../svg/body_front.svg';
+import {ReactComponent as BodyBack} from '../svg/body_back.svg';
+
 
 function AnswerOption(props) {
     switch(props.answerType) {
@@ -13,6 +16,33 @@ function AnswerOption(props) {
             />
           </li>
         )
+        case 'email' :
+          return (
+            <li className="answerOption">
+              <input 
+              type="email" 
+              placeholder={props.answerContent} 
+              onKeyPress={props.onKeyPressed}
+              />
+            </li>
+          )
+          case 'body' :
+            return(
+              <>
+              <BodyFront className="bodySelect" onClick={props.onAnswerSelected}/>
+              <BodyBack className="bodySelect" onClick={props.onAnswerSelected}/>
+              </>
+            )
+          case 'number' :
+            return (
+              <li className="answerOption">
+                <input 
+                type="number" 
+                placeholder={props.answerContent} 
+                onKeyPress={props.onKeyPressed}
+                />
+              </li>
+            )
       default : 
   return (
     <li className="answerOption">
@@ -39,9 +69,9 @@ function AnswerOption(props) {
 
 AnswerOption.propTypes = {
   answerType: PropTypes.string.isRequired,
-  answerImage: PropTypes.string.isRequired,
-  answerContent: PropTypes.string.isRequired,
-  answer: PropTypes.string.isRequired,
+  answerImage: PropTypes.string,
+  answerContent: PropTypes.string,
+  answer: PropTypes.string,
   onAnswerSelected: PropTypes.func.isRequired,
   onKeyPressed: PropTypes.func.isRequired,
 };
