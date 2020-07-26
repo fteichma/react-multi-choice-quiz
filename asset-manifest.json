@@ -1,25 +1,27 @@
 {
   "files": {
-    "main.css": "/react-multi-choice-quiz/static/css/main.6137dafc.chunk.css",
-    "main.js": "/react-multi-choice-quiz/static/js/main.dcbfdf41.chunk.js",
-    "main.js.map": "/react-multi-choice-quiz/static/js/main.dcbfdf41.chunk.js.map",
+    "main.css": "/react-multi-choice-quiz/static/css/main.64952560.chunk.css",
+    "main.js": "/react-multi-choice-quiz/static/js/main.734f3501.chunk.js",
+    "main.js.map": "/react-multi-choice-quiz/static/js/main.734f3501.chunk.js.map",
     "runtime-main.js": "/react-multi-choice-quiz/static/js/runtime-main.fd91f373.js",
     "runtime-main.js.map": "/react-multi-choice-quiz/static/js/runtime-main.fd91f373.js.map",
     "static/css/2.e2dd9b0a.chunk.css": "/react-multi-choice-quiz/static/css/2.e2dd9b0a.chunk.css",
     "static/js/2.6861e55b.chunk.js": "/react-multi-choice-quiz/static/js/2.6861e55b.chunk.js",
     "static/js/2.6861e55b.chunk.js.map": "/react-multi-choice-quiz/static/js/2.6861e55b.chunk.js.map",
     "index.html": "/react-multi-choice-quiz/index.html",
-    "precache-manifest.4f7eb4e6684df28fd8c7675573a2fb27.js": "/react-multi-choice-quiz/precache-manifest.4f7eb4e6684df28fd8c7675573a2fb27.js",
+    "precache-manifest.aa3bf6481d1db81271cd77dc2ddacc3e.js": "/react-multi-choice-quiz/precache-manifest.aa3bf6481d1db81271cd77dc2ddacc3e.js",
     "service-worker.js": "/react-multi-choice-quiz/service-worker.js",
     "static/css/2.e2dd9b0a.chunk.css.map": "/react-multi-choice-quiz/static/css/2.e2dd9b0a.chunk.css.map",
-    "static/css/main.6137dafc.chunk.css.map": "/react-multi-choice-quiz/static/css/main.6137dafc.chunk.css.map",
-    "static/js/2.6861e55b.chunk.js.LICENSE.txt": "/react-multi-choice-quiz/static/js/2.6861e55b.chunk.js.LICENSE.txt"
+    "static/css/main.64952560.chunk.css.map": "/react-multi-choice-quiz/static/css/main.64952560.chunk.css.map",
+    "static/js/2.6861e55b.chunk.js.LICENSE.txt": "/react-multi-choice-quiz/static/js/2.6861e55b.chunk.js.LICENSE.txt",
+    "static/media/body_back.5900c5d2.svg": "/react-multi-choice-quiz/static/media/body_back.5900c5d2.svg",
+    "static/media/body_front.5c545b6d.svg": "/react-multi-choice-quiz/static/media/body_front.5c545b6d.svg"
   },
   "entrypoints": [
     "static/js/runtime-main.fd91f373.js",
     "static/css/2.e2dd9b0a.chunk.css",
     "static/js/2.6861e55b.chunk.js",
-    "static/css/main.6137dafc.chunk.css",
-    "static/js/main.dcbfdf41.chunk.js"
+    "static/css/main.64952560.chunk.css",
+    "static/js/main.734f3501.chunk.js"
   ]
 }
