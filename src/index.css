@@ -37,6 +37,26 @@ body {
   width: 80%;
 }
 
+::placeholder {
+  color:#ccc;
+}
+
+.info-error {
+  position: absolute;
+  bottom: -25px;
+  left: 0;
+  right: 0;
+  margin: auto;
+  text-align: center;
+  color: #d00000;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+::ms-input-placeholder {
+  color:#ccc;
+}
+
 /* Result Component */
 .result {
   padding: 1.5rem 2.5rem;
@@ -116,7 +136,7 @@ a {
   background-color: white;
   width: 200px;
   margin: 10px;
-  border-radius: 20px;
+  border-radius: 30px;
   position: relative;
 }
 
@@ -127,7 +147,6 @@ a {
   border:none;
   height: 45px;
   border-radius: 30px;
-  padding: 20px;
   text-align: center;
   font-size: 17px;
 }
@@ -218,7 +237,6 @@ body {
   }
   .container {
     align-items: flex-start;
-    margin-top: 20px;
   }
   .questionCount {
     bottom: 30px;

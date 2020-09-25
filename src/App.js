@@ -16,7 +16,8 @@ class App extends Component {
       answerOptions: [],
       answer: '',
       answersCount: {},
-      end: false
+      end: false,
+      error:false
     };
     this.handleAnswerSelected = this.handleAnswerSelected.bind(this);
     this.handleKeyPressed = this.handleKeyPressed.bind(this);
@@ -40,9 +41,19 @@ class App extends Component {
   }
 
   handleKeyPressed(event) {
+    this.setState({
+      error:false
+    })
     let keyCode = event.keyCode || event.charCode;
     if(keyCode === 13) {
-      this.handleAnswerSelected(event)
+      if(event.target.value) {
+        this.handleAnswerSelected(event)
+      }
+      else {
+        this.setState({
+          error:true,
+        })
+      }
     }
   }
 
@@ -80,6 +91,7 @@ class App extends Component {
         questionTotal={quizQuestions.length}
         onAnswerSelected={this.handleAnswerSelected}
         onKeyPressed={this.handleKeyPressed}
+        error={this.state.error}
         />
     );
   }
