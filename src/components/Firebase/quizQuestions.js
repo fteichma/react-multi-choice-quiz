@@ -1,19 +1,19 @@
 var quizQuestions = [
     {
-        question: "Quel est votre nom ?",
+        question: "Quel est votre prénom ?",
         answers: [
             {
                 type : "text",
-                content : "Nom"
+                content : "Prénom"
             }
         ]
     },
   {
-      question: "Quel est votre prénom ?",
+      question: "Quel est votre nom ?",
       answers: [
           {
               type : "text",
-              content : "Prénom"
+              content : "Nom"
           }
       ]
   },
@@ -37,7 +37,7 @@ var quizQuestions = [
         {
           type : "radio",
           image : "https://image.flaticon.com/icons/svg/1864/1864593.svg",
-            content: "Homme"
+          content: "Homme"
         }
     ]
 },

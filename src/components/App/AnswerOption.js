@@ -1,7 +1,6 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import {ReactComponent as BodyFront} from '../svg/body_front.svg';
-import {ReactComponent as BodyBack} from '../svg/body_back.svg';
+import {ReactComponent as BodyFront} from '../../svg/body_front.svg';
+import {ReactComponent as BodyBack} from '../../svg/body_back.svg';
 import 'animate.css';
 
 function AnswerOption(props) {
@@ -17,6 +16,7 @@ function AnswerOption(props) {
             type={props.answerType} 
             placeholder={props.answerContent} 
             onKeyPress={props.onKeyPressed}
+            name={props.answerContent}
             autoFocus
             />
           </li>
@@ -53,14 +53,5 @@ function AnswerOption(props) {
   );
   }
 }
-
-AnswerOption.propTypes = {
-  answerType: PropTypes.string.isRequired,
-  answerImage: PropTypes.string,
-  answerContent: PropTypes.string,
-  answer: PropTypes.string,
-  onAnswerSelected: PropTypes.func.isRequired,
-  onKeyPressed: PropTypes.func.isRequired,
-};
 
 export default AnswerOption;

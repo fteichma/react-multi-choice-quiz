@@ -1,8 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import Question from '../components/Question';
-import QuestionCount from '../components/QuestionCount';
-import AnswerOption from '../components/AnswerOption';
+import Question from './Question';
+import QuestionCount from './QuestionCount';
+import AnswerOption from './AnswerOption';
 
 function Quiz(props) {
   function renderAnswerOptions(key) {
@@ -33,16 +32,5 @@ function Quiz(props) {
     </div>
   );
 }
-
-Quiz.propTypes = {
-  answer: PropTypes.string.isRequired,
-  answerOptions: PropTypes.array.isRequired,
-  question: PropTypes.string.isRequired,
-  questionId: PropTypes.number.isRequired,
-  questionTotal: PropTypes.number.isRequired,
-  onAnswerSelected: PropTypes.func.isRequired,
-  onKeyPressed: PropTypes.func.isRequired,
-  error: PropTypes.bool.isRequired
-};
 
 export default Quiz;
