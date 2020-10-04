@@ -8,7 +8,12 @@ import AdminPanel from './components/Admin';
 import * as ROUTES from './constants/routes';
 import { withAuthentication } from './components/Session';
  
-const Root = () => (
+class Root extends React.Component {
+  constructor(props){
+    super();
+  }
+  render() {
+  return(
   <Router>
     <div>
       <Route exact path={ROUTES.APP} component={App} />
@@ -16,6 +21,8 @@ const Root = () => (
       <Route path={ROUTES.ADMIN} component={AdminPanel} />
     </div>
   </Router>
-);
+  )
+  }
+}
  
 export default withAuthentication(Root);

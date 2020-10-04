@@ -56,10 +56,12 @@ const styles = (theme) => ({
 class Questions extends Component {
     constructor(props) {
         super(props);
+        if(props.questions){
         let questions = props.questions[0].quest;
-        var items = Object.keys(questions).map(function (key) { 
-            return questions[key]; 
-        }); 
+            var items = Object.keys(questions).map(function (key) { 
+                return questions[key]; 
+            }); 
+        }
         console.log(items);
         this.state = {
             items,
@@ -150,7 +152,7 @@ class Questions extends Component {
                         </TableRow>
                     </TableHead>
                     <TableBody component={DroppableComponent(this.onDragEnd)}>
-                        {this.state.items.map((item, index) => (
+                        {this.state.items?.map((item, index) => (
                             <React.Fragment>
                             <TableRow className={classes.tableRow} component={DraggableComponent(index.toString(), index)} key={index} >
                                 <TableCell>

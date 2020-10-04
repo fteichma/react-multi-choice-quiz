@@ -4,6 +4,9 @@ import Summary from './Summary';
 import '../../App.css';
 import "animate.css";
 
+import { withFirebase } from '../Firebase';
+import firebase from "firebase/app";
+
 import Loading from '../Loading';
 
 class App extends Component {
@@ -11,7 +14,7 @@ class App extends Component {
     super(props);
 
     this.state = {
-      loading: true,
+      loading: false,
       counter: 0,
       answerOptions: [],
       answer: '',
@@ -20,7 +23,7 @@ class App extends Component {
       error:false,
       answers: [],
       question: '',
-      questions : undefined,
+      questions : {},
       questionId: 1,
     };
     this.handleAnswerSelected = this.handleAnswerSelected.bind(this);
@@ -30,6 +33,13 @@ class App extends Component {
   componentDidMount() {
     /* let index = 0;
     this.getQuestions(index); */
+/*     let db = this.props.firebase.db;
+    let responsesRef = db.ref("responses");
+    let newResponseRef = responsesRef.push();
+    newResponseRef.set({
+      test : "ok",
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    }); */
   }
 
    /* async getQuestions(index) {
@@ -57,12 +67,14 @@ class App extends Component {
       setTimeout(() => this.setNextQuestion(), 300);
     } else {
       setTimeout(() => this.setState({ end: true }), 300);
-     /*  const {answers} = this.state;
-      const timestamp = firebase.firestore.FieldValue.serverTimestamp;
-      let date = new Date();
-      db.collection('answers').add({answers, createdAt: timestamp(), date : date.toLocaleString()}).catch((error) => {
-        console.log(error.message);
-      }) */
+     const {answers} = this.state;
+      let db = this.props.firebase.db;
+      let responsesRef = db.ref("responses");
+      let newResponseRef = responsesRef.push();
+      newResponseRef.set({
+        answers,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
     }
   }
 
@@ -133,4 +145,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default withFirebase(App);

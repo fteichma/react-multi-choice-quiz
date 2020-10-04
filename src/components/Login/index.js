@@ -1,4 +1,10 @@
-import React from "react";
+import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
+import { compose } from 'recompose';
+
+import { withFirebase } from '../Firebase';
+import * as ROUTES from '../../constants/routes';
+
 import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 import {
   Box,
@@ -6,9 +12,20 @@ import {
   TextField,
   Button,
 } from "@material-ui/core";
-
 import { ToastContainer } from 'react-toastify';
-/* import Notify from "../../notify"; */
+import Notify from "../../notify";
+
+const LogInPage = () => (
+  <div>
+    <LogInForm />
+  </div>
+);
+
+const INITIAL_STATE = {
+  username: '',
+  email: '',
+  error: '',
+};
 
 const styles = (theme) => ({
   paper: {
@@ -40,41 +57,35 @@ const theme = createMuiTheme({
   },
 });
 
-class Login extends React.Component {
+class LogInFormBase extends Component {
     constructor(props) {
-        super(props);
-        this.state = {
-            email : "",
-            password : ""
-        };
-        this.handleEmailChange = this.handleEmailChange.bind(this);
-        this.handlePasswordChange = this.handlePasswordChange.bind(this);
+        super();
+        this.state = { ...INITIAL_STATE };
+        this.handleChange = this.handleChange.bind(this);    
     }
-    handleEmailChange = (e) => {
-        this.setState({
-            email : e.target.value
-        })
+    handleChange = (event) => {
+      const { target: { name, value } } = event
+      this.setState({ [name]: value })
     }
-
-    handlePasswordChange = (e) => {
-      this.setState({
-          password : e.target.value
-      })
-  }
-  /* login = (e) => {
-      e.preventDefault();
-      const {email, password} = this.state;
-        auth.signInWithEmailAndPassword(email,password).then(
-          (result) => {
-            localStorage.setItem('log',result);
-            this.props.history.push("/admin");
-          }
-        ).catch((error) => {
-          Notify(error.message, "error");
+    onSubmit = event => {
+      const { email, password } = this.state;
+   
+      this.props.firebase
+        .doSignInWithEmailAndPassword(email, password)
+        .then(() => {
+          this.setState({ ...INITIAL_STATE });
+          this.props.history.push(ROUTES.ADMIN);
         })
-    }; */
+        .catch(error => {
+          Notify(error.message, "error");   
+        });
+   
+      event.preventDefault();
+    };
   render() {
     const { classes } = this.props;
+    const { email, password } = this.state;
+    const isInvalid = password === "" || email === '';
     return (
       <MuiThemeProvider theme={theme}>
         <div className={classes.container}>
@@ -84,14 +95,14 @@ class Login extends React.Component {
             width={500}
             bgcolor="#fff"
           >
-            <form onSubmit={this.login} autoComplete="yes">
+            <form onSubmit={this.onSubmit} autoComplete="yes">
               <TextField
                 id="email"
                 name="email"
                 label="Adresse email"
                 className="mb-4"
-                onChange={this.handleEmailChange}
-                value={this.state.email}
+                onChange={this.handleChange}
+                value={email || ''}
                 type="email"
                 fullWidth
                 required
@@ -106,8 +117,8 @@ class Login extends React.Component {
                 name="password"
                 label="Mot de passe"
                 className="mb-4"
-                onChange={this.handlePasswordChange}
-                value={this.state.password}
+                onChange={this.handleChange}
+                value={password || ''}
                 type="password"
                 fullWidth
                 required
@@ -124,6 +135,7 @@ class Login extends React.Component {
              fullWidth
              style={{ textTransform: "none" }}
              type="submit"
+             disabled={isInvalid}
            >
             Se connecter
            </Button>
@@ -136,4 +148,12 @@ class Login extends React.Component {
   }
 }
 
-export default withStyles(styles)(Login);
+const LogInForm = compose(
+  withRouter,
+  withFirebase,
+  withStyles(styles)
+)(LogInFormBase);
+
+export default LogInPage;
+
+export {LogInForm}

@@ -71,7 +71,7 @@ class Responses extends React.Component{
           </TableRow>
         </TableHead>
         <TableBody>
-          {answers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, key) => (
+          {answers?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, key) => (
               <React.Fragment>
             <TableRow key={key} className={classes.tableRow}>
                           <TableCell>
@@ -120,7 +120,7 @@ class Responses extends React.Component{
     <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
-        count={answers.length}
+        count={answers?.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onChangePage={this.handleChangePage}

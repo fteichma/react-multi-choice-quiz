@@ -1,17 +1,15 @@
-import React from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import { createMuiTheme } from "@material-ui/core/styles";
+import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
+import { withRouter } from 'react-router-dom';
 import {
   Box,
   withStyles,
   Button,
   Tab,
   Tabs, 
-  ThemeProvider,
   Container,
 } from "@material-ui/core";
-
-import { compose } from 'recompose';
 
 import Questions from './Questions';
 import Responses from './Responses';
@@ -21,41 +19,16 @@ import Loading from '../Loading';
 import { withFirebase } from '../Firebase';
 import { AuthUserContext, withAuthorization } from '../Session';
 
-function TabPanel(props) {
-  const {children, value, index, classes, ...other} = props;
+import { compose } from 'recompose';
 
-  return (
-      <div
-          role="tabpanel"
-          hidden={value !== index}
-          id={`simple-tabpanel-${index}`}
-          className={"tabpanel"}
-          aria-labelledby={`simple-tab-${index}`}
-          {...other}
-      >
-          {value === index && (
-              <Container style={{padding:"0 25px", width:"100%"}}>
-                  <Box>
-                      {children}
-                  </Box>
-              </Container>
-          )}
-      </div>
-  );
-}
-
-TabPanel.propTypes = {
-  children: PropTypes.node,
-  index: PropTypes.any.isRequired,
-  value: PropTypes.any.isRequired,
-};
-
-function a11yProps(index) {
-  return {
-    id: `vertical-tab-${index}`,
-    'aria-controls': `vertical-tabpanel-${index}`,
-  };
-}
+const AdminPage = () => (
+  <AuthUserContext.Consumer>
+    {authUser => (
+  <div>
+    <Admin />
+  </div>)}
+  </AuthUserContext.Consumer>
+)
 
 const styles = (theme) => ({
   root: {
@@ -86,7 +59,7 @@ const styles = (theme) => ({
     textAlign:"left",
     fontSize: 13
   }
-});
+})
 
 const theme = createMuiTheme({
   palette:{
@@ -97,22 +70,50 @@ const theme = createMuiTheme({
       main : "#64b5f6"
     }
   }
-})
+}
+)
 
-class Admin extends React.Component {
+function TabPanel(props) {
+  const {children, value, index, classes, ...other} = props;
+
+  return (
+      <div
+          role="tabpanel"
+          hidden={value !== index}
+          id={`simple-tabpanel-${index}`}
+          className={"tabpanel"}
+          aria-labelledby={`simple-tab-${index}`}
+          {...other}
+      >
+          {value === index && (
+              <Container style={{padding:"0 25px", width:"100%"}}>
+                  <Box>
+                      {children}
+                  </Box>
+              </Container>
+          )}
+      </div>
+  );
+}
+
+function a11yProps(index) {
+  return {
+    id: `vertical-tab-${index}`,
+    'aria-controls': `vertical-tabpanel-${index}`,
+  };
+}
+
+class AdminBase extends Component {
   constructor(props) {
-    super(props);
+    super();
     this.state = {
         value : 0,
         totUsers : 0,
+        totQuest: 0,
         loading: false,
     };
-    this.handleChange = this.handleChange.bind(this);
 }
 componentDidMount() {
-  this.setState({
-    loading: false,
-  })
   //LOCALHOST SPEED
 /*   if(localStorage.getItem("answers")) {
     this.setState({
@@ -126,6 +127,7 @@ componentDidMount() {
   else {
     this.getDb();
   } */
+  this.getDb();
 }
 componentWillUnmount() {
   this.props.firebase.users().off();
@@ -169,12 +171,23 @@ componentWillUnmount() {
     });
     
   } */
+  getDb() {
+    let db = this.props.firebase.db;
+    let responsesRef = db.ref("responses");
+    responsesRef.on('value',(snap)=>{
+      let data = snap.val();
+      this.setState({
+        answers : Object.keys(data).map(i => data[i]),
+        totUsers : Object.keys(data).length
+      })
+      console.log(this.state.answers);
+    });
+  }
   render() {
     const { classes } = this.props;
     const {loading} = this.state;
   return (
-    <ThemeProvider theme={theme}>
-        <AuthUserContext.Consumer>
+    <MuiThemeProvider theme={theme}>
     <div className={classes.root}>
       <Tabs
         orientation="vertical"
@@ -217,12 +230,20 @@ componentWillUnmount() {
            </Button>
       </TabPanel>
     </div>
-    </AuthUserContext.Consumer>
-    </ThemeProvider>
+    </MuiThemeProvider>
   );
       }
 }
 
 const condition = authUser => !!authUser;
 
-export default withAuthorization(condition)(withStyles(styles)(withFirebase(Admin)));
+const Admin = compose(
+  withRouter,
+  withFirebase,
+  withStyles(styles),
+  withAuthorization(condition)
+)(AdminBase);
+
+export default AdminPage
+
+export {Admin}

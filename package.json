@@ -9,6 +9,7 @@
     "@react-firebase/auth": "^0.2.10",
     "animate.css": "^4.1.0",
     "bootstrap": "^4.5.2",
+    "dayjs": "^1.9.1",
     "firebase": "^7.21.1",
     "prop-types": "^15.6.2",
     "react": "^16.13.1",
