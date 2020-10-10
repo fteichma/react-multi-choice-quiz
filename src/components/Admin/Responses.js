@@ -14,6 +14,10 @@ import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import TablePagination from '@material-ui/core/TablePagination';
 
+import { withFirebase } from '../Firebase';
+import firebase from "firebase/app";
+import { compose } from 'recompose';
+
 const styles = (theme) => ({
     root: {
       width : "100%"
@@ -32,14 +36,18 @@ const styles = (theme) => ({
 });
   
 
-class Responses extends React.Component{
+class ResponsesBase extends React.Component{
     constructor(props) {
         super();
         this.state = {
             open: {},
             page : 0,
             rowsPerPage : 10,
+            loading:true,
         };
+    }
+    componentDidMount() {
+      this.getResponses();
     }
     handleChangePage = (e, newPage) => {
       this.setState({
@@ -56,9 +64,21 @@ class Responses extends React.Component{
             open : {...this.state.open, [key] : this.state.open[key]? false : true}
         })
     }
+    getResponses() {
+      let db = this.props.firebase.db;
+      let responsesRef = db.ref("responses")
+      responsesRef.orderByChild('createdAt').once('value').then((snap) => {
+        let data = snap.val();
+        let answers = Object.keys(data).map(i => data[i]);
+        this.setState({
+          answers : answers.reverse(),
+          loading: false,
+        })
+      });
+  }
     render() {
-    const {answers, classes} = this.props;
-    const { rowsPerPage, page } = this.state;
+    const { classes } = this.props;
+    const { rowsPerPage, page, answers } = this.state;
   return (
     <Paper className={classes.root}>
     <TableContainer>
@@ -131,4 +151,15 @@ class Responses extends React.Component{
 }
 }
 
-export default withStyles(styles)(Responses);
+const ResponsesPage = () => (
+  <Responses/>
+)
+
+const Responses = compose(
+withFirebase,
+withStyles(styles),
+)(ResponsesBase);
+
+export default ResponsesPage
+
+export {Responses}

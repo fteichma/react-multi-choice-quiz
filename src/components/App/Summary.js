@@ -1,6 +1,6 @@
 import React from 'react';
 
-function ThankYou() {
+function Summary() {
   return (
       <div className="thankYou">
         <h2>Merci pour votre participation !</h2>
@@ -9,4 +9,4 @@ function ThankYou() {
   );
 }
 
-export default ThankYou;
+export default Summary;

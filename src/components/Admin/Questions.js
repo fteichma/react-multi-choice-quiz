@@ -1,7 +1,7 @@
 
 import React, { Component } from "react"
 import { makeStyles, withStyles, createMuiTheme } from '@material-ui/core/styles'
-import { TableContainer, Table, TableBody, TableCell, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Button, Tab} from '@material-ui/core'
+import { TableContainer, Table, TableBody, TableCell, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Button, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from '@material-ui/core'
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp'
@@ -9,6 +9,20 @@ import PhotoCamera from '@material-ui/icons/PhotoCamera';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import SaveIcon from '@material-ui/icons/Save';
 import DeleteIcon from '@material-ui/icons/Delete';
+import red from '@material-ui/core/colors/red';
+
+import { withFirebase } from '../Firebase';
+import firebase from "firebase/app";
+import { compose } from 'recompose';
+
+import Loading from '../Loading';
+import { RedeemRounded } from "@material-ui/icons"
+
+const QuestionsPage = () => (
+    <div>
+        <Questions/>
+    </div>
+)
 
 // a little function to help us with reordering the result
 const reorder = (list, startIndex, endIndex) => {
@@ -53,22 +67,30 @@ const styles = (theme) => ({
       },
   });
 
-class Questions extends Component {
+  const DeleteButton = withStyles((theme) => ({
+    root: {
+      color: red[500],
+      '&:hover': {
+        color: red[700],
+      },
+    },
+  }))(Button);
+
+class QuestionsBase extends Component {
     constructor(props) {
         super(props);
-        if(props.questions){
-        let questions = props.questions[0].quest;
-            var items = Object.keys(questions).map(function (key) { 
-                return questions[key]; 
-            }); 
-        }
-        console.log(items);
         this.state = {
-            items,
+            show : 0,
+            loading: true,
             open : {},
-            dragged : false,
+            openDeleteDialog: false,
+            deleteIndex: null,
         }
-        this.onDragEnd = this.onDragEnd.bind(this)
+        this.onDragEnd = this.onDragEnd.bind(this);
+    }
+
+    componentDidMount() {
+        this.getQuestions();
     }
 
     setOpen = (key) => {
@@ -95,15 +117,22 @@ class Questions extends Component {
         })
     }
 
-    deleteItem = (index) => {
-        console.log(this.state.items[index])
-        const {items} = this.state;
-        let copy = items;
-        copy.splice(index,1);
+    showDeleteDialog = (index) => {
         this.setState({
-            items : copy
+            openDeleteDialog : true,
+            deleteIndex : index
         })
-        console.log(this.state.items)
+    }
+
+    deleteItem = () => {
+        const {items, deleteIndex} = this.state;
+        let copy = items;
+        copy.splice(deleteIndex,1);
+        this.setState({
+            items : copy,
+            deleteIndex: null,
+            openDeleteDialog:false,
+        })
     }
 
     /* onSave = () => {
@@ -115,10 +144,37 @@ class Questions extends Component {
       })
     } */
 
+    newQuestions() {
+        let db = this.props.firebase.db;
+        let questionsRef = db.ref("questions");
+        let newQuestionsRef = questionsRef.push();
+        newQuestionsRef.set({
+          questions: [],
+          createdAt: firebase.database.ServerValue.TIMESTAMP,
+          open : {},
+          dragged : false,
+        });
+      }
+
+    getQuestions() {
+        let db = this.props.firebase.db;
+        let questionsRef = db.ref("questions");
+        questionsRef.on('value',(snap)=>{
+          let data = snap.val();
+          let questions = Object.keys(data).map(i => data[i]);
+          let items =  Object.keys(questions).map(i => questions[i]);
+          this.setState({
+            questions : questions[0].questions,
+            items : items[0].questions,
+            loading : false,
+          })
+        });
+    }
+
     render() {
         const {classes} = this.props;
-        const {dragged} = this.state;
-        return (
+        const {dragged, items, questions, loading, open, openDeleteDialog, deleteIndex} = this.state;
+        return loading ? ( <Loading /> ) : ( 
             <>
             <div style={{
                 width:"100%",
@@ -152,25 +208,25 @@ class Questions extends Component {
                         </TableRow>
                     </TableHead>
                     <TableBody component={DroppableComponent(this.onDragEnd)}>
-                        {this.state.items?.map((item, index) => (
+                        {items?.map((item, index) => (
                             <React.Fragment>
                             <TableRow className={classes.tableRow} component={DraggableComponent(index.toString(), index)} key={index} >
                                 <TableCell>
                                     <IconButton aria-label="expand row" size="small" onClick={() => this.setOpen(index)}>
-                                    {this.state.open[index] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                    {open[index] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                                     </IconButton>
                                 </TableCell>
                                 <TableCell scope="row">{index + 1}</TableCell>
                                 <TableCell>{item.question}</TableCell>
                                 <TableCell>
-                                    <IconButton aria-label="delete" onClick={() => this.deleteItem(index)} disabled={dragged}>
+                                    <IconButton aria-label="delete" onClick={() => this.showDeleteDialog(index)} disabled={dragged} className={classes.deleteBtn}>
                                         <DeleteIcon fontSize="small" />
                                     </IconButton>
                                 </TableCell>
                             </TableRow>
                             <TableRow>
                             <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-                              <Collapse in={this.state.open[index]} timeout="auto" unmountOnExit>
+                              <Collapse in={open[index]} timeout="auto" unmountOnExit>
                                 <Box margin={1}>
                                 <div>
                                     <span><b>Image principale</b></span>                                    
@@ -189,7 +245,7 @@ class Questions extends Component {
       </Button>
                                         </label>
       {item.image && 
-      (<IconButton disabled={dragged} variant="contained" color="red" aria-label="delete" onClick={(e)=>{
+      (<IconButton disabled={dragged} variant="contained" color="red" aria-label="delete" className={classes.deleteBtn} onClick={(e)=>{
           console.log(e)
           }}>
          <DeleteIcon fontSize="small" disabled={dragged}/>
@@ -254,6 +310,39 @@ class Questions extends Component {
                 </Table>
             </TableContainer>
             </Paper>
+            <Dialog
+        open={openDeleteDialog}
+        onClose={() => {
+            this.setState({
+                deleteIndex : null,
+                openDeleteDialog : false,
+            }) 
+        }}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Êtes-vous sûr de vouloir supprimer cette question ?"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Cette action est irréversible
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+              this.setState({
+                  deleteIndex : null,
+                  openDeleteDialog : false,
+              })
+          }} color="primary">
+            Annuler
+          </Button>
+          <DeleteButton onClick={() => {
+              this.deleteItem()
+          }} autoFocus color="primary">
+            Supprimer
+          </DeleteButton>
+        </DialogActions>
+      </Dialog>
             </>
         )
     }
@@ -297,4 +386,11 @@ const DroppableComponent = (
     )
 }
 
-export default withStyles(styles)(Questions);
+const Questions = compose(
+    withFirebase,
+    withStyles(styles),
+  )(QuestionsBase);
+  
+  export default QuestionsPage
+  
+  export {Questions}

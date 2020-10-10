@@ -174,13 +174,18 @@ componentWillUnmount() {
   getDb() {
     let db = this.props.firebase.db;
     let responsesRef = db.ref("responses");
+    let questionsRef = db.ref("questions");
     responsesRef.on('value',(snap)=>{
       let data = snap.val();
       this.setState({
-        answers : Object.keys(data).map(i => data[i]),
         totUsers : Object.keys(data).length
       })
-      console.log(this.state.answers);
+    });
+    questionsRef.on('value',(snap)=>{
+      let data = snap.val();
+      this.setState({
+        totQuest : Object.keys(data).length
+      })
     });
   }
   render() {

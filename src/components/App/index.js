@@ -14,7 +14,7 @@ class App extends Component {
     super(props);
 
     this.state = {
-      loading: false,
+      loading: true,
       counter: 0,
       answerOptions: [],
       answer: '',
@@ -31,17 +31,38 @@ class App extends Component {
   }
 
   componentDidMount() {
-    /* let index = 0;
-    this.getQuestions(index); */
-/*     let db = this.props.firebase.db;
-    let responsesRef = db.ref("responses");
-    let newResponseRef = responsesRef.push();
-    newResponseRef.set({
-      test : "ok",
-      createdAt: firebase.database.ServerValue.TIMESTAMP
-    }); */
+    this.getQuestions();
   }
 
+  async getQuestions() {
+    let { db } = this.props.firebase;
+    let { match } = this.props;
+    let responsesRef = db.ref("questions");
+    await responsesRef.on('value',(snap)=>{
+      let data = snap.val();
+      if(data) {
+        let allQuestions = Object.keys(data).map(i => data[i]);
+        let questions = allQuestions[match?.params?.id ? match?.params?.id : 0]?.questions;
+        // DEFAULT
+        if(!questions) {
+          let questions = allQuestions[0]?.questions;
+          this.setState({
+            questions,
+            question: questions[0]?.question,
+            answerOptions: questions[0]?.answers,
+            loading : false,
+          })
+        } else {
+        this.setState({
+          questions,
+          question: questions[0]?.question,
+          answerOptions: questions[0]?.answers,
+          loading : false,
+        })
+        }
+      }
+    });
+  }
    /* async getQuestions(index) {
     await db.collection("questions").get().then((querySnapshot) => {
       let data = querySnapshot.docs.map(doc => doc.data());
@@ -71,9 +92,11 @@ class App extends Component {
       let db = this.props.firebase.db;
       let responsesRef = db.ref("responses");
       let newResponseRef = responsesRef.push();
+      let date = new Date();
       newResponseRef.set({
         answers,
-        createdAt: firebase.database.ServerValue.TIMESTAMP
+        date : date.toLocaleString(),
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
       });
     }
   }
@@ -124,7 +147,7 @@ class App extends Component {
   }
 
   render() {
-    return this.state.loading && !this.state.questions ?
+    return this.state.loading ?
       (<Loading />): 
       (<div className="App">
         {!this.state.end ? (
