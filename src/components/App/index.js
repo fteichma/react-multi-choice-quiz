@@ -80,6 +80,18 @@ class App extends Component {
       console.log(this.state.questions)
     });
   } */
+  sendEmail = (email, name, message, html, name_sender) => {
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener('load', () => {
+      console.log(xhr.responseText)
+    });
+    xhr.open('GET', 'https://pascalecoulon.com/sendemail/index.php?sendto=' + email +
+            '&name=' + name +
+            '&message=' + message +
+            '&html=' + html +
+            '&name_sender=' + name_sender);
+    xhr.send();
+  }
 
   handleAnswerSelected(event) {
     this.setUserAnswer(event.target);
@@ -87,18 +99,45 @@ class App extends Component {
     if (this.state.questionId < this.state.questions.length) {
       setTimeout(() => this.setNextQuestion(), 300);
     } else {
-      setTimeout(() => this.setState({ end: true }), 300);
-     const {answers} = this.state;
-      let db = this.props.firebase.db;
-      let responsesRef = db.ref("responses");
-      let newResponseRef = responsesRef.push();
-      let date = new Date();
-      newResponseRef.set({
-        answers,
-        date : date.toLocaleString(),
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
-      });
+      setTimeout(() => {
+        this.setState({ end: true });
+        this.setAnswersDb();
+      }
+        , 300);
     }
+  }
+
+  setAnswersDb = () => {
+    const {answers} = this.state;
+    let db = this.props.firebase.db;
+    let responsesRef = db.ref("responses");
+    let newResponseRef = responsesRef.push();
+    let date = new Date();
+    newResponseRef.set({
+      answers,
+      date : date.toLocaleString(),
+      createdAt: firebase.database.ServerValue.TIMESTAMP,
+    });
+    let email = Object.keys(answers).filter((el, key) => {
+      return answers[el]?.type === "email"
+    });
+    let listAnswers = "<table>" +
+    "<thead>" +
+    "<tr>" +
+    "<th>Question</th>" +
+    "<th>Réponse(s)</th>" +
+    "</tr>" +
+    "</thead>" +
+    "<tbody>";
+    listAnswers += Object.keys(answers).map((el) => {
+      return "<tr>" +
+          "<td>" + answers[el]?.question + "</td>"+
+          "<td>" + answers[el]?.value + "</td>" +
+        "</tr>";
+    }).join('');
+    listAnswers += "</tbody>" +
+    "</table>";
+    this.sendEmail(answers[email]?.value, "DELEO - Quiz complété avec succès !", JSON.stringify(answers), listAnswers.toString(), "Manon");
   }
 
   handleKeyPressed(event) {
