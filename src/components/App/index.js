@@ -189,6 +189,11 @@ class App extends Component {
     return this.state.loading ?
       (<Loading />): 
       (<div className="App">
+        <div className="brand-logo">
+          <a href="https://deleo.fr/">
+            <img width="100%" src="https://firebasestorage.googleapis.com/v0/b/deleo-93c9d.appspot.com/o/logo-deleo.png?alt=media&token=7cc62f10-1778-411a-a550-de91e372faf1" alt="Logo" />
+          </a>
+        </div>
         {!this.state.end ? (
             <Quiz
             answer={this.state.answer}
