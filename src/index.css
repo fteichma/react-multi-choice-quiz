@@ -55,8 +55,7 @@ h1 {
   justify-content: center;
   height: 100vh;
   margin: auto;
-  max-width: 630px;
-  width: 80%;
+  width: 90%;
 }
 
 ::placeholder {
@@ -306,4 +305,32 @@ line {
 
 #Capa_1, #Capa_2 {
   pointer-events: none;
+}
+
+.btn-nav {
+  position: absolute;
+  height: 50px;
+  width: 50px;
+  border-radius: 100%;
+  box-shadow: 0 4px 8px #00000025;
+  background-color: white;
+  border: none;
+  top:0;
+  bottom:0;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-prev {
+  left: 0;
+}
+
+.btn-next {
+  right: 0;
+}
+
+.btn-next svg {
+  margin-left:4px;
 }

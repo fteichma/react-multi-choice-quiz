@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Quiz from './Quiz';
 import Summary from './Summary';
+import axios from 'axios';
 import '../../App.css';
 import "animate.css";
 
@@ -45,21 +46,14 @@ class App extends Component {
         let questions = allQuestions[match?.params?.id ? match?.params?.id : 0]?.questions;
         // DEFAULT
         if(!questions) {
-          let questions = allQuestions[0]?.questions;
-          this.setState({
-            questions,
-            question: questions[0]?.question,
-            answerOptions: questions[0]?.answers,
-            loading : false,
-          })
-        } else {
+          questions = allQuestions[0]?.questions;
+        }
         this.setState({
           questions,
           question: questions[0]?.question,
           answerOptions: questions[0]?.answers,
           loading : false,
-        })
-        }
+        });
       }
     });
   }
@@ -81,7 +75,7 @@ class App extends Component {
     });
   } */
   sendEmail = (email, name, message, html, name_sender) => {
-    var xhr = new XMLHttpRequest();
+    /* var xhr = new XMLHttpRequest();
     xhr.addEventListener('load', () => {
       console.log(xhr.responseText)
     });
@@ -90,20 +84,44 @@ class App extends Component {
             '&message=' + message +
             '&html=' + html +
             '&name_sender=' + name_sender);
-    xhr.send();
+    xhr.send(); */
+    axios({
+      method: "post",
+      url: `https://pascalecoulon.com/sendemail/index.php`,
+      headers: { "content-type": "application/json" },
+      data: JSON.stringify({
+        email : email,
+        name : name,
+        message : message,
+        html: html,
+        name_sender: name_sender
+      })
+    })
+      .then(result => {
+        if (result.data.sent) {
+          console.log("ok");
+        } else {
+          console.log(result.data)
+        }
+      })
+      .catch(error => console.log(error));
   }
 
   handleAnswerSelected(event) {
-    this.setUserAnswer(event.target);
-
-    if (this.state.questionId < this.state.questions.length) {
-      setTimeout(() => this.setNextQuestion(), 300);
-    } else {
-      setTimeout(() => {
-        this.setState({ end: true });
-        this.setAnswersDb();
+    this.setState({error: false});
+    if(event.target.value) {
+      this.setUserAnswer(event.target);
+      if (this.state.questionId < this.state.questions.length) {
+        setTimeout(() => this.setNextQuestion(), 300);
+      } else {
+        setTimeout(() => {
+          this.setState({ end: true });
+          this.setAnswersDb();
+        }, 300);
       }
-        , 300);
+    }
+    else {
+      this.setState({error: true})
     }
   }
 
@@ -146,14 +164,7 @@ class App extends Component {
     })
     let keyCode = event.keyCode || event.charCode;
     if(keyCode === 13) {
-      if(event.target.value) {
-        this.handleAnswerSelected(event)
-      }
-      else {
-        this.setState({
-          error:true,
-        })
-      }
+      this.handleAnswerSelected(event)
     }
   }
 
@@ -164,10 +175,34 @@ class App extends Component {
         [answer.value]: (state.answersCount[answer.value] || 0) + 1
       },
       answer: answer,
-      answers : {...state.answers, 
-        [state.counter] : {question : state.question, value : answer.value, type : answer.type, name: answer.name}
-      },
+      answers : [...state.answers, 
+        {question : state.question, value : answer.value, type : answer.type, name: answer.name}
+      ],
     }), () => {
+      console.log(this.state.answers)
+    });
+  }
+
+  setBackQuestion = () => {
+    const counter = this.state.counter - 1;
+    const questionId = this.state.questionId - 1;
+    const questions = this.state.questions;
+    const answers = this.state.answers;
+    answers.pop();
+    console.log(answers);
+    this.setState((state, props) => ({
+      counter: counter,
+      questionId: questionId,
+      question: questions[counter].question,
+      answerOptions: questions[counter].answers,
+      answers,
+      answer: '',
+      error: false,
+      answersCount : {
+        ...state.answersCount,
+      [state.answer.value]: (state.answersCount[state.answer.value] || 0) - 1
+    },
+    }),() => {
       console.log(this.state.answers)
     });
   }
@@ -203,6 +238,7 @@ class App extends Component {
             questionTotal={this.state.questions.length}
             onAnswerSelected={this.handleAnswerSelected}
             onKeyPressed={this.handleKeyPressed}
+            onBack={this.setBackQuestion}
             error={this.state.error}
             />
           ) : (

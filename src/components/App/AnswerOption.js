@@ -25,10 +25,15 @@ function AnswerOption(props) {
         )
           case 'body' :
             return(
-              <>
-              <BodyFront className="bodySelect" onClick={props.onAnswerSelected}/>
-              <BodyBack className="bodySelect" onClick={props.onAnswerSelected}/>
-              </>
+            <>
+              {/* <BodyFront className="bodySelect" onClick={props.onAnswerSelected}/>
+              <BodyBack className="bodySelect" onClick={props.onAnswerSelected}/> */}
+              <li>
+                <input type="checkbox" id={props.answerContent} name="bodySelect" value={props.answerContent}
+                onChange={props.onAnswerSelected}/>
+                <label htmlFor="bodySelect">{props.answerContent}</label>
+              </li>
+            </>
             )
       default : 
   return (
