@@ -107,10 +107,10 @@ class App extends Component {
       .catch(error => console.log(error));
   }
 
-  handleAnswerSelected(event) {
+  handleAnswerSelected = (target, checkedList) => {
     this.setState({error: false});
-    if(event.target.value) {
-      this.setUserAnswer(event.target);
+    if(target?.value) {
+      this.setUserAnswer(target, checkedList);
       if (this.state.questionId < this.state.questions.length) {
         setTimeout(() => this.setNextQuestion(), 300);
       } else {
@@ -162,21 +162,18 @@ class App extends Component {
     this.setState({
       error:false
     })
-    let keyCode = event.keyCode || event.charCode;
-    if(keyCode === 13) {
-      this.handleAnswerSelected(event)
-    }
+      this.handleAnswerSelected(event);
   }
 
-  setUserAnswer(answer){
+  setUserAnswer(target, checkedList){
     this.setState((state, props) => ({
       answersCount: {
         ...state.answersCount,
-        [answer.value]: (state.answersCount[answer.value] || 0) + 1
+        [target.value]: (state.answersCount[target.value] || 0) + 1
       },
-      answer: answer,
+      answer: target,
       answers : [...state.answers, 
-        {question : state.question, value : answer.value, type : answer.type, name: answer.name}
+        {question : state.question, value : checkedList?.length ? JSON.stringify(checkedList) : target.value, type : target.type, name: target.name}
       ],
     }), () => {
       console.log(this.state.answers)

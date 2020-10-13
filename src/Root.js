@@ -16,9 +16,9 @@ class Root extends React.Component {
   return(
   <Router>
     <div>
-      <Route exact path={[ROUTES.QUIZ, ROUTES.QUIZ_ID]} component={App} />
       <Route path={ROUTES.LOG_IN} component={Login} />
       <Route path={ROUTES.ADMIN} component={AdminPanel} />
+      <Route exact path={[ROUTES.QUIZ, ROUTES.QUIZ_ID]} component={App} />
     </div>
   </Router>
   )
