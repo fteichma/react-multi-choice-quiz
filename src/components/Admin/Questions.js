@@ -9,14 +9,18 @@ import PhotoCamera from '@material-ui/icons/PhotoCamera';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import SaveIcon from '@material-ui/icons/Save';
 import DeleteIcon from '@material-ui/icons/Delete';
+import AddIcon from '@material-ui/icons/Add';
 import red from '@material-ui/core/colors/red';
+import green from '@material-ui/core/colors/green';
+import Select, { components } from 'react-select';
+import TextField from '@material-ui/core/TextField';
 
 import { withFirebase } from '../Firebase';
 import firebase from "firebase/app";
 import { compose } from 'recompose';
 
 import Loading from '../Loading';
-import { RedeemRounded } from "@material-ui/icons"
+import SelectStyle from '../select';
 
 const QuestionsPage = () => (
     <div>
@@ -69,9 +73,18 @@ const styles = (theme) => ({
 
   const DeleteButton = withStyles((theme) => ({
     root: {
-      color: red[500],
+      backgroundColor: red[500],
       '&:hover': {
-        color: red[700],
+        backgroundColor: red[700],
+      },
+    },
+  }))(Button);
+
+  const SaveButton = withStyles((theme) => ({
+    root: {
+      backgroundColor: green[500],
+      '&:hover': {
+        backgroundColor: green[700],
       },
     },
   }))(Button);
@@ -85,6 +98,9 @@ class QuestionsBase extends Component {
             open : {},
             openDeleteDialog: false,
             deleteIndex: null,
+            idList : undefined,
+            id : undefined,
+            openNewQuestionDialog : false,
         }
         this.onDragEnd = this.onDragEnd.bind(this);
     }
@@ -99,7 +115,63 @@ class QuestionsBase extends Component {
         })
     }
 
-    onDragEnd(result) {
+    handleUpload = (e, index, where) => {
+      const {storage} = this.props.firebase;
+      console.log("ok");
+      let image = e?.target?.files[0];
+      if(image) {
+        const uploadTask = storage.ref(`images/${image.name}`).put(image);
+        uploadTask.on("state_changed", 
+        snapshot => {
+
+        },
+        error => {
+          console.log(error);
+        },
+        () => {
+          storage.ref("images")
+          .child(image.name)
+          .getDownloadURL()
+          .then(url => {
+            console.log(url);
+          })
+        })
+      }
+    }
+
+    handleUploadMain = (e, index) => {
+      const {storage} = this.props.firebase;
+      let image = e?.target?.files[0];
+      if(image) {
+        const uploadTask = storage.ref(`images/${image.name}`).put(image);
+        uploadTask.on("state_changed", 
+        snapshot => {
+
+        },
+        error => {
+          console.log(error);
+        },
+        () => {
+          storage.ref("images")
+          .child(image.name)
+          .getDownloadURL()
+          .then(url => {
+            this.setUploadMain(url, index)
+          })
+        })
+      }
+    }
+
+    setUploadMain = (url, index) => {
+      console.log(url);
+      console.log(index);
+      const {id} = this.state;
+      let db = this.props.firebase.db;
+      let mainImage = db.ref(`questions/${id}/questions/${index}/mainImage`);
+      mainImage.set(url);
+    }
+
+    onDragEnd(result) { 
         // dropped outside the list
         if (!result.destination) {
             return
@@ -132,58 +204,122 @@ class QuestionsBase extends Component {
             items : copy,
             deleteIndex: null,
             openDeleteDialog:false,
+        }, () => {
+          this.onSave()
         })
     }
-
-    /* onSave = () => {
-        const {items} = this.state;
-      const timestamp = firebase.firestore.FieldValue.serverTimestamp;
-      let date = new Date();
-      db.collection('answers').add({answers, createdAt: timestamp(), date : date.toLocaleString()}).catch((error) => {
-        console.log(error.message);
+    onSave = () => {
+      const {items,id} = this.state;
+      let db = this.props.firebase.db;
+      let questionsRef = db.ref(`questions/${id}`);
+      questionsRef.set({
+        questions : items,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        id
+      });
+      this.setState({
+        dragged:false
       })
-    } */
+    }
 
-    newQuestions() {
+    newQuestions = () => {
         let db = this.props.firebase.db;
         let questionsRef = db.ref("questions");
         let newQuestionsRef = questionsRef.push();
+        let newKey = newQuestionsRef.key;
         newQuestionsRef.set({
           questions: [],
           createdAt: firebase.database.ServerValue.TIMESTAMP,
-          open : {},
-          dragged : false,
+          id : newKey
         });
       }
+      newQuestion = () => {
+        /* let db = this.props.firebase.db;
+        let questionsRef = db.ref("questions");
+        let newQuestionsRef = questionsRef.push();
+        let newKey = newQuestionsRef.key;
+        newQuestionsRef.set({
+          questions: [],
+          createdAt: firebase.database.ServerValue.TIMESTAMP,
+          id : newKey
+        }); */
+        this.setState({
+          openNewQuestionDialog : true
+        })
+      }
 
-    getQuestions() {
+    getQuestions = () => {
         let db = this.props.firebase.db;
         let questionsRef = db.ref("questions");
         questionsRef.on('value',(snap)=>{
           let data = snap.val();
           let questions = Object.keys(data).map(i => data[i]);
-          let items =  Object.keys(questions).map(i => questions[i]);
+          let idList =  Object.keys(questions).map(i => {return{value : questions[i].id, label: questions[i].id}});
+          let id =  questions[0].id
           this.setState({
-            questions : questions[0].questions,
-            items : items[0].questions,
+            idList,
+            id
+          })
+          this.getQuestionsByRef(id);
+        });
+    }
+
+    getQuestionsByRef(id) {
+      let db = this.props.firebase.db;
+        let questionsRef = db.ref(`questions/${id}`);
+        questionsRef.on('value',(snap)=>{ 
+          let data = snap.val();
+          let questions = data?.questions;
+          this.setState({
             loading : false,
+            questions,
+            items :  questions,
           })
         });
     }
 
     render() {
         const {classes} = this.props;
-        const {dragged, items, questions, loading, open, openDeleteDialog, deleteIndex} = this.state;
+        const {dragged, items, loading, open, openDeleteDialog, openNewQuestionDialog, deleteIndex, idList, id} = this.state;
         return loading ? ( <Loading /> ) : ( 
             <>
             <div style={{
                 width:"100%",
                 display:"flex",
                 alignItems:"center",
-                justifyContent:"space-between"
+                justifyContent:""
             }}>
             <h1>Questionnaires</h1>
-        {dragged && <Button
+      <span style={{
+        margin: "0 1em"
+      }}><Select
+						blurInputOnSelect={false}
+						tabSelectsValue={false}
+						menuShouldScrollIntoView={true}
+						styles={SelectStyle('160px').default}
+						isSearchable
+						menuPlacement={'auto'}
+						onChange={(e)=>{
+              this.getQuestionsByRef(e.value);
+              this.setState({
+                id: e.value
+              })
+            }}
+            options={idList}
+            value={{value:id,label:id}}
+						placeholder={'Identifiant'}
+					/></span>
+    <Button         
+      className={classes.button}
+      variant="contained" 
+      size="small" 
+      disableElevation 
+      color="primary" 
+      startIcon={<AddIcon/>}
+      onClick={() => this.newQuestions()}>
+      Nouveau
+    </Button>
+    {dragged && <SaveButton
         variant="contained"
         color="primary"
         size="small"
@@ -194,7 +330,7 @@ class QuestionsBase extends Component {
         onClick={this.onSave}
       >
         Sauvegarder
-      </Button>}
+      </SaveButton>}
       </div>
             <Paper className={classes.root}>
             <TableContainer className={classes.container}>
@@ -230,8 +366,6 @@ class QuestionsBase extends Component {
                                 <Box margin={1}>
                                 <div>
                                     <span><b>Image principale</b></span>                                    
-      <input disabled={dragged} accept="image/*" className={classes.input} id="contained-button-file" type="file" />
-                                        <label htmlFor="contained-button-file">
                                         <Button
         variant="contained"
         color="default"
@@ -240,18 +374,24 @@ class QuestionsBase extends Component {
         className={classes.button}
         startIcon={<CloudUploadIcon />}
         disabled={dragged}
+        component="label"
+        onChange={(e) => this.handleUploadMain(e, index)}
       >
-        {item.image ? "Remplacer" : "Téléverser"}
+        {item.mainImage ? "Remplacer" : "Téléverser"}
+        <input disabled={dragged}  accept="image/*" className={classes.input} type="file" />
       </Button>
-                                        </label>
-      {item.image && 
-      (<IconButton disabled={dragged} variant="contained" color="red" aria-label="delete" className={classes.deleteBtn} onClick={(e)=>{
-          console.log(e)
-          }}>
-         <DeleteIcon fontSize="small" disabled={dragged}/>
+      {item.mainImage && 
+      (<IconButton disabled={dragged} variant="contained" onClick={() => this.setUploadMain("",index)}aria-label="delete" className={classes.deleteBtn}>
+         <DeleteIcon color={red[500]} fontSize="small" disabled={dragged}/>
       </IconButton>)
       }
       </div>
+      {item.mainImage &&
+      (<div>
+        <img width="50" src={item.mainImage} />
+      </div>)
+    }
+      
                                 
                                   <Table size="small" aria-label="purchases">
                                         <TableHead>
@@ -277,14 +417,10 @@ class QuestionsBase extends Component {
                                           </TableCell>
                                           <TableCell>
                                           {el.type === "radio" && !el.image ? (
-                                        <>
-                                        <input accept="image/*" className={classes.input} id="icon-button-file" type="file" />
-                                        <label htmlFor="icon-button-file">
-                                          <IconButton color="primary" disabled={dragged} aria-label="upload picture" component="span">
+                                          <IconButton color="primary" disabled={dragged} aria-label="upload picture" component="label">
                                             <PhotoCamera />
+                                            <input accept="image/*" className={classes.input} id="icon-button-file" type="file" />
                                           </IconButton>
-                                        </label>
-                                        </>
                                     ) : el.image ?
                                     ( 
                                         <>
@@ -310,6 +446,18 @@ class QuestionsBase extends Component {
                 </Table>
             </TableContainer>
             </Paper>
+            <Button         
+      className={classes.button}
+      variant="contained" 
+      size="small" 
+      disableElevation 
+      color="primary" 
+      startIcon={<AddIcon/>}
+      onClick={() => this.newQuestion()}>
+      Ajouter une question
+    </Button>
+            <h1>Emailing/Résumé</h1>
+
             <Dialog
         open={openDeleteDialog}
         onClose={() => {
@@ -338,9 +486,43 @@ class QuestionsBase extends Component {
           </Button>
           <DeleteButton onClick={() => {
               this.deleteItem()
-          }} autoFocus color="primary">
+          }} autoFocus color="primary" variant="contained">
             Supprimer
           </DeleteButton>
+        </DialogActions>
+      </Dialog>
+      <Dialog fullWidth open={openNewQuestionDialog} onClose={() => {
+        this.setState({
+          openNewQuestionDialog : false,
+        })
+      }} aria-labelledby="form-dialog-title">
+        <DialogTitle id="form-dialog-title">Ajouter une question</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Ajouter une question au questionnaire
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Question (ex. : Quel est votre prénom ?)"
+            type="text"
+            fullWidth
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            this.setState({
+              openNewQuestionDialog: false,
+            })
+          }} color="primary">
+            Annuler
+          </Button>
+          <Button onClick={() => 
+          this.setState({
+            openNewQuestionDialog:false,
+          })} color="primary" variant="contained">
+            Ajouter
+          </Button>
         </DialogActions>
       </Dialog>
             </>

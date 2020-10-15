@@ -1,7 +1,5 @@
 import React from 'react';
-import Question from './Question';
 import QuestionCount from './QuestionCount';
-import AnswerOption from './AnswerOption';
 import { ChevronLeft, ChevronRight } from 'react-feather';
 import {ReactComponent as BodyFront} from '../../svg/body_front.svg';
 import {ReactComponent as BodyBack} from '../../svg/body_back.svg';
@@ -33,8 +31,9 @@ class Quiz extends React.Component {
     }
   }
   render() {
-  return (
-    <div>
+    if(!this.props.notFound){
+        return(
+        <>
             {this.props.questionId>1 && 
       (<button onClick={()=>{
         this.setState({
@@ -48,9 +47,14 @@ class Quiz extends React.Component {
       </button>)}
     <div className="container">
       <div key={this.props.questionId} className="questionContainer animate__animated animate__fadeInRight">
-        <Question content={this.props.question} />
+      {this.props.mainImage && (
+        <div style={{margin:"auto",display:"flex",justifyContent:"center",alignItems:"center"}}>
+        <img width='65' src={this.props.mainImage} alt=""/>
+        </div>
+      )}
+      <h2 className="question">{this.props.question}</h2>
         <ul className="answerOptions">
-            {this.props.answerOptions.map((el, key, array) => { 
+            {this.props.answerOptions?.map((el, key, array) => { 
               if(array[key].type === "text" || array[key].type === "email" || array[key].type === "number") {
                   return (
                     <li className="answerOption">
@@ -150,8 +154,16 @@ class Quiz extends React.Component {
         }}>
           <ChevronRight />
       </button>
-    </div>
-  )}
+      </>
+        )} else {
+      return(
+        <div className="container">
+        <span className="info-not-found">
+          Aucun quiz à cette adresse
+          </span>
+          </div>)
+    }
+  }
 }
 
 export default Quiz;

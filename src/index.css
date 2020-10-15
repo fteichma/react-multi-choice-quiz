@@ -79,6 +79,14 @@ h1 {
   font-size: 14px;
 }
 
+.info-not-found {
+  margin: auto;
+  text-align: center;
+  color: #ff2b2b;
+  font-weight: 700;
+  font-size: 14px;
+}
+
 ::ms-input-placeholder {
   color:#ccc;
 }
@@ -395,68 +403,68 @@ body {
 }
 
 #Cou{
-  top: 50px;
-  left: 80px;
+  top: 70px;
+  left: 84px;
 }
 
 #Plidusoutien-gorge{
-  left: 48px;
-  top: 125px;
+  left: 8px;
+  top: 147px;
 }
 
 #Ailesdange{
-  left: 85px;
-  top:110px;
+  left: 80px;
+  top:115px;
 }
 
 #Poigneesdamour {
-  top: 165px;
-  left: 46px;
+  top: 195px;
+  left: 15px;
 }
 
 #Culottedecheval {
-  top: 215px;
+  top: 255px;
   left: 79px;
 }
 
 #Genoux {
-  top: 274px;
-  left: 43px;
-}
-
-#Menton {
-  top: 61px;
-  left: 78px;
-}
-
-#Decollete {
-  top: 92px;
-  left: 61px;
-}
-
-#Pseudogynecomastie {
-  top: 109px;
+  top: 324px;
   left: 20px;
 }
 
+#Menton {
+  top: 78px;
+  left: 72px;
+}
+
+#Decollete {
+  top:120px;
+  left: 75px;
+}
+
+#Pseudogynecomastie {
+  top: 136px;
+  left: -75px;
+}
+
 #Bras {
-  left: 130px;
-  top: 133px;
+  left: 160px;
+  top: 165px;
 }
 
 #Ventre {
-    top: 172px;
-    left: 62px;
+    top: 211px;
+    left: 65px;
 }
 
 #Cuisses{
-  top: 250px;
-  left: 110px;
+  top: 300px;
+  left: 122px;
 }
 
 #Mollets {
-  top: 340px;
-  left: 50px;
+  top: 395px;
+  left: 44px;
 }
 
 .body {

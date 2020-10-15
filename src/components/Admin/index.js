@@ -205,9 +205,8 @@ componentWillUnmount() {
         <Tab label="Dashboard" {...a11yProps(0)} className={classes.tab} />
         <Tab label="Réponses" {...a11yProps(1)} className={classes.tab}/>
         <Tab label="Questions" {...a11yProps(2)} className={classes.tab}/>
-        <Tab label="Conditions" {...a11yProps(3)} className={classes.tab}/>
-        <Tab label="Personnalisation" {...a11yProps(4)} className={classes.tab}/>
-        <Tab label="Mon compte" {...a11yProps(5)} className={classes.tab}/>
+        <Tab label="Personnalisation" {...a11yProps(3)} className={classes.tab}/>
+        <Tab label="Mon compte" {...a11yProps(4)} className={classes.tab}/>
       </Tabs>
       <TabPanel value={this.state.value} index={0}>
         {loading ? <Loading /> : <Dashboard totUsers={this.state.totUsers} totQuest={this.state.totQuest} />}
@@ -220,12 +219,9 @@ componentWillUnmount() {
       {loading ? <Loading /> : <Questions questions={this.state.questions}/>}
       </TabPanel>
       <TabPanel value={this.state.value} index={3}>
-      <h1>Conditions</h1>
-      </TabPanel>
-      <TabPanel value={this.state.value} index={4}>
       <h1>Personnalisation</h1>
       </TabPanel>
-      <TabPanel value={this.state.value} index={5}>
+      <TabPanel value={this.state.value} index={4}>
         <h1>Mon compte</h1>
         <Button
              variant="contained"

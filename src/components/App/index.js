@@ -7,6 +7,7 @@ import "animate.css";
 
 import { withFirebase } from '../Firebase';
 import firebase from "firebase/app";
+import queryString from 'query-string';
 
 import Loading from '../Loading';
 
@@ -26,6 +27,8 @@ class App extends Component {
       question: '',
       questions : {},
       questionId: 1,
+      notFound : true,
+      mainImage : undefined
     };
     this.handleAnswerSelected = this.handleAnswerSelected.bind(this);
     this.handleKeyPressed = this.handleKeyPressed.bind(this);
@@ -35,28 +38,36 @@ class App extends Component {
     this.getQuestions();
   }
 
-  async getQuestions() {
-    let { db } = this.props.firebase;
-    let { match } = this.props;
-    let responsesRef = db.ref("questions");
-    await responsesRef.on('value',(snap)=>{
+  getQuestions() {
+    let url = this.props.location.search;
+    let params = queryString.parse(url);
+    console.log(params?.id);
+    this.getQuestionsByRef(params?.id);
+}
+
+getQuestionsByRef(id) {
+  let db = this.props.firebase.db;
+    let questionsRef = db.ref(`questions/${id}`);
+    questionsRef.on('value',(snap)=>{ 
       let data = snap.val();
       if(data) {
-        let allQuestions = Object.keys(data).map(i => data[i]);
-        let questions = allQuestions[match?.params?.id ? match?.params?.id : 0]?.questions;
-        // DEFAULT
-        if(!questions) {
-          questions = allQuestions[0]?.questions;
-        }
+        let questions = data?.questions;
+      this.setState({
+        loading : false,
+        questions,
+        mainImage : questions[0]?.mainImage,
+        question : questions[0]?.question,
+        answerOptions : questions[0]?.answers,
+        notFound : false,
+      })
+      }
+      else {
         this.setState({
-          questions,
-          question: questions[0]?.question,
-          answerOptions: questions[0]?.answers,
           loading : false,
-        });
+        })
       }
     });
-  }
+}
    /* async getQuestions(index) {
     await db.collection("questions").get().then((querySnapshot) => {
       let data = querySnapshot.docs.map(doc => doc.data());
@@ -75,16 +86,6 @@ class App extends Component {
     });
   } */
   sendEmail = (email, name, message, html, name_sender) => {
-    /* var xhr = new XMLHttpRequest();
-    xhr.addEventListener('load', () => {
-      console.log(xhr.responseText)
-    });
-    xhr.open('GET', 'https://pascalecoulon.com/sendemail/index.php?sendto=' + email +
-            '&name=' + name +
-            '&message=' + message +
-            '&html=' + html +
-            '&name_sender=' + name_sender);
-    xhr.send(); */
     axios({
       method: "post",
       url: `https://pascalecoulon.com/sendemail/index.php`,
@@ -192,6 +193,7 @@ class App extends Component {
       questionId: questionId,
       question: questions[counter].question,
       answerOptions: questions[counter].answers,
+      mainImage : questions[counter].mainImage,
       answers,
       answer: '',
       error: false,
@@ -213,6 +215,7 @@ class App extends Component {
       questionId: questionId,
       question: questions[counter].question,
       answerOptions: questions[counter].answers,
+      mainImage : questions[counter].mainImage,
       answer: ''
     });
   }
@@ -233,10 +236,12 @@ class App extends Component {
             questionId={this.state.questionId}
             question={this.state.question}
             questionTotal={this.state.questions.length}
+            mainImage={this.state.mainImage}
             onAnswerSelected={this.handleAnswerSelected}
             onKeyPressed={this.handleKeyPressed}
             onBack={this.setBackQuestion}
             error={this.state.error}
+            notFound={this.state.notFound}
             />
           ) : (
             <Summary />
