@@ -92,8 +92,8 @@ class ResponsesBase extends React.Component{
         </TableHead>
         <TableBody>
           {answers?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, key) => (
-              <React.Fragment>
-            <TableRow key={key} className={classes.tableRow}>
+              <React.Fragment key={key}>
+            <TableRow className={classes.tableRow}>
                           <TableCell>
             <IconButton aria-label="expand row" size="small" onClick={() => this.setOpen(key)}>
               {this.state.open[key] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -140,7 +140,7 @@ class ResponsesBase extends React.Component{
     <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
-        count={answers.length}
+        count={answers?.length || 0}
         rowsPerPage={rowsPerPage}
         page={page}
         onChangePage={this.handleChangePage}

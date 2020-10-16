@@ -133,6 +133,7 @@ a {
 
 .questionContainer {
   margin-top:-40px;
+  max-width: 80%;
 }
 
 /* QuestionCount Component */
@@ -147,7 +148,8 @@ a {
   width: fit-content;
   border-radius: 30px;
   padding: 12px;
-  background:white;
+  background-color:var(--primary);
+  opacity: 0.9;
   box-shadow: 0 4px 8px #00000010;
 }
 
@@ -156,15 +158,18 @@ a {
   min-block-size: 10px;
   margin: 0 10px;
   border-radius: 30px;
-  background-color: rgb(194, 194, 194);
+  background-color:var(--secondary);
+  opacity: 0.3;
 }
 
 .questionDot.active {
-  background-color:#79cfec;
+  background-color:var(--secondary);
+  opacity: 0.65;
 }
 
 .questionDot.current {
-  background-color: rgb(134, 134, 134);
+  background-color:var(--secondary);
+  opacity: 0.9;
 }
 
 /* Question Component */
@@ -206,6 +211,21 @@ a {
   position: relative;
 }
 
+.radioOption::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 15px;
+  transition: all ease-in 0.1s;
+  box-sizing: border-box;
+  pointer-events: none;
+  background: var(--primary);
+  opacity: 0;
+}
+
 .radioOption::after {
   content: "";
   width: 100%;
@@ -214,8 +234,7 @@ a {
   top: 0;
   left: 0;
   border-radius: 15px;
-  background: #79cfec18;
-  border: 3px solid #79cfec;
+  border: 3px solid var(--primary);
   opacity: 0;
   transition: all ease-in 0.1s;
   box-sizing: border-box;
@@ -226,8 +245,8 @@ a {
   opacity: 1;
 }
 
-.radioOption:hover {
-  color:#2c9abe;
+.radioOption:hover:before {
+  opacity: 0.07;
 }
 
 
@@ -344,6 +363,25 @@ body {
   opacity: 1;
 }
 
+.body input[type=checkbox]:checked::before, .bodySelect:hover input[type=checkbox]::before {
+  opacity: 0.07;
+}
+
+.bodySelect input[type=checkbox]::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 15px;
+  background: var(--primary);
+  opacity: 0;
+  transition: all linear 0.1s;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
 .bodySelect input[type=checkbox]::after {
   content: "";
   width: 100%;
@@ -352,8 +390,7 @@ body {
   top: 0;
   left: 0;
   border-radius: 15px;
-  background: #79cfec25;
-  border: 2px solid #79cfec;
+  border: 2px solid var(--primary);
   opacity: 0;
   transition: all linear 0.1s;
   box-sizing: border-box;
@@ -407,6 +444,7 @@ body {
   position: absolute;
   left:0;
   right: 0;
+  z-index: 78;
 }
 
 .question-description {
@@ -425,6 +463,13 @@ body {
 .categories-settings>span {
   margin-right: 1em;
   font-size: 14px;
+}
+
+.categories-settings td {
+  font-size: 14px;
+  min-width: 75px;
+  margin: auto;
+  text-align: center;
 }
 
 /* .bodySelect input {
@@ -523,7 +568,7 @@ line {
   width: 50px;
   border-radius: 100%;
   box-shadow: 0 4px 8px #00000025;
-  background-color: white;
+  background-color: var(--primary);
   border: none;
   top:0;
   bottom:0;
@@ -533,6 +578,17 @@ line {
   justify-content: center;
   cursor: pointer;
   z-index: 9;
+  outline: none;
+}
+
+.btn-nav:hover {
+  filter : brightness(0.8)
+}
+
+.btn-nav-demo {
+  position: relative;
+  margin : 0 1em;
+  display: block;
 }
 
 .btn-prev {
@@ -541,6 +597,10 @@ line {
 
 .btn-next {
   right: 10px;
+}
+
+.btn-nav svg {
+  color: var(--secondary);
 }
 
 .btn-next svg {

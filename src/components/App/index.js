@@ -56,6 +56,7 @@ getCustom() {
       this.setState({
         custom : data
       })
+      document.getElementsByTagName("body")[0].style = `--primary:${data?.primary};--secondary:${data?.secondary}`;
     }
     });
 }
@@ -228,18 +229,18 @@ getQuestionsByRef(id) {
     return this.state.loading ?
       (<Loading />): 
       (<div className="App">
-        <div className="brand-logo" style={{
+        {custom?.logo?.url &&
+        (<div className="brand-logo" style={{
           width: custom?.logo?.width
         }}>
           <a href={custom?.logo?.link} target="_blank">
             <img width="100%" src={custom?.logo?.url} alt="Logo" />
           </a>
-        </div>
+        </div>)}
         {!this.state.end ? (
             <Quiz
             answer={this.state.answer}
-            bgColor={this.state.custom?.bgColor}
-            textColor={this.state.custom?.textColor}
+            custom={this.state.custom}
             answerOptions={this.state.answerOptions}
             questionId={this.state.questionId}
             question={this.state.question}
@@ -254,7 +255,10 @@ getQuestionsByRef(id) {
             notFound={this.state.notFound}
             />
           ) : (
-            <Summary />
+            <Summary 
+            answer={this.state.answer}
+            custom={this.state.custom}
+            />
           )}
       </div>)
   }

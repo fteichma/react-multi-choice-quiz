@@ -389,7 +389,7 @@ class QuestionsBase extends Component {
             localStorage.setItem('id',e.target.value);
           }}>
             {idList.map((el, id) => (
-            <MenuItem value={el.value}>{`Questionnaire nº${id+1}`}</MenuItem>
+            <MenuItem key={id} value={el.value}>{`Questionnaire nº${id+1}`}</MenuItem>
             ))}
         </SelectMUI>
       </FormControl>
@@ -441,8 +441,8 @@ class QuestionsBase extends Component {
                     </TableHead>
                     <TableBody component={DroppableComponent(this.onDragEnd)}>
                         {items?.map((item, index) => (
-                            <React.Fragment>
-                            <TableRow className={classes.tableRow} component={DraggableComponent(index.toString(), index)} key={index} >
+                            <React.Fragment key={index}>
+                            <TableRow className={classes.tableRow} component={DraggableComponent(index.toString(), index)}>
                                 <TableCell>
                                     <IconButton aria-label="expand row" size="small" onClick={() => this.setOpen(index)}>
                                     {open[index] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}

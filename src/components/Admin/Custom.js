@@ -3,7 +3,8 @@ import {
     Button,
     IconButton,
     Slider,
-    Typography
+    Typography,
+    TextField
 } from '@material-ui/core';
 
 import {
@@ -11,6 +12,8 @@ import {
     CloudUpload as CloudUploadIcon,
     Save as SaveIcon
 } from '@material-ui/icons';
+
+import { ChevronRight } from 'react-feather';
 
 import { withStyles } from '@material-ui/core/styles';
 
@@ -88,6 +91,7 @@ class CustomBase extends Component{
             custom : undefined,
             showPickerBg:[],
             showSave : false,
+            hover:false,
         }
     }
     componentDidMount() {
@@ -145,7 +149,7 @@ class CustomBase extends Component{
 
     render() {
         const {classes} = this.props;
-        const {custom, showPickerBg, showSave} = this.state;
+        const {custom, showPickerBg, showSave, hover} = this.state;
         return(
             <>
             <div style={{display:"flex", alignItems:"center", width:"100%"}}>
@@ -167,19 +171,48 @@ class CustomBase extends Component{
             <p>
                 Logo de la marque
             </p>
+            {custom?.logo?.url ? (
+                <p>
+                    <img src={custom?.logo?.url} alt="logo" width={custom?.logo?.width} />
+                </p>  
+            ) :
+            (
             <p>
-                <img src={custom?.logo?.url} alt="logo" width={custom?.logo?.width} />
-            </p>
-            <p>
+                Aucun logo.
+            </p>   
+            )}
+            <Button
+        variant="contained"
+        color="default"
+        size="small"
+        disableElevation
+        className={classes.button}
+        startIcon={<CloudUploadIcon />}
+        component="label"
+        onChange={(e) => {this.handleUpload(e, "logo/url")}}
+      >
+        {custom?.logo?.url ? "Remplacer" : "Téléverser"}
+        <input  accept="image/*" className={classes.input} type="file" />
+      </Button>
+      {custom?.logo && 
+      (<IconButton variant="contained" onClick={() => {}}aria-label="delete" className={classes.deleteBtn}>
+         <DeleteIcon color={"default"} fontSize="small"/>
+      </IconButton>)}
             <div className="categories-settings">
-            <span></span>
-            {custom?.logo?.width}
-            <Typography id="non-linear-slider" gutterBottom>
+            <p style={{
+                marginRight: "1em"
+            }}>
             Taille (en px.)
-</Typography>
+            </p>
+            <span>{custom?.logo?.width}px</span>
+
 <Slider
+style={{
+    width:250,
+    marginLeft:"2em",
+}}
   value={custom?.logo?.width}
-  min={0}
+  min={30}
   step={1}
   max={200}
   valueLabelFormat={`${custom?.logo?.width}px`}
@@ -201,24 +234,28 @@ class CustomBase extends Component{
   aria-labelledby="non-linear-slider"
 />
             </div>
-            </p>
-            <Button
-        variant="contained"
-        color="default"
-        size="small"
-        disableElevation
-        className={classes.button}
-        startIcon={<CloudUploadIcon />}
-        component="label"
-        onChange={(e) => {this.handleUpload(e, "logo")}}
-      >
-        {custom?.logo ? "Remplacer" : "Téléverser"}
-        <input  accept="image/*" className={classes.input} type="file" />
-      </Button>
-      {custom?.logo && 
-      (<IconButton variant="contained" onClick={() => {}}aria-label="delete" className={classes.deleteBtn}>
-         <DeleteIcon color={red[500]} fontSize="small"/>
-      </IconButton>)}
+
+        <div className="categories-settings">
+            <span>Lien (logo)</span>
+            <TextField
+            margin="dense"
+            onChange={(e, value) => {
+                let link = e.target.value;
+                this.setState((state) => ({
+                    custom : {
+                        ...state.custom,
+                        logo : {
+                            ...state.custom.logo,
+                            link : link
+                        }
+                    },
+                    showSave : true,
+                }))
+            }}
+            value={custom?.logo?.link || ''}
+            label="Lien associé au logo"
+            type="text"/>
+        </div>
 
             <p>
                 Couleurs de la marque
@@ -277,7 +314,7 @@ class CustomBase extends Component{
             <span>Couleur des titres</span>
             {custom?.textColor &&
             (
-                <p style={{position:"relative"}}>
+                <div style={{position:"relative"}}>
                  <button className="color-select"
                  style={{
                      backgroundColor : custom?.textColor?.title
@@ -322,7 +359,7 @@ class CustomBase extends Component{
                         </OutsideClickHandler>
                      )
                  }
-                </p>
+                </div>
             )
             }
             </div>
@@ -378,6 +415,122 @@ class CustomBase extends Component{
                 </p>
             )
             }
+            </div>
+            <div className="categories-settings">
+                <span>
+                    Couleurs globales
+                    (Ex. : Bouton)
+                </span>
+                <button className="btn-nav btn-next btn-nav-demo" 
+                style={{
+                    backgroundColor: custom?.primary
+                }}>
+                    <ChevronRight style={{
+                        color:custom?.secondary
+                    }}/>
+                </button>
+                <table>
+                    <thead>
+                        <tr>
+                            <td>Primaire</td>
+                            <td>Secondaire</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+            <td>
+                <div style={{position:"relative"}}>
+                 <button className="color-select"
+                 style={{
+                     backgroundColor :  custom?.primary
+                 }}
+                 onClick={() => {
+                    const {showPickerBg} = this.state;
+                    let cp = showPickerBg;
+                    showPickerBg[3] = true;
+                    this.setState({
+                        showPickerBg: cp,
+                    });
+                 }}/>
+                 {
+                     showPickerBg[3] && (
+                        <OutsideClickHandler
+                        onOutsideClick={() => {
+                            const {showPickerBg} = this.state;
+                            let cp = showPickerBg;
+                            showPickerBg[3] = false;
+                            this.setState({
+                                showPickerBg: cp,
+                            });
+                        }}
+                      >
+                        <ChromePicker className="color-picker" color={custom?.primary} 
+                        onChangeComplete={() => {
+                            this.setState({
+                                showSave : true,
+                            })
+                        }}
+                        onChange={(color) => {
+                            this.setState((state)=>({
+                                custom : {
+                                    ...state.custom,
+                                    primary: color.hex
+                                }
+                            }))
+                        }}/>
+                        </OutsideClickHandler>
+                     )
+                 }
+                </div>
+            </td>
+            <td>
+                <div style={{position:"relative"}}>
+                 <button className="color-select"
+                 style={{
+                     backgroundColor :  custom?.secondary
+                 }}
+                 onClick={() => {
+                    const {showPickerBg} = this.state;
+                    let cp = showPickerBg;
+                    showPickerBg[4] = true;
+                    this.setState({
+                        showPickerBg: cp,
+                    });
+                 }}/>
+                 {
+                     showPickerBg[4] && (
+                        <OutsideClickHandler
+                        onOutsideClick={() => {
+                            const {showPickerBg} = this.state;
+                            let cp = showPickerBg;
+                            showPickerBg[4] = false;
+                            this.setState({
+                                showPickerBg: cp,
+                            });
+                        }}
+                      >
+                        <ChromePicker className="color-picker" color={custom?.secondary} 
+                        onChangeComplete={() => {
+                            this.setState({
+                                showSave : true,
+                            })
+                        }}
+                        onChange={(color) => {
+                            this.setState((state)=>({
+                                custom : {
+                                    ...state.custom,
+                                    secondary: color.hex
+                                }
+                            }))
+                        }}/>
+                        </OutsideClickHandler>
+                     )
+                 }
+                </div>
+            </td>
+            </tr>
+            </tbody>
+            </table>
             </div>
             </>
         )

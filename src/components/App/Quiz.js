@@ -9,7 +9,9 @@ class Quiz extends React.Component {
     super();
     this.state = {
       target : undefined,
-      checkedList : []
+      checkedList : [],
+      back:false,
+      error : false,
     };
   }
   onMultiCheck = (e) => {
@@ -31,33 +33,41 @@ class Quiz extends React.Component {
     }
   }
   render() {
+    const {custom} = this.props;
+    const {back, error} = this.state;
     if(!this.props.notFound){
         return(
         <>
             {this.props.questionId>1 && 
       (<button onClick={()=>{
         this.setState({
-          target : undefined,
-          checkedList : []
+          checkedList : [],
+          back:true,
+          error:false,
         });
         this.props.onBack();
-      }} 
+        setTimeout(()=> {
+          this.setState({
+            target : undefined
+          })
+        }, 300);
+      }}
       className="btn-nav btn-prev">
         <ChevronLeft/>
       </button>)}
-    <div className="container" style={{backgroundColor: this.props.bgColor}}>
-      <div key={this.props.questionId} className="questionContainer animate__animated animate__fadeInRight">
+    <div className="container" style={{backgroundColor: custom?.bgColor}}>
+      <div key={this.props.questionId} className={`questionContainer animate__animated ${back ? `animate__fadeInLeft` : `animate__fadeInRight`}`}>
       {this.props.mainImage && (
         <div style={{margin:"auto",display:"flex",justifyContent:"center",alignItems:"center"}}>
         <img width='65' src={this.props.mainImage} alt=""/>
         </div>
       )}
       <h2 className="question" style={{
-        color : this.props?.textColor?.title
+        color : custom?.textColor?.title
       }}>{this.props.question}</h2>
       {this.props.description &&
       (<p className="question-description" style={{
-        color : this.props?.textColor?.p
+        color : custom?.textColor?.p
       }}>{this.props.description}</p>)}
         <ul className="answerOptions">
             {this.props?.answerOptions.map((el, key, array) => { 
@@ -65,22 +75,36 @@ class Quiz extends React.Component {
                   return (
                     <li className="answerOption" key={`answerOption${key}`}>
                       <input
-                      className={this.props.error ? `animate__animated animate__shakeX` : ``} 
+                      className={error ? `animate__animated animate__shakeX` : ``} 
                       type={this.props.type} 
                       placeholder={array[key].content} 
                       onKeyPress={(e) => {
                         let keyCode = e.keyCode || e.charCode;
                         if(keyCode === 13) {
+                          if(e.target.value) {
                           this.props.onKeyPressed(e.target);
                           this.setState({
-                            target : undefined
+                            error : false,
+                            back:false
                           })
+                          setTimeout(()=> {
+                            this.setState({
+                              target : undefined,
+                            })
+                          }, 300);
+                        } else {
+                          this.setState({error:true});
+                        }
+                          
                       }}}
                       name={array[key].content}
                       onChange={(e) => {
+                        let target = e.target;
                         this.setState({
-                          target : e.target
-                      })}}
+                          target,
+                          error:false,
+                      })
+                    }}
                       value={this.state.target?.value || ''}
                       autoFocus
                       />
@@ -100,7 +124,8 @@ class Quiz extends React.Component {
                   onChange={(e) => {
                     this.props.onAnswerSelected(e.target)
                     this.setState({
-                      target : e.target
+                      target : undefined,
+                      back:false,
                     })
                   }}
                 />
@@ -147,18 +172,32 @@ class Quiz extends React.Component {
             )
             }
         </ul>
-        {this.props.error && <span className="info-error">Veuillez compléter le champ</span>}
+        {error && <span className="info-error">Veuillez compléter le champ</span>}
       </div>
       <QuestionCount counter={this.props.questionId} total={this.props.questionTotal} />
     </div>
-    <button className="btn-nav btn-next" onClick={() => {
-        this.props.onAnswerSelected(this.state.target, this.state.checkedList);
+    <button className="btn-nav btn-next"
+    onClick={() => {
+      const {target} = this.state;
+      if(target.value) {
+      this.setState({
+        checkedList : [],
+        back : false
+      })
+      setTimeout(()=> {
         this.setState({
-          target : undefined,
-          checkedList : []
+          target : undefined
         })
+      }, 300);
+        this.props.onAnswerSelected(this.state.target, this.state.checkedList);
+        } else {
+          this.setState({
+            error:true,
+            target : undefined
+          })
+        }
         }}>
-          <ChevronRight />
+          <ChevronRight/>
       </button>
       </>
         )} else {
