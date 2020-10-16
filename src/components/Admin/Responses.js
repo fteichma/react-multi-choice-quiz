@@ -140,7 +140,7 @@ class ResponsesBase extends React.Component{
     <TablePagination
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
-        count={answers?.length}
+        count={answers.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onChangePage={this.handleChangePage}

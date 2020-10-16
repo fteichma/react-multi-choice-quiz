@@ -28,6 +28,7 @@ body {
   position: absolute;
   top: 30px;
   left: 30px;
+  z-index: 9;
 }
 
 h1 {
@@ -169,7 +170,7 @@ a {
 /* Question Component */
 .question {
   margin: 0;
-  padding: 1.5rem 0 1.5rem;
+  padding: 1.5rem 0 1rem;
   text-align: center;
   line-height: 1.5;
   color: #000000bb;
@@ -392,6 +393,38 @@ body {
   font-size: 11px;
   line-height: 1;
   cursor: pointer;
+}
+
+.color-select {
+  border:3px solid rgb(255, 255, 255);
+  box-shadow: 0 0px 5px #000000cc;
+  width: 20px;
+  height: 20px;
+  border-radius: 50px;
+}
+
+.color-picker {
+  position: absolute;
+  left:0;
+  right: 0;
+}
+
+.question-description {
+  text-align: center;
+  margin: 0 auto 1.5em;
+  width: 80%;
+  line-height: 1.5;
+}
+
+.categories-settings {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.categories-settings>span {
+  margin-right: 1em;
+  font-size: 14px;
 }
 
 /* .bodySelect input {

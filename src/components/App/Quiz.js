@@ -45,14 +45,20 @@ class Quiz extends React.Component {
       className="btn-nav btn-prev">
         <ChevronLeft/>
       </button>)}
-    <div className="container">
+    <div className="container" style={{backgroundColor: this.props.bgColor}}>
       <div key={this.props.questionId} className="questionContainer animate__animated animate__fadeInRight">
       {this.props.mainImage && (
         <div style={{margin:"auto",display:"flex",justifyContent:"center",alignItems:"center"}}>
         <img width='65' src={this.props.mainImage} alt=""/>
         </div>
       )}
-      <h2 className="question">{this.props.question}</h2>
+      <h2 className="question" style={{
+        color : this.props?.textColor?.title
+      }}>{this.props.question}</h2>
+      {this.props.description &&
+      (<p className="question-description" style={{
+        color : this.props?.textColor?.p
+      }}>{this.props.description}</p>)}
         <ul className="answerOptions">
             {this.props?.answerOptions.map((el, key, array) => { 
               if(this.props.type === "text" || this.props.type === "email" || this.props.type === "number") {

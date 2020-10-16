@@ -31,7 +31,8 @@ const NEW_QUESTION = {
     }
   },
   mainImage: "",
-  question: ""
+  question: "",
+  description: ""
 };
 
 const QuestionsPage = () => (
@@ -125,6 +126,7 @@ class QuestionsBase extends Component {
         this.onDragEnd = this.onDragEnd.bind(this);
         this.handleChangeNewQuestionAnswers.bind(this);
         this.handleChangeName.bind(this);
+        this.handleChangeDescription.bind(this);
     }
 
     componentDidMount() {
@@ -143,6 +145,15 @@ class QuestionsBase extends Component {
         newQuestion : {
           ...state.newQuestion,
         question : value,
+      },
+      }));
+    }
+    handleChangeDescription = (e) => {
+      let value = e.target.value;
+      this.setState((state) => ({
+        newQuestion : {
+          ...state.newQuestion,
+        description : value,
       },
       }));
     }
@@ -470,12 +481,20 @@ class QuestionsBase extends Component {
          <DeleteIcon color={red[500]} fontSize="small" disabled={dragged}/>
       </IconButton>)
       }
-      </div>
-      {item.mainImage &&
+            {item.mainImage &&
       (<div>
         <img width="50" src={item.mainImage} />
       </div>)
     }
+      </div>
+      <div style={{marginBottom:"1.5em"}}>
+      <p><b>Description</b></p> 
+      {item.description ? (
+      <p>{item.description}</p>
+      ) : (
+        <p>Aucune description</p>
+      )}
+      </div>
       
                                 
                                   <Table size="small" aria-label="purchases">
@@ -586,6 +605,14 @@ class QuestionsBase extends Component {
             onChange={(e) => this.handleChangeName(e)}
             value={this.state.newQuestion?.question || ''}
             label="Question"
+            type="text"
+            fullWidth
+          />
+          <TextField
+            margin="dense"
+            onChange={(e) => this.handleChangeDescription(e)}
+            value={this.state.newQuestion?.description || ''}
+            label="Description"
             type="text"
             fullWidth
           />
@@ -700,7 +727,7 @@ class QuestionsBase extends Component {
             Annuler
           </Button>
           <Button 
-          disabled={!this.state.newQuestion.answers[0]?.content}
+          disabled={!this.state.newQuestion.answers[0]?.content || !this.state.newQuestion.question}
           onClick={() => 
           this.addNewQuestion()
           } color="primary" variant="contained">

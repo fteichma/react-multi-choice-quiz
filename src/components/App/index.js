@@ -25,6 +25,7 @@ class App extends Component {
       error:false,
       answers: [],
       question: '',
+      description: '',
       questions : {},
       type: '',
       questionId: 1,
@@ -37,12 +38,26 @@ class App extends Component {
 
   componentDidMount() {
     this.getQuestions();
+    this.getCustom();
   }
 
   getQuestions() {
     let url = this.props.location.search;
     let params = queryString.parse(url);
     this.getQuestionsByRef(params?.id);
+}
+
+getCustom() {
+  let db = this.props.firebase.db;
+  let questionsRef = db.ref(`custom`);
+  questionsRef.on('value',(snap)=>{ 
+    let data = snap.val();
+    if(data) {
+      this.setState({
+        custom : data
+      })
+    }
+    });
 }
 
 getQuestionsByRef(id) {
@@ -61,6 +76,7 @@ getQuestionsByRef(id) {
         answerOptions : questions[0]?.answers,
         type: questions[0]?.type,
         notFound : false,
+        description : questions[0]?.description,
       });
       }
       }
@@ -208,20 +224,26 @@ getQuestionsByRef(id) {
   }
 
   render() {
+    const {custom} = this.state;
     return this.state.loading ?
       (<Loading />): 
       (<div className="App">
-        <div className="brand-logo">
-          <a href="https://deleo.fr/">
-            <img width="100%" src="https://firebasestorage.googleapis.com/v0/b/deleo-93c9d.appspot.com/o/logo-deleo.png?alt=media&token=7cc62f10-1778-411a-a550-de91e372faf1" alt="Logo" />
+        <div className="brand-logo" style={{
+          width: custom?.logo?.width
+        }}>
+          <a href={custom?.logo?.link} target="_blank">
+            <img width="100%" src={custom?.logo?.url} alt="Logo" />
           </a>
         </div>
         {!this.state.end ? (
             <Quiz
             answer={this.state.answer}
+            bgColor={this.state.custom?.bgColor}
+            textColor={this.state.custom?.textColor}
             answerOptions={this.state.answerOptions}
             questionId={this.state.questionId}
             question={this.state.question}
+            description={this.state.description}
             type={this.state.type}
             questionTotal={this.state.questions.length}
             mainImage={this.state.mainImage}

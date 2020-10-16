@@ -15,6 +15,7 @@ import Questions from './Questions';
 import Responses from './Responses';
 import Dashboard from './Dashboard';
 import Loading from '../Loading';
+import Custom from './Custom';
 
 import { withFirebase } from '../Firebase';
 import { AuthUserContext, withAuthorization } from '../Session';
@@ -219,7 +220,7 @@ componentWillUnmount() {
       {loading ? <Loading /> : <Questions questions={this.state.questions}/>}
       </TabPanel>
       <TabPanel value={this.state.value} index={3}>
-      <h1>Personnalisation</h1>
+      {loading ? <Loading /> : <Custom />}
       </TabPanel>
       <TabPanel value={this.state.value} index={4}>
         <h1>Mon compte</h1>
