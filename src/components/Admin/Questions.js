@@ -1,7 +1,7 @@
 
 import React, { Component } from "react"
 import { makeStyles, withStyles, createMuiTheme } from '@material-ui/core/styles'
-import { TableContainer, Table, TableBody, TableCell, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Button, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from '@material-ui/core'
+import { TableContainer, Table, TableBody, TableCell, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Button, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Select as SelectMUI, MenuItem, InputLabel} from '@material-ui/core'
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp'
@@ -21,6 +21,18 @@ import { compose } from 'recompose';
 
 import Loading from '../Loading';
 import SelectStyle from '../select';
+import { Visibility } from "@material-ui/icons"
+
+const NEW_QUESTION = {
+  type : "",
+  answers : {
+    0 : {
+      content : ""
+    }
+  },
+  mainImage: "",
+  question: ""
+};
 
 const QuestionsPage = () => (
     <div>
@@ -50,6 +62,11 @@ const getItemStyle = (isDragging, draggableStyle) => ({
 const styles = (theme) => ({
     root: {
       width : "100%"
+    },
+    formControl: {
+      marginTop: theme.spacing(1),
+      marginBottom: theme.spacing(1),
+      minWidth: 120,
     },
     tableRow: {
       '& > *': {
@@ -99,44 +116,80 @@ class QuestionsBase extends Component {
             openDeleteDialog: false,
             deleteIndex: null,
             idList : undefined,
-            id : undefined,
+            id : localStorage.getItem('id') ? localStorage.getItem('id') : undefined,
             openNewQuestionDialog : false,
+            newQuestion : NEW_QUESTION,
+            items : {},
+            questions: {}
         }
         this.onDragEnd = this.onDragEnd.bind(this);
+        this.handleChangeNewQuestionAnswers.bind(this);
+        this.handleChangeName.bind(this);
     }
 
     componentDidMount() {
         this.getQuestions();
+    }
+    
+    resetNewQuestion = () => {
+      this.setState({
+        newQuestion : NEW_QUESTION,
+      })
+    }
+
+    handleChangeName = (e) => {
+      let value = e.target.value;
+      this.setState((state) => ({
+        newQuestion : {
+          ...state.newQuestion,
+        question : value,
+      },
+      }));
+    }
+
+    handleChangeNewQuestionAnswers = (e, id) => {
+      const {answers} = this.state.newQuestion;
+      let value = e?.target?.value;
+      let cp = answers;
+      cp[id] = {content : value};
+      this.setState((state, props) => ({
+        newQuestion : {
+          ...state.newQuestion,
+        answers : cp,
+      },
+      }));
+    }
+
+    addNewQuestionAnswers = () => {
+      const {answers} = this.state.newQuestion;
+      let cp = answers;
+      let length = Object.keys(answers).length;
+      cp[length] = {content : ""};
+      this.setState((state, props) => ({
+        newQuestion : {
+          ...state.newQuestion,
+        answers : cp
+      },
+      }));
+    }
+
+    addNewQuestion = () => {
+      const {id, items, newQuestion} = this.state;
+      let length = 0;
+      if(items) length = Object.keys(items).length;
+      let db = this.props.firebase.db;
+      let mainImage = db.ref(`questions/${id}/questions/${length}`);
+      mainImage.set(newQuestion);
+      this.setState({
+        openNewQuestionDialog:false,
+      })
+      this.resetNewQuestion();
     }
 
     setOpen = (key) => {
         this.setState({
             open : {...this.state.open, [key] : this.state.open[key]? false : true}
         })
-    }
-
-    handleUpload = (e, index, where) => {
-      const {storage} = this.props.firebase;
-      console.log("ok");
-      let image = e?.target?.files[0];
-      if(image) {
-        const uploadTask = storage.ref(`images/${image.name}`).put(image);
-        uploadTask.on("state_changed", 
-        snapshot => {
-
-        },
-        error => {
-          console.log(error);
-        },
-        () => {
-          storage.ref("images")
-          .child(image.name)
-          .getDownloadURL()
-          .then(url => {
-            console.log(url);
-          })
-        })
-      }
     }
 
     handleUploadMain = (e, index) => {
@@ -163,8 +216,6 @@ class QuestionsBase extends Component {
     }
 
     setUploadMain = (url, index) => {
-      console.log(url);
-      console.log(index);
       const {id} = this.state;
       let db = this.props.firebase.db;
       let mainImage = db.ref(`questions/${id}/questions/${index}/mainImage`);
@@ -232,6 +283,12 @@ class QuestionsBase extends Component {
           createdAt: firebase.database.ServerValue.TIMESTAMP,
           id : newKey
         });
+        setTimeout(() => { 
+          this.setState({
+            id: newKey
+          });
+          this.getQuestionsByRef(newKey);}, 1000);
+
       }
       newQuestion = () => {
         /* let db = this.props.firebase.db;
@@ -255,7 +312,7 @@ class QuestionsBase extends Component {
           let data = snap.val();
           let questions = Object.keys(data).map(i => data[i]);
           let idList =  Object.keys(questions).map(i => {return{value : questions[i].id, label: questions[i].id}});
-          let id =  questions[0].id
+          let id = localStorage.getItem("id") ? localStorage.getItem("id") : questions[0].id;
           this.setState({
             idList,
             id
@@ -289,8 +346,7 @@ class QuestionsBase extends Component {
                 alignItems:"center",
                 justifyContent:""
             }}>
-            <h1>Questionnaires</h1>
-      <span style={{
+      {/* <span style={{
         margin: "0 1em"
       }}><Select
 						blurInputOnSelect={false}
@@ -304,11 +360,40 @@ class QuestionsBase extends Component {
               this.setState({
                 id: e.value
               })
+              localStorage.setItem('id',e.value);
             }}
             options={idList}
             value={{value:id,label:id}}
 						placeholder={'Identifiant'}
-					/></span>
+					/></span> */}
+          <FormControl required className={classes.formControl}>
+        <SelectMUI
+          id="demo-simple-select"
+          value={id}
+          onChange={(e) => {
+            this.getQuestionsByRef(e.target.value);
+            this.setState({
+              id: e.target.value
+            })
+            localStorage.setItem('id',e.target.value);
+          }}>
+            {idList.map((el, id) => (
+            <MenuItem value={el.value}>{`Questionnaire nº${id+1}`}</MenuItem>
+            ))}
+        </SelectMUI>
+      </FormControl>
+      <Button         
+      className={classes.button}
+      variant="contained"
+      target="_blank" 
+      href={`${window.location.origin}/?id=${id}`}
+      size="small" 
+      disableElevation 
+      color="secondary" 
+      startIcon={<Visibility/>}
+      >
+      Visualiser
+    </Button>
     <Button         
       className={classes.button}
       variant="contained" 
@@ -327,7 +412,7 @@ class QuestionsBase extends Component {
         className={classes.button}
         startIcon={<SaveIcon/>}
         disabled={!dragged}
-        onClick={this.onSave}
+        onClick={() => this.onSave()}
       >
         Sauvegarder
       </SaveButton>}
@@ -397,26 +482,22 @@ class QuestionsBase extends Component {
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell>Numéro</TableCell>
-                                                <TableCell>Type</TableCell>
                                                 <TableCell>Nom/Contenu</TableCell>
                                                 <TableCell>Image</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                  {item.answers.map((el, key) => {
+                                  {item.answers.map((el, key, array) => {
                                       return(
                                         <TableRow key={key+"_answers"}>
                                           <TableCell scope="row">
                                               {`${key+1}`}
                                           </TableCell>
                                           <TableCell>
-                                              {el.type}
-                                          </TableCell>
-                                          <TableCell>
                                               {el.content}
                                           </TableCell>
                                           <TableCell>
-                                          {el.type === "radio" && !el.image ? (
+                                          {array.type === "radio" && !el.image ? (
                                           <IconButton color="primary" disabled={dragged} aria-label="upload picture" component="label">
                                             <PhotoCamera />
                                             <input accept="image/*" className={classes.input} id="icon-button-file" type="file" />
@@ -498,29 +579,131 @@ class QuestionsBase extends Component {
       }} aria-labelledby="form-dialog-title">
         <DialogTitle id="form-dialog-title">Ajouter une question</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Ajouter une question au questionnaire
-          </DialogContentText>
           <TextField
             autoFocus
+            required
             margin="dense"
-            label="Question (ex. : Quel est votre prénom ?)"
+            onChange={(e) => this.handleChangeName(e)}
+            value={this.state.newQuestion?.question || ''}
+            label="Question"
             type="text"
             fullWidth
           />
+          <FormControl required className={classes.formControl}>
+        <InputLabel id="simple-select-label">Type</InputLabel>
+        <SelectMUI
+          labelId="simple-select-label"
+          id="simple-select"
+          value={this.state.newQuestion?.type || ''}
+          onChange={(e) => {
+            this.setState((state, props) => ({
+              newQuestion : {
+                ...state.newQuestion,
+              type : e.target.value,
+              answers: {
+                0 : {
+                  content : ""
+                }
+              },
+            },
+            }));
+          }}>
+          <MenuItem value={'text'}>Entrée</MenuItem>
+          <MenuItem value={'number'}>Nombre</MenuItem>
+          <MenuItem value={'email'}>Email</MenuItem>
+          <MenuItem value={'radio'}>Sélection</MenuItem>
+          <MenuItem value={'checkbox'}>Multi-sélection</MenuItem>
+        </SelectMUI>
+      </FormControl>
+      {this.state.newQuestion?.type === "number" && (
+        <TextField
+        required
+        margin="dense"
+        label="Ex. : âge"
+        type="text"
+        onChange={(e) => this.handleChangeNewQuestionAnswers(e, 0)}
+        value={
+          this.state.newQuestion.answers[0]?.content || ''
+        }
+        fullWidth />
+      )}
+      {this.state.newQuestion?.type === "text" && (
+        <TextField
+        required
+        margin="dense"
+        label="Ex. : Prénom"
+        type="text"
+        onChange={(e) => this.handleChangeNewQuestionAnswers(e, 0)}
+        value={
+          this.state.newQuestion.answers[0]?.content || ''
+        }
+        fullWidth />
+      )}
+      {this.state.newQuestion?.type === "email" && (
+        <TextField
+          required
+          margin="dense"
+          label="Ex. : Email"
+          type="text"
+          onChange={(e) => this.handleChangeNewQuestionAnswers(e, 0)}
+          value={
+            this.state.newQuestion.answers[0]?.content || ''
+          }
+          fullWidth />
+      )}
+      {this.state.newQuestion?.type === "checkbox" && (
+        <>
+        {Object.keys(this.state.newQuestion.answers).map((el,id) =>
+          (<TextField
+          required
+          margin="dense"
+          label={`Option n°${id+1}`}
+          value={
+            this.state.newQuestion.answers[`${id}`]?.content || ''
+          }
+          onChange={(e) => this.handleChangeNewQuestionAnswers(e, id)}
+          type="text"
+          fullWidth />)
+        )}
+          <Button onClick={() => this.addNewQuestionAnswers()} color="primary" variant="contained" size="small">
+            Ajouter un champ
+          </Button>
+        </>
+      )}
+      {this.state.newQuestion?.type === "radio" && (
+                <>
+                {Object.keys(this.state.newQuestion.answers).map((el,id) =>
+                  (<TextField
+                  required
+                  margin="dense"
+                  label={`Option n°${id+1}`}
+                  value={
+                    this.state.newQuestion.answers[`${id}`]?.content || ''
+                  }
+                  onChange={(e) => this.handleChangeNewQuestionAnswers(e, id)}
+                  type="text"
+                  fullWidth />)
+                )}
+                  <Button onClick={() => this.addNewQuestionAnswers()} color="primary" variant="contained" size="small">
+                    Ajouter un champ
+                  </Button>
+                </>
+      )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => {
             this.setState({
               openNewQuestionDialog: false,
-            })
+            });
+            this.resetNewQuestion();
           }} color="primary">
             Annuler
           </Button>
-          <Button onClick={() => 
-          this.setState({
-            openNewQuestionDialog:false,
-          })} color="primary" variant="contained">
+          <Button 
+          disabled={!this.state.newQuestion.answers[0]?.content}
+          onClick={() => 
+          this.addNewQuestion()
+          } color="primary" variant="contained">
             Ajouter
           </Button>
         </DialogActions>

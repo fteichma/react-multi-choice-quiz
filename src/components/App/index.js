@@ -26,6 +26,7 @@ class App extends Component {
       answers: [],
       question: '',
       questions : {},
+      type: '',
       questionId: 1,
       notFound : true,
       mainImage : undefined
@@ -41,7 +42,6 @@ class App extends Component {
   getQuestions() {
     let url = this.props.location.search;
     let params = queryString.parse(url);
-    console.log(params?.id);
     this.getQuestionsByRef(params?.id);
 }
 
@@ -52,14 +52,17 @@ getQuestionsByRef(id) {
       let data = snap.val();
       if(data) {
         let questions = data?.questions;
+        if(questions) {
       this.setState({
         loading : false,
         questions,
         mainImage : questions[0]?.mainImage,
         question : questions[0]?.question,
         answerOptions : questions[0]?.answers,
+        type: questions[0]?.type,
         notFound : false,
-      })
+      });
+      }
       }
       else {
         this.setState({
@@ -68,23 +71,6 @@ getQuestionsByRef(id) {
       }
     });
 }
-   /* async getQuestions(index) {
-    await db.collection("questions").get().then((querySnapshot) => {
-      let data = querySnapshot.docs.map(doc => doc.data());
-      console.log("Document keys:", Object.keys(data));
-        Object.keys(data).forEach((name) => {
-          console.log(name, data[name]);
-        });
-      let questions = data[index];
-      this.setState({
-        questions : Object.keys(questions).map(i => questions[i]),
-        question: questions[index].question,
-        answerOptions: questions[0].answers,
-        loading: false,
-      })
-      console.log(this.state.questions)
-    });
-  } */
   sendEmail = (email, name, message, html, name_sender) => {
     axios({
       method: "post",
@@ -100,7 +86,7 @@ getQuestionsByRef(id) {
     })
       .then(result => {
         if (result.data.sent) {
-          console.log("ok");
+          console.log("send");
         } else {
           console.log(result.data)
         }
@@ -138,8 +124,9 @@ getQuestionsByRef(id) {
       createdAt: firebase.database.ServerValue.TIMESTAMP,
     });
     let email = Object.keys(answers).filter((el, key) => {
-      return answers[el]?.type === "email"
+      return answers[key].type === "email"
     });
+    console.log(email);
     let listAnswers = "<table>" +
     "<thead>" +
     "<tr>" +
@@ -156,7 +143,7 @@ getQuestionsByRef(id) {
     }).join('');
     listAnswers += "</tbody>" +
     "</table>";
-    this.sendEmail(answers[email]?.value, "DELEO - Quiz complété avec succès !", JSON.stringify(answers), listAnswers.toString(), "Manon");
+    this.sendEmail(answers[email.toString()]?.value, "DELEO - Quiz complété avec succès !", JSON.stringify(answers), listAnswers.toString(), "Manon");
   }
 
   handleKeyPressed(event) {
@@ -174,11 +161,9 @@ getQuestionsByRef(id) {
       },
       answer: target,
       answers : [...state.answers, 
-        {question : state.question, value : checkedList?.length ? JSON.stringify(checkedList) : target.value, type : target.type, name: target.name}
+        {question : state.question, value : checkedList?.length ? JSON.stringify(checkedList) : target.value, type: target.type, name: target.name}
       ],
-    }), () => {
-      console.log(this.state.answers)
-    });
+    }));
   }
 
   setBackQuestion = () => {
@@ -194,6 +179,7 @@ getQuestionsByRef(id) {
       question: questions[counter].question,
       answerOptions: questions[counter].answers,
       mainImage : questions[counter].mainImage,
+      type: questions[counter].type,
       answers,
       answer: '',
       error: false,
@@ -214,6 +200,7 @@ getQuestionsByRef(id) {
       counter: counter,
       questionId: questionId,
       question: questions[counter].question,
+      type: questions[counter].type,
       answerOptions: questions[counter].answers,
       mainImage : questions[counter].mainImage,
       answer: ''
@@ -235,6 +222,7 @@ getQuestionsByRef(id) {
             answerOptions={this.state.answerOptions}
             questionId={this.state.questionId}
             question={this.state.question}
+            type={this.state.type}
             questionTotal={this.state.questions.length}
             mainImage={this.state.mainImage}
             onAnswerSelected={this.handleAnswerSelected}

@@ -54,13 +54,13 @@ class Quiz extends React.Component {
       )}
       <h2 className="question">{this.props.question}</h2>
         <ul className="answerOptions">
-            {this.props.answerOptions?.map((el, key, array) => { 
-              if(array[key].type === "text" || array[key].type === "email" || array[key].type === "number") {
+            {this.props?.answerOptions.map((el, key, array) => { 
+              if(this.props.type === "text" || this.props.type === "email" || this.props.type === "number") {
                   return (
-                    <li className="answerOption">
+                    <li className="answerOption" key={`answerOption${key}`}>
                       <input
                       className={this.props.error ? `animate__animated animate__shakeX` : ``} 
-                      type={array[key].type} 
+                      type={this.props.type} 
                       placeholder={array[key].content} 
                       onKeyPress={(e) => {
                         let keyCode = e.keyCode || e.charCode;
@@ -75,18 +75,18 @@ class Quiz extends React.Component {
                         this.setState({
                           target : e.target
                       })}}
-                      value={this.state.target?.value}
+                      value={this.state.target?.value || ''}
                       autoFocus
                       />
                     </li>
                   ) }
-                   else if(array[key].type === "radio") {
+                   else if(this.props.type === "radio") {
             return (
-              <li className="answerOption radioOption">
+              <li className="answerOption radioOption" key={`radioOption${key}`}>
                 <input
-                  type={array[key].type}
+                  type={this.props.type}
                   className="radioCustomButton"
-                  name="radioGroup"
+                  name={array[key].content}
                   checked={array[key].content === array[key].answer}
                   id={array[key].content}
                   value={array[key].content}
@@ -106,10 +106,10 @@ class Quiz extends React.Component {
                 </label>
               </li>
             )}
-            else if (array[key].type === "checkbox") {
+            else if (this.props.type === "checkbox") {
               return (
-                    <li key={key} className="answerOption checkboxOption">
-                      <input type={array[key].type} id={array[key].content} name="select" value={array[key].content}
+                    <li className="answerOption checkboxOption" key={`checkboxOption${key}`}>
+                      <input type={this.props.type} id={array[key].content} name="select" value={array[key].content}
                                         onChange={(e) => this.onMultiCheck(e)} 
                                           />
                       <label htmlFor="select">{array[key].content}</label>
@@ -118,12 +118,12 @@ class Quiz extends React.Component {
             }
             })}
             {/* BODY */}
-            {(this.props?.answerOptions[(this.props?.questionId-1)]?.type === "body") &&
+            {(this.props?.type === "body") &&
             (
               <ul className="answerOptions">
                 <div className="body" id="bodyBack">
                 {this.props.answerOptions.map((el,key,array) => 
-              (key < 6) && (<li key={key} className="bodySelect" id={el.content.replace(/\s/g, '').replace(/'/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}>
+              (key < 6) && (<li key={`bodySelect${key}`} className="bodySelect" id={el.content.replace(/\s/g, '').replace(/'/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}>
                   <input type="checkbox" name="bodySelect" value={el.content} onChange={(e) => this.onMultiCheck(e)} id={`body${key}`}/>
                   <label htmlFor={`body${key}`}>{el.content}</label>
                 </li>))}
@@ -131,7 +131,7 @@ class Quiz extends React.Component {
                 </div>
                 <div className="body" id="bodyFront">
               {this.props.answerOptions.map((el,key,array) => 
-              (key >= 6) && (<li key={key} className="bodySelect" id={el.content.replace(/\s/g, '').replace(/'/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}>
+              (key >= 6) && (<li key={`bodySelect${key}`} className="bodySelect" id={el.content.replace(/\s/g, '').replace(/'/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}>
                   <input type="checkbox" name="bodySelect" value={el.content} onChange={(e) => this.onMultiCheck(e)} id={`body${key}`}/>
                   <label htmlFor={`body${key}`}>{el.content}</label>
                 </li>))}
