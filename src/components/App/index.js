@@ -56,7 +56,7 @@ getCustom() {
       this.setState({
         custom : data
       })
-      document.getElementsByTagName("body")[0].style = `--primary:${data?.primary};--secondary:${data?.secondary}`;
+      document.getElementsByTagName("body")[0].style = `--select-primary:${data?.select?.primary};--select-secondary:${data?.select?.secondary};`;
     }
     });
 }
@@ -194,6 +194,7 @@ getQuestionsByRef(id) {
       counter: counter,
       questionId: questionId,
       question: questions[counter].question,
+      description: questions[counter].description,
       answerOptions: questions[counter].answers,
       mainImage : questions[counter].mainImage,
       type: questions[counter].type,
@@ -217,6 +218,7 @@ getQuestionsByRef(id) {
       counter: counter,
       questionId: questionId,
       question: questions[counter].question,
+      description: questions[counter].description,
       type: questions[counter].type,
       answerOptions: questions[counter].answers,
       mainImage : questions[counter].mainImage,

@@ -1,13 +1,14 @@
 
 import React, { Component } from "react"
 import { makeStyles, withStyles, createMuiTheme } from '@material-ui/core/styles'
-import { TableContainer, Table, TableBody, TableCell, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Button, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Select as SelectMUI, MenuItem, InputLabel} from '@material-ui/core'
+import { TableContainer, Table, TableBody, TableCell, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Button, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Select as SelectMUI, Menu, MenuItem, InputLabel, Popover} from '@material-ui/core'
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp'
 import PhotoCamera from '@material-ui/icons/PhotoCamera';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import SaveIcon from '@material-ui/icons/Save';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/Add';
 import red from '@material-ui/core/colors/red';
@@ -80,12 +81,12 @@ const styles = (theme) => ({
     input: {
         display: 'none',
       },
-      container: {
-        maxHeight: "90vh",
-      },
       button: {
         margin: theme.spacing(1),
         textTransform:"none"
+      },
+      padding: {
+        padding: theme.spacing(2),
       },
   });
 
@@ -121,7 +122,8 @@ class QuestionsBase extends Component {
             openNewQuestionDialog : false,
             newQuestion : NEW_QUESTION,
             items : {},
-            questions: {}
+            questions: {},
+            anchorMore: undefined
         }
         this.onDragEnd = this.onDragEnd.bind(this);
         this.handleChangeNewQuestionAnswers.bind(this);
@@ -233,6 +235,13 @@ class QuestionsBase extends Component {
       mainImage.set(url);
     }
 
+    setUploadAnswer = (url, index, key) => {
+      const {id} = this.state;
+      let db = this.props.firebase.db;
+      let image = db.ref(`questions/${id}/questions/${index}/answers/${key}/image`);
+      image.set(url);
+    }
+
     onDragEnd(result) { 
         // dropped outside the list
         if (!result.destination) {
@@ -282,6 +291,33 @@ class QuestionsBase extends Component {
       this.setState({
         dragged:false
       })
+    }
+
+    onDelete = () => {
+      let db = this.props.firebase.db;
+      const {id} = this.state;
+      if(id){
+        let questionsRef = db.ref(`questions/${id}`);
+        questionsRef.remove();
+      }
+    }
+
+    onDuplicate = () => {
+      const {items} = this.state;
+      let db = this.props.firebase.db;
+      let questionsRef = db.ref("questions");
+      let newQuestionsRef = questionsRef.push();
+      let newKey = newQuestionsRef.key;
+      newQuestionsRef.set({
+        questions: items,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        id : newKey
+      });
+      setTimeout(() => { 
+        this.setState({
+          id: newKey
+        });
+        this.getQuestionsByRef(newKey);}, 1000);
     }
 
     newQuestions = () => {
@@ -348,7 +384,7 @@ class QuestionsBase extends Component {
 
     render() {
         const {classes} = this.props;
-        const {dragged, items, loading, open, openDeleteDialog, openNewQuestionDialog, deleteIndex, idList, id} = this.state;
+        const {dragged, items, loading, open, openDeleteDialog, openNewQuestionDialog, deleteIndex, anchorMore, idList, id} = this.state;
         return loading ? ( <Loading /> ) : ( 
             <>
             <div style={{
@@ -393,6 +429,41 @@ class QuestionsBase extends Component {
             ))}
         </SelectMUI>
       </FormControl>
+      <IconButton aria-controls="simple-menu" aria-haspopup="true" onClick={(e) => 
+      {
+        let currentTarget = e.currentTarget;
+        this.setState({
+        anchorMore : currentTarget
+      })
+    }
+    }>
+                                        <MoreVertIcon fontSize="small" />
+                                    </IconButton>
+<Menu
+  id="simple-menu"
+  anchorEl={anchorMore}
+  open={anchorMore}
+  keepMounted
+  anchorOrigin={{
+    vertical: 'bottom',
+    horizontal: 'right',
+  }}
+  transformOrigin={{
+    vertical: 'top',
+    horizontal: 'right',
+  }}
+  onClose={() => {
+    this.setState({
+      anchorMore: undefined,
+    })}}
+>
+  <MenuItem onClick={() => {
+   this.onDuplicate();
+  }}>Dupliquer</MenuItem>
+  <MenuItem onClick={() => {
+    this.onDelete();
+  }}>Supprimer</MenuItem>
+</Menu>
       <Button         
       className={classes.button}
       variant="contained"
@@ -478,7 +549,7 @@ class QuestionsBase extends Component {
       </Button>
       {item.mainImage && 
       (<IconButton disabled={dragged} variant="contained" onClick={() => this.setUploadMain("",index)}aria-label="delete" className={classes.deleteBtn}>
-         <DeleteIcon color={red[500]} fontSize="small" disabled={dragged}/>
+         <DeleteIcon fontSize="small" disabled={dragged}/>
       </IconButton>)
       }
             {item.mainImage &&
@@ -502,7 +573,7 @@ class QuestionsBase extends Component {
                                             <TableRow>
                                                 <TableCell>Numéro</TableCell>
                                                 <TableCell>Nom/Contenu</TableCell>
-                                                <TableCell>Image</TableCell>
+                                                {(item.type === "radio" || item.type==="checkbox") && (<TableCell>Image</TableCell>)}
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -516,20 +587,19 @@ class QuestionsBase extends Component {
                                               {el.content}
                                           </TableCell>
                                           <TableCell>
-                                          {array.type === "radio" && !el.image ? (
+                                          {(item.type === "radio" || item.type==="checkbox") && !el.image ? (
                                           <IconButton color="primary" disabled={dragged} aria-label="upload picture" component="label">
                                             <PhotoCamera />
                                             <input accept="image/*" className={classes.input} id="icon-button-file" type="file" />
                                           </IconButton>
-                                    ) : el.image ?
+                                    ) : el.image &&
                                     ( 
                                         <>
-                                        <img src={el.image} style={{maxWidth:80}}/>
+                                          <img src={el.image} style={{maxWidth:80}}/>
+                                          <IconButton disabled={dragged} variant="contained" onClick={() => this.setUploadAnswer("",index, key)} aria-label="delete" className={classes.deleteBtn}>
+                                            <DeleteIcon fontSize="small" disabled={dragged}/>
+                                          </IconButton>
                                         </>
-                                    )
-                                    :
-                                    (
-                                        "/"
                                     )}
                                           </TableCell>
                                         </TableRow>

@@ -148,7 +148,6 @@ a {
   width: fit-content;
   border-radius: 30px;
   padding: 12px;
-  background-color:var(--primary);
   opacity: 0.9;
   box-shadow: 0 4px 8px #00000010;
 }
@@ -158,17 +157,14 @@ a {
   min-block-size: 10px;
   margin: 0 10px;
   border-radius: 30px;
-  background-color:var(--secondary);
   opacity: 0.3;
 }
 
 .questionDot.active {
-  background-color:var(--secondary);
   opacity: 0.65;
 }
 
 .questionDot.current {
-  background-color:var(--secondary);
   opacity: 0.9;
 }
 
@@ -194,14 +190,16 @@ a {
   border:none;
   height: 45px;
   border-radius: 30px;
+  padding:0 1em;
+  width: 200px;
   text-align: center;
   font-size: 17px;
   box-shadow: 0 4px 8px #00000010;
-  margin: 10px;
+  margin: 1em 0;
   border-radius: 30px;
 }
 
-.radioOption {
+.radioOption, .multiOption {
   border:none;
   box-shadow: 0 4px 8px #00000010;
   background-color: white;
@@ -211,7 +209,7 @@ a {
   position: relative;
 }
 
-.radioOption::before {
+.radioOption::after, .radioOption::before {
   content: "";
   width: 100%;
   height: 100%;
@@ -219,26 +217,20 @@ a {
   top: 0;
   left: 0;
   border-radius: 15px;
+  opacity: 0;
   transition: all ease-in 0.1s;
   box-sizing: border-box;
   pointer-events: none;
-  background: var(--primary);
-  opacity: 0;
+}
+
+.radioOption::before { 
+  background: #00000090;
+  background: var(--select-primary);
 }
 
 .radioOption::after {
-  content: "";
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 15px;
-  border: 3px solid var(--primary);
-  opacity: 0;
-  transition: all ease-in 0.1s;
-  box-sizing: border-box;
-  pointer-events: none;
+  border: 3px solid #00000090;
+  border: 3px solid var(--select-primary);
 }
 
 .radioOption:hover:after {
@@ -246,8 +238,9 @@ a {
 }
 
 .radioOption:hover:before {
-  opacity: 0.07;
+  opacity: 0.09;
 }
+
 
 
 .answerOptions input[type=text]:focus,
@@ -265,14 +258,76 @@ a {
   height: 100%;
 }
 
+.multiOption input[type=checkbox] {
+  transition: all 0.1s linear;
+}
+
+.multiOption input[type=checkbox]:checked::after, .multiOption:hover input[type=checkbox]::after {
+  opacity: 1;
+}
+
+.multiOption input[type=checkbox]:checked::before, .multiOption:hover input[type=checkbox]::before {
+  opacity: 0.09;
+}
+
+.multiOption input[type=checkbox]::after, .multiOption input[type=checkbox]::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 15px;
+  opacity: 0;
+  transition: all linear 0.1s;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.multiOption input[type=checkbox]::before {
+  background : #00000090;
+  background: var(--select-primary);
+}
+
+
+.multiOption input[type=checkbox]::after {
+  border : 3px solid #00000090;
+  border: 3px solid var(--select-primary);
+}
+
+
+.multiOption input[type=checkbox]:checked::after {
+  border: 3px solid #2ef391;
+  border: 3px solid var(--select-secondary);
+}
+
+.multiOptioninput[type=checkbox]:checked::before {
+  background: #2ef39125;
+  background: var(--select-secondary);
+}
+
+.multiOption input[type=checkbox] {
+  margin:0;
+  padding:0;
+  width: 0;
+  height: 0;
+}
+
+.multiOption label {
+  cursor: pointer;
+}
+
 .radioCustomButton,
-.radioCustomLabel {
+.radioCustomLabel,
+.multiCustomButton,
+.multiCustomLabel {
   display: inline-block;
   vertical-align: middle;
   cursor: pointer;
 }
 
-.radioCustomLabel {
+.radioCustomLabel,
+.multiCustomLabel {
   position: relative;
   width: 100%;
   margin: 0;
@@ -282,6 +337,10 @@ a {
   font-size: 14px;
   line-height: 1.5;
   pointer-events: none;
+}
+
+.multiCustomLabel {
+  pointer-events: all;
 }
 
 /* Animation */
@@ -335,7 +394,6 @@ body {
   }
   .questionCount {
     bottom: 30px;
-    background:white;
     box-shadow: 0 4px 8px #00000010;
   }
   .questionContainer {
@@ -364,42 +422,43 @@ body {
 }
 
 .body input[type=checkbox]:checked::before, .bodySelect:hover input[type=checkbox]::before {
-  opacity: 0.07;
+  opacity: 0.09;
+}
+
+.bodySelect input[type=checkbox]::after, .bodySelect input[type=checkbox]::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 15px;
+  opacity: 0;
+  transition: all linear 0.1s;
+  box-sizing: border-box;
+  pointer-events: none;
 }
 
 .bodySelect input[type=checkbox]::before {
-  content: "";
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 15px;
-  background: var(--primary);
-  opacity: 0;
-  transition: all linear 0.1s;
-  box-sizing: border-box;
-  pointer-events: none;
+  background : #00000090;
+  background: var(--select-primary);
 }
 
+
 .bodySelect input[type=checkbox]::after {
-  content: "";
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 15px;
-  border: 2px solid var(--primary);
-  opacity: 0;
-  transition: all linear 0.1s;
-  box-sizing: border-box;
-  pointer-events: none;
+  border : 2px solid #00000090;
+  border: 2px solid var(--select-primary);
 }
+
 
 .body input[type=checkbox]:checked::after {
   border: 2px solid #2ef391;
+  border: 2px solid var(--select-secondary);
+}
+
+.body input[type=checkbox]:checked::before {
   background: #2ef39125;
+  background: var(--select-secondary);
 }
 
 .bodySelect input[type=checkbox] {
@@ -417,6 +476,7 @@ body {
   background: white;
   opacity: 0.85;
   border-radius: 20px;
+  line-height: 1;
   border:none;
   box-shadow: 0 4px 8px #00000010;
   z-index: 9;
@@ -568,7 +628,6 @@ line {
   width: 50px;
   border-radius: 100%;
   box-shadow: 0 4px 8px #00000025;
-  background-color: var(--primary);
   border: none;
   top:0;
   bottom:0;
@@ -582,7 +641,7 @@ line {
 }
 
 .btn-nav:hover {
-  filter : brightness(0.8)
+  filter : brightness(0.95)
 }
 
 .btn-nav-demo {
@@ -597,10 +656,6 @@ line {
 
 .btn-next {
   right: 10px;
-}
-
-.btn-nav svg {
-  color: var(--secondary);
 }
 
 .btn-next svg {

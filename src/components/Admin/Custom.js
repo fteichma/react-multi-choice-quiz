@@ -418,21 +418,20 @@ style={{
             </div>
             <div className="categories-settings">
                 <span>
-                    Couleurs globales
-                    (Ex. : Bouton)
+                    Couleurs des boutons/étapes
                 </span>
                 <button className="btn-nav btn-next btn-nav-demo" 
                 style={{
-                    backgroundColor: custom?.primary
+                    backgroundColor: custom?.btn?.primary
                 }}>
                     <ChevronRight style={{
-                        color:custom?.secondary
+                        color:custom?.btn?.secondary
                     }}/>
                 </button>
                 <table>
                     <thead>
                         <tr>
-                            <td>Primaire</td>
+                            <td>Principale</td>
                             <td>Secondaire</td>
                         </tr>
                     </thead>
@@ -442,7 +441,7 @@ style={{
                 <div style={{position:"relative"}}>
                  <button className="color-select"
                  style={{
-                     backgroundColor :  custom?.primary
+                     backgroundColor :  custom?.btn?.primary
                  }}
                  onClick={() => {
                     const {showPickerBg} = this.state;
@@ -464,7 +463,7 @@ style={{
                             });
                         }}
                       >
-                        <ChromePicker className="color-picker" color={custom?.primary} 
+                        <ChromePicker className="color-picker" color={custom?.btn?.primary} 
                         onChangeComplete={() => {
                             this.setState({
                                 showSave : true,
@@ -474,7 +473,10 @@ style={{
                             this.setState((state)=>({
                                 custom : {
                                     ...state.custom,
-                                    primary: color.hex
+                                    btn : {
+                                        ...state.custom.btn,
+                                        primary: color.hex
+                                    }
                                 }
                             }))
                         }}/>
@@ -487,7 +489,7 @@ style={{
                 <div style={{position:"relative"}}>
                  <button className="color-select"
                  style={{
-                     backgroundColor :  custom?.secondary
+                     backgroundColor :  custom?.btn?.secondary
                  }}
                  onClick={() => {
                     const {showPickerBg} = this.state;
@@ -509,7 +511,7 @@ style={{
                             });
                         }}
                       >
-                        <ChromePicker className="color-picker" color={custom?.secondary} 
+                        <ChromePicker className="color-picker" color={custom?.btn?.secondary} 
                         onChangeComplete={() => {
                             this.setState({
                                 showSave : true,
@@ -519,7 +521,10 @@ style={{
                             this.setState((state)=>({
                                 custom : {
                                     ...state.custom,
-                                    secondary: color.hex
+                                    btn : {
+                                        ...state.custom.btn,
+                                        secondary: color.hex
+                                    }
                                 }
                             }))
                         }}/>
@@ -532,6 +537,128 @@ style={{
             </tbody>
             </table>
             </div>
+            <div className="categories-settings">
+                <span>
+                    Couleur de sélection
+                </span>
+                {/* <button className="btn-nav btn-next btn-nav-demo" 
+                style={{
+                    backgroundColor: custom?.select?.primary
+                }}>
+                    <ChevronRight style={{
+                        color:custom?.select?.secondary
+                    }}/>
+                </button> */}
+                <table>
+                    <thead>
+                        <tr>
+                            <td>Sélection</td>
+                            <td>Sélectionné (Validé)</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+            <td>
+                <div style={{position:"relative"}}>
+                 <button className="color-select"
+                 style={{
+                     backgroundColor :  custom?.select?.primary
+                 }}
+                 onClick={() => {
+                    const {showPickerBg} = this.state;
+                    let cp = showPickerBg;
+                    showPickerBg[5] = true;
+                    this.setState({
+                        showPickerBg: cp,
+                    });
+                 }}/>
+                 {
+                     showPickerBg[5] && (
+                        <OutsideClickHandler
+                        onOutsideClick={() => {
+                            const {showPickerBg} = this.state;
+                            let cp = showPickerBg;
+                            showPickerBg[5] = false;
+                            this.setState({
+                                showPickerBg: cp,
+                            });
+                        }}
+                      >
+                        <ChromePicker className="color-picker" color={custom?.select?.primary} 
+                        onChangeComplete={() => {
+                            this.setState({
+                                showSave : true,
+                            })
+                        }}
+                        onChange={(color) => {
+                            this.setState((state)=>({
+                                custom : {
+                                    ...state.custom,
+                                    select : {
+                                        ...state.custom.select,
+                                        primary : color.hex
+                                    }
+                                }
+                            }))
+                        }}/>
+                        </OutsideClickHandler>
+                     )
+                 }
+                </div>
+            </td>
+            <td>
+                <div style={{position:"relative"}}>
+                 <button className="color-select"
+                 style={{
+                     backgroundColor :  custom?.select?.secondary
+                 }}
+                 onClick={() => {
+                    const {showPickerBg} = this.state;
+                    let cp = showPickerBg;
+                    showPickerBg[6] = true;
+                    this.setState({
+                        showPickerBg: cp,
+                    });
+                 }}/>
+                 {
+                     showPickerBg[6] && (
+                        <OutsideClickHandler
+                        onOutsideClick={() => {
+                            const {showPickerBg} = this.state;
+                            let cp = showPickerBg;
+                            showPickerBg[6] = false;
+                            this.setState({
+                                showPickerBg: cp,
+                            });
+                        }}
+                      >
+                        <ChromePicker className="color-picker" color={custom?.select?.secondary} 
+                        onChangeComplete={() => {
+                            this.setState({
+                                showSave : true,
+                            })
+                        }}
+                        onChange={(color) => {
+                            this.setState((state)=>({
+                                custom : {
+                                    ...state.custom,
+                                    select: {
+                                        ...state.custom.select,
+                                        secondary : color.hex
+                                    }
+                                }
+                            }))
+                        }}/>
+                        </OutsideClickHandler>
+                     )
+                 }
+                </div>
+            </td>
+            </tr>
+            </tbody>
+            </table>
+            </div>
+           
             </>
         )
     }
