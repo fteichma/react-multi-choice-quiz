@@ -38,7 +38,7 @@ class Quiz extends React.Component {
     if(!this.props.notFound){
         return(
         <>
-            {this.props.questionId>1 && 
+            {this.props.questionId>1 ?
       (<button onClick={()=>{
         this.setState({
           checkedList : [],
@@ -58,7 +58,9 @@ class Quiz extends React.Component {
       }}
       >
         <ChevronLeft color={custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"}/>
-      </button>)}
+      </button>) : (
+        <span></span>
+      )}
     <div className="container" style={{backgroundColor: custom?.bgColor ? custom?.bgColor : "#ffffff"}}>
       <div key={this.props.questionId} className={`questionContainer animate__animated ${back ? `animate__fadeInLeft` : `animate__fadeInRight`}`}>
       {this.props.mainImage && (

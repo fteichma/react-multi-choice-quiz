@@ -16,6 +16,7 @@ import Responses from './Responses';
 import Dashboard from './Dashboard';
 import Loading from '../Loading';
 import Custom from './Custom';
+import Emailing from './Emailing';
 
 import { withFirebase } from '../Firebase';
 import { AuthUserContext, withAuthorization } from '../Session';
@@ -207,7 +208,8 @@ componentWillUnmount() {
         <Tab label="Réponses" {...a11yProps(1)} className={classes.tab}/>
         <Tab label="Questions" {...a11yProps(2)} className={classes.tab}/>
         <Tab label="Personnalisation" {...a11yProps(3)} className={classes.tab}/>
-        <Tab label="Mon compte" {...a11yProps(4)} className={classes.tab}/>
+        <Tab label="Emailing" {...a11yProps(4)} className={classes.tab}/>
+        {/* <Tab label="Mon compte" {...a11yProps(4)} className={classes.tab}/> */}
       </Tabs>
       <TabPanel value={this.state.value} index={0}>
         {loading ? <Loading /> : <Dashboard totUsers={this.state.totUsers} totQuest={this.state.totQuest} />}
@@ -223,6 +225,9 @@ componentWillUnmount() {
       {loading ? <Loading /> : <Custom />}
       </TabPanel>
       <TabPanel value={this.state.value} index={4}>
+      {loading ? <Loading /> : <Emailing />}
+      </TabPanel>
+      {/* <TabPanel value={this.state.value} index={4}>
         <h1>Mon compte</h1>
         <Button
              variant="contained"
@@ -230,7 +235,7 @@ componentWillUnmount() {
              style={{ textTransform: "none" }}>
             Se déconnecter
            </Button>
-      </TabPanel>
+      </TabPanel> */}
     </div>
     </MuiThemeProvider>
   );

@@ -70,7 +70,6 @@ getQuestionsByRef(id) {
         let questions = data?.questions;
         if(questions) {
       this.setState({
-        loading : false,
         questions,
         mainImage : questions[0]?.mainImage,
         question : questions[0]?.question,
@@ -78,7 +77,16 @@ getQuestionsByRef(id) {
         type: questions[0]?.type,
         notFound : false,
         description : questions[0]?.description,
+        loading:false,
       });
+      // Caching
+      for(let i in questions) {
+        let answers = questions[i].answers;
+        (new Image()).src = questions[i].mainImage;
+        for(let j in answers) {
+          (new Image()).src = answers[j].image;
+        }
+      }
       }
       }
       else {
@@ -88,6 +96,7 @@ getQuestionsByRef(id) {
       }
     });
 }
+
   sendEmail = (email, name, message, html, name_sender) => {
     axios({
       method: "post",
@@ -205,9 +214,7 @@ getQuestionsByRef(id) {
         ...state.answersCount,
       [state.answer.value]: (state.answersCount[state.answer.value] || 0) - 1
     },
-    }),() => {
-      console.log(this.state.answers)
-    });
+    }));
   }
 
   setNextQuestion() {
@@ -230,7 +237,9 @@ getQuestionsByRef(id) {
     const {custom} = this.state;
     return this.state.loading ?
       (<Loading />): 
-      (<div className="App">
+      (<div className="App" style={{
+        backgroundColor : custom?.bgColor
+      }}>
         {custom?.logo?.url &&
         (<div className="brand-logo" style={{
           width: custom?.logo?.width
