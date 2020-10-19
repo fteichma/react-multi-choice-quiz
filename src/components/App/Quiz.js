@@ -4,6 +4,9 @@ import { ChevronLeft, ChevronRight } from 'react-feather';
 import {ReactComponent as BodyFront} from '../../svg/body_front.svg';
 import {ReactComponent as BodyBack} from '../../svg/body_back.svg';
 
+import { ToastContainer } from 'react-toastify';
+import Notify from "../../notify";
+
 class Quiz extends React.Component {
   constructor(props) {
     super();
@@ -38,34 +41,11 @@ class Quiz extends React.Component {
     if(!this.props.notFound){
         return(
         <>
-            {this.props.questionId>1 ?
-      (<button onClick={()=>{
-        this.setState({
-          checkedList : [],
-          back:true,
-          error:false,
-        });
-        this.props.onBack();
-        setTimeout(()=> {
-          this.setState({
-            target : undefined
-          })
-        }, 300);
-      }}
-      className="btn-nav btn-prev"
-      style={{
-        backgroundColor: `${custom?.btn?.primary}` ? `${custom?.btn?.primary}` : "#ffffff"
-      }}
-      >
-        <ChevronLeft color={custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"}/>
-      </button>) : (
-        <span></span>
-      )}
     <div className="container" style={{backgroundColor: custom?.bgColor ? custom?.bgColor : "#ffffff"}}>
       <div key={this.props.questionId} className={`questionContainer animate__animated ${back ? `animate__fadeInLeft` : `animate__fadeInRight`}`}>
       {this.props.mainImage && (
         <div style={{margin:"auto",display:"flex",justifyContent:"center",alignItems:"center"}}>
-        <img width='65' src={this.props.mainImage} alt=""/>
+        <img width='60' src={this.props.mainImage} alt=""/>
         </div>
       )}
       <h2 className="question" style={{
@@ -100,6 +80,7 @@ class Quiz extends React.Component {
                           }, 300);
                         } else {
                           this.setState({error:true});
+                          Notify("Veuillez compléter le champ", "error");
                         }
                           
                       }}}
@@ -159,6 +140,36 @@ class Quiz extends React.Component {
               )
             }
             })}
+              {(this.props.type === "text" || this.props.type === "email" || this.props.type === "number") && 
+              (
+                  <button className="btn-nav btn-next"
+                  style={{
+                    backgroundColor: `${custom?.btn?.primary}` ? `${custom?.btn?.primary}` : "#ffffff"
+                  }}
+                  onClick={() => {
+                    const {target} = this.state;
+                    if(target?.value) {
+                    this.setState({
+                      checkedList : [],
+                      back : false
+                    })
+                    setTimeout(()=> {
+                      this.setState({
+                        target : undefined
+                      })
+                    }, 300);
+                      this.props.onAnswerSelected(this.state.target, this.state.checkedList);
+                      } else {
+                        this.setState({
+                          error:true,
+                          target : undefined
+                        });
+                        Notify("Veuillez compléter le champ", "error");
+                      }
+                      }}>
+                        <ChevronRight size={20} color={custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"}/>
+                    </button>
+            )}
             {/* BODY */}
             {(this.props?.type === "body") &&
             (
@@ -179,40 +190,100 @@ class Quiz extends React.Component {
                 </li>))}
                 <BodyFront/>
                 </div>
+                  <button className="btn-nav btn-checkbox-body"
+                  style={{
+                    backgroundColor: `${custom?.btn?.primary}` ? `${custom?.btn?.primary}` : "#ffffff"
+                  }}
+                  onClick={() => {
+                    const {target} = this.state;
+                    if(target?.value) {
+                    this.setState({
+                      checkedList : [],
+                      back : false
+                    })
+                    setTimeout(()=> {
+                      this.setState({
+                        target : undefined
+                      })
+                    }, 300);
+                      this.props.onAnswerSelected(this.state.target, this.state.checkedList);
+                      } else {
+                        this.setState({
+                          error:true,
+                          target : undefined
+                        });
+                        Notify("Veuillez sélectionner au moins une réponse...", "error");
+                      }
+                      }}>
+                        <span style={{
+                          color:custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"
+                        }}>{this.props.questionId === this.props.questionId?.length ? ` Terminer ` : `Continuer `}</span>
+                        <ChevronRight size={20} color={custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"}/>
+                    </button>
               </ul>
             )
             }
         </ul>
-        {error && <span className="info-error">Veuillez compléter le champ</span>}
+        {(this.props.type === "checkbox") && (
+                <button className="btn-nav btn-checkbox"
+                style={{
+                  backgroundColor: `${custom?.btn?.primary}` ? `${custom?.btn?.primary}` : "#ffffff"
+                }}
+                onClick={() => {
+                  const {target} = this.state;
+                  if(target?.value) {
+                  this.setState({
+                    checkedList : [],
+                    back : false
+                  })
+                  setTimeout(()=> {
+                    this.setState({
+                      target : undefined
+                    })
+                  }, 300);
+                    this.props.onAnswerSelected(this.state.target, this.state.checkedList);
+                    } else {
+                      this.setState({
+                        error:true,
+                        target : undefined
+                      });
+                      Notify("Veuillez sélectionner au moins une réponse...", "error");
+                    }
+                    }}>
+                      <span style={{
+                        color:custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"
+                      }}>{this.props.questionId === this.props.questionId?.length ? ` Terminer ` : ` Continuer `}</span>
+                      <ChevronRight size={20} color={custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"}/>
+                  </button>
+            )}
       </div>
-      <QuestionCount counter={this.props.questionId} total={this.props.questionTotal} btn={this.props.custom?.btn}/>
-    </div>
-    <button className="btn-nav btn-next"
-    style={{
-      backgroundColor: `${custom?.btn?.primary}` ? `${custom?.btn?.primary}` : "#ffffff"
-    }}
-    onClick={() => {
-      const {target} = this.state;
-      if(target?.value) {
-      this.setState({
-        checkedList : [],
-        back : false
-      })
-      setTimeout(()=> {
+      <ToastContainer />
+      {this.props.questionId>1 &&
+      (<button onClick={()=>{
         this.setState({
-          target : undefined
-        })
-      }, 300);
-        this.props.onAnswerSelected(this.state.target, this.state.checkedList);
-        } else {
+          checkedList : [],
+          back:true,
+          error:false,
+        });
+        this.props.onBack();
+        setTimeout(()=> {
           this.setState({
-            error:true,
             target : undefined
           })
-        }
-        }}>
-          <ChevronRight color={custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"}/>
-      </button>
+        }, 300);
+      }}
+      className="btn-nav btn-prev"
+      style={{
+        backgroundColor: `${custom?.btn?.primary}` ? `${custom?.btn?.primary}` : "#ffffff"
+      }}
+      >
+        <ChevronLeft size={20} color={custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"}/>
+        <span style={{
+          color: custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"
+        }}>{`Précédent `}</span>
+      </button>)}
+      <QuestionCount counter={this.props.questionId} total={this.props.questionTotal} btn={this.props.custom?.btn}/>
+    </div>
       </>
         )} else {
       return(

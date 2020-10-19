@@ -16,7 +16,7 @@ import Responses from './Responses';
 import Dashboard from './Dashboard';
 import Loading from '../Loading';
 import Custom from './Custom';
-import Emailing from './Emailing';
+import EmailingPage from './Emailing';
 
 import { withFirebase } from '../Firebase';
 import { AuthUserContext, withAuthorization } from '../Session';
@@ -109,13 +109,16 @@ class AdminBase extends Component {
   constructor(props) {
     super();
     this.state = {
-        value : 0,
+        tab : 0,
         totUsers : 0,
         totQuest: 0,
         loading: false,
     };
 }
 componentDidMount() {
+  this.setState({
+    tab : localStorage.getItem('tab') ? localStorage.getItem('tab') : 0,
+  })
   //LOCALHOST SPEED
 /*   if(localStorage.getItem("answers")) {
     this.setState({
@@ -134,8 +137,9 @@ componentDidMount() {
 componentWillUnmount() {
   this.props.firebase.users().off();
 }
-  handleChange = (event, newValue) => {
-    this.setState({value:newValue});
+  handleChange = (e, newValue) => {
+    this.setState({tab:newValue});
+    localStorage.setItem('tab',newValue);
   };
   /* getDb() {
     const answers = db.collection("answers");
@@ -199,11 +203,10 @@ componentWillUnmount() {
       <Tabs
         orientation="vertical"
         variant="scrollable"
-        value={this.state.value}
+        value={Number(this.state.tab)}
         onChange={this.handleChange}
         aria-label="Vertical tabs example"
-        className={classes.tabs}
-      >
+        className={classes.tabs}>
         <Tab label="Dashboard" {...a11yProps(0)} className={classes.tab} />
         <Tab label="Réponses" {...a11yProps(1)} className={classes.tab}/>
         <Tab label="Questions" {...a11yProps(2)} className={classes.tab}/>
@@ -211,23 +214,23 @@ componentWillUnmount() {
         <Tab label="Emailing" {...a11yProps(4)} className={classes.tab}/>
         {/* <Tab label="Mon compte" {...a11yProps(4)} className={classes.tab}/> */}
       </Tabs>
-      <TabPanel value={this.state.value} index={0}>
+      <TabPanel value={Number(this.state.tab)} index={0}>
         {loading ? <Loading /> : <Dashboard totUsers={this.state.totUsers} totQuest={this.state.totQuest} />}
       </TabPanel>
-      <TabPanel value={this.state.value} index={1}>
+      <TabPanel value={Number(this.state.tab)} index={1}>
       <h1>Réponses</h1>
         {loading ? <Loading /> : <Responses answers={this.state.answers} /> }
       </TabPanel>
-      <TabPanel value={this.state.value} index={2}>
+      <TabPanel value={Number(this.state.tab)} index={2}>
       {loading ? <Loading /> : <Questions questions={this.state.questions}/>}
       </TabPanel>
-      <TabPanel value={this.state.value} index={3}>
+      <TabPanel value={Number(this.state.tab)} index={3}>
       {loading ? <Loading /> : <Custom />}
       </TabPanel>
-      <TabPanel value={this.state.value} index={4}>
-      {loading ? <Loading /> : <Emailing />}
+      <TabPanel value={Number(this.state.tab)} index={4}>
+      {loading ? <Loading /> : <EmailingPage tab={this.state.tab} />}
       </TabPanel>
-      {/* <TabPanel value={this.state.value} index={4}>
+      {/* <TabPanel value={tab} index={4}>
         <h1>Mon compte</h1>
         <Button
              variant="contained"

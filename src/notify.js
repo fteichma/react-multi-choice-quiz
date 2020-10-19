@@ -21,7 +21,8 @@ const Notify = (txt = 'Success!', type = 'success', btn, action) => {
 				style={{
 					display: 'flex',
 					alignItems: 'center',
-					marginBottom: '1em'
+					marginBottom: '1em',
+					fontSize: 14,
 				}}
 			>
 				{type === 'success' && (
@@ -42,7 +43,7 @@ const Notify = (txt = 'Success!', type = 'success', btn, action) => {
 				)}
 
 				{type === 'error' && (
-					<Icon.XCircle
+					<Icon.X
 						size={18}
 						style={{
 							marginRight: '0.75em'

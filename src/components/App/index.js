@@ -240,7 +240,7 @@ getQuestionsByRef(id) {
       (<div className="App" style={{
         backgroundColor : custom?.bgColor
       }}>
-        {custom?.logo?.url &&
+                {custom?.logo?.url &&
         (<div className="brand-logo" style={{
           width: custom?.logo?.width
         }}>
@@ -248,6 +248,7 @@ getQuestionsByRef(id) {
             <img width="100%" src={custom?.logo?.url} alt="Logo" />
           </a>
         </div>)}
+        <div className="Quiz">
         {!this.state.end ? (
             <Quiz
             answer={this.state.answer}
@@ -271,7 +272,9 @@ getQuestionsByRef(id) {
             custom={this.state.custom}
             />
           )}
-      </div>)
+          </div>
+      </div>
+      )
   }
 }
 
