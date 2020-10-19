@@ -1,5 +1,4 @@
 {
-  "homepage": "http://fteichma.github.io/react-multi-choice-quiz",
   "name": "react-quiz",
   "version": "2.0.0",
   "private": false,
@@ -36,8 +35,8 @@
   },
   "scripts": {
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
-    "start": "HTTPS=true react-scripts start",
+    "deploy": "npm run -d build",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -50,8 +49,5 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ],
-  "devDependencies": {
-    "gh-pages": "^3.1.0"
-  }
+  ]
 }

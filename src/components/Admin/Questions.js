@@ -37,6 +37,15 @@ const NEW_QUESTION = {
   description: ""
 };
 
+const NEW_CONDITION = {
+  0 : {
+    question : "",
+    operator : "",
+    value : "",
+    next : "",
+  }
+};
+
 const QuestionsPage = () => (
     <div>
         <Questions/>
@@ -266,24 +275,23 @@ class QuestionsBase extends Component {
       let length = 0;
       if(items) length = Object.keys(items).length;
       let db = this.props.firebase.db;
-      let mainImage = db.ref(`questions/${id}/questions/${length}`);
-      mainImage.set(newQuestion);
+      let question = db.ref(`questions/${id}/questions/${length}`);
+      question.set(newQuestion);
       this.setState({
         openNewQuestionDialog:false,
       })
       this.resetNewQuestion();
     }
 
-    newCondition = () => {
-      const {id} = this.state;
+    addNewCondition = () => {
+      const {id, conditions} = this.state;
+      let length = 0;
+      if (conditions) length = Object.keys(conditions).length;
       let db = this.props.firebase.db;
-      let conditionRef = db.ref(`questions/${id}/conditions`);
-      let newConditionRef = conditionRef.push();
-      let newKey = newConditionRef.key;
-      newConditionRef.set({
-        condition : [],
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
-        id : newKey
+      let conditionRef = db.ref(`questions/${id}/conditions/${length}`);
+      conditionRef.set({
+        conditions : NEW_CONDITION,
+        sendEmail : "",
       });
     }
 
@@ -469,6 +477,7 @@ class QuestionsBase extends Component {
         let newKey = newQuestionsRef.key;
         newQuestionsRef.set({
           questions: [],
+          conditions: [],
           createdAt: firebase.database.ServerValue.TIMESTAMP,
           id : newKey
         });
@@ -746,10 +755,84 @@ class QuestionsBase extends Component {
       Ajouter une question
     </Button>
             <h1>Emailing/Résumé</h1>
-            {Object.keys(conditions).map((el, id) => (
-                  <p>{conditions[id]}</p>
-                
+            {conditions && conditions.map((el, id) => (
+              <>
+                  <p>Si...</p>
+                  {el.conditions.map((condition, key) => (
+                    <div style={{display:"flex", alignItems:"center"}}>
+                  <FormControl variant="outlined" required className={classes.formControl}>
+        <SelectMUI
+          labelId="simple-select-label"
+          id="simple-select"
+          value={conditions[id].conditions[key].question}
+          onChange={(e) => {
+            const {conditions} = this.state;
+            let cp = conditions;
+              let value = e.target.value;
+              cp[id].conditions[key].question = value;
+              this.setState({
+                condition : cp,
+              })
+          }}>
+            {items && items.map((item) => (
+              <MenuItem value={item.question}>{item.question}</MenuItem>
+            ))
+            }
+        </SelectMUI>
+      </FormControl>
+      <FormControl variant="outlined" required className={classes.formControl}>
+        <SelectMUI
+          labelId="simple-select-label"
+          id="simple-select"
+          value={conditions[id].conditions[key].operator}
+          onChange={(e) => {
+            const {conditions} = this.state;
+            let cp = conditions;
+              let value = e.target.value;
+              cp[id].conditions[key].operator = value;
+              this.setState({
+                condition : cp,
+              })
+          }}>
+              <MenuItem value={"==="}><b>Strictement égal à</b></MenuItem>
+              <MenuItem value={">"}>Strictement supérieur à</MenuItem>
+              <MenuItem value={"<"}>Strictement inférieur à</MenuItem>
+              <MenuItem value={">="}>Supérieur ou égal à</MenuItem>
+              <MenuItem value={"<="}>Inférieur ou égal à</MenuItem>
+        </SelectMUI>
+      </FormControl>
+      <TextField 
+        onChange={(e) => {
+          const {conditions} = this.state;
+          let cp = conditions;
+            let value = e.target.value;
+            cp[id].conditions[key].value = value;
+            this.setState({
+              condition : cp,
+            })
+        }}
+        id="outlined-basic" variant="outlined" value={conditions[id].conditions[key].value} />
+      </div>))}
+    <IconButton aria-label="add" 
+    onClick={() => {
+        const {conditions} = this.state;
+        let cp = conditions;
+        let length = Object.keys(cp[id].conditions).length;
+        cp[id].conditions[length] = {
+          question : "",
+          operator : "",
+          value : "",
+          next : "",
+        }
+        this.setState({
+          conditions : cp,
+        }) }} className={classes.deleteBtn}>
+                                        <AddIcon fontSize="small" />
+    </IconButton>
+      <p>Alors, afficher/envoyer :</p>
+              </>
             ))}
+            <br/>
                         <Button         
       className={classes.button}
       variant="contained" 
@@ -757,7 +840,7 @@ class QuestionsBase extends Component {
       disableElevation 
       color="primary" 
       startIcon={<AddIcon/>}
-      onClick={() => this.newCondition()}>
+      onClick={() => this.addNewCondition()}>
       Ajouter une condition
     </Button>
             <Dialog
@@ -818,7 +901,7 @@ class QuestionsBase extends Component {
             type="text"
             fullWidth
           />
-          <FormControl required className={classes.formControl}>
+          <FormControl variant="outlined" required className={classes.formControl}>
         <InputLabel id="simple-select-label">Type</InputLabel>
         <SelectMUI
           labelId="simple-select-label"
