@@ -1,4 +1,5 @@
 {
+  "homepage": ".",
   "name": "react-quiz",
   "version": "2.0.0",
   "private": false,

@@ -44,6 +44,7 @@ class ResponsesBase extends React.Component{
             page : 0,
             rowsPerPage : 10,
             loading:true,
+            answers:[],
         };
     }
     componentDidMount() {
@@ -69,11 +70,17 @@ class ResponsesBase extends React.Component{
       let responsesRef = db.ref("responses")
       responsesRef.orderByChild('createdAt').once('value').then((snap) => {
         let data = snap.val();
+        if(data) {
         let answers = Object.keys(data).map(i => data[i]);
         this.setState({
           answers : answers.reverse(),
           loading: false,
+        }) 
+      } else {
+        this.setState({
+          loading:false,
         })
+      }
       });
   }
     render() {

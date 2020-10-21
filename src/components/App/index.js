@@ -30,7 +30,7 @@ class App extends Component {
       type: '',
       questionId: 1,
       notFound : true,
-      mainImage : undefined
+      mainImage : undefined,
     };
     this.handleAnswerSelected = this.handleAnswerSelected.bind(this);
     this.handleKeyPressed = this.handleKeyPressed.bind(this);

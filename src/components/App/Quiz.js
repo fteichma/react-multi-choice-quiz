@@ -13,6 +13,7 @@ class Quiz extends React.Component {
     this.state = {
       target : undefined,
       checkedList : [],
+      disabledList : [],
       back:false,
       error : false,
     };
@@ -27,7 +28,7 @@ class Quiz extends React.Component {
     this.setState((state) => ({
       checkedList : ary
     }))
-    } else if(!(e?.target?.checked)){
+    } else {
       let ary = checkedList;
       ary = ary.filter(el => el !== e.target.value);
       this.setState({
@@ -35,9 +36,46 @@ class Quiz extends React.Component {
       })
     }
   }
+  onBodyCheck = (e) => {
+    const {checkedList} = this.state;
+    this.setState({
+      target : e.target,
+    });
+    if(e?.target?.checked) {
+    let value = e.target.value;
+    let _disabledList = [];
+    if(value === "Ailes d'ange" || value === "Culotte de cheval") {
+      _disabledList = ["Cou", "Pli du soutien-gorge", "Poignées d'amour", "Genoux", "Menton", "Décolleté", "Pseudogynécomastie", "Bras", "Ventre", "Cuisses", "Mollets"]
+    }
+    else if(value === "Pli du soutien-gorge" || value === "Ventre") {
+      _disabledList = ["Cou", "Ailes d'ange", "Poignées d'amour", "Culotte de cheval", "Genoux", "Menton", "Décolleté", "Pseudogynécomastie", "Bras", "Cuisses", "Mollets"];
+    } 
+    else {
+      _disabledList = ["Cou", "Pli du soutien-gorge", "Ailes d'ange", "Poignées d'amour", "Culotte de cheval", "Genoux", "Menton", "Décolleté", "Pseudogynécomastie", "Bras", "Ventre", "Cuisses", "Mollets"];
+      _disabledList = _disabledList.filter(e => e !== value);
+    }
+    let ary = [...checkedList, value];
+    this.setState((state) => ({
+      checkedList : ary,
+      disabledList : _disabledList
+    }))
+    } else {
+      let ary = checkedList;
+      ary = ary.filter(el => el !== e.target.value);
+      this.setState({
+        checkedList : ary,
+      })
+      console.log(ary);
+      if(ary.length === 0) {
+        this.setState({
+          disabledList : []
+        })
+      }
+    }
+  }
   render() {
     const {custom} = this.props;
-    const {back, error} = this.state;
+    const {back, error, disabledList} = this.state;
     if(!this.props.notFound){
         return(
         <>
@@ -176,16 +214,16 @@ class Quiz extends React.Component {
               <ul className="answerOptions">
                 <div className="body" id="bodyBack">
                 {this.props.answerOptions.map((el,key,array) => 
-              (key < 6) && (<li key={`bodySelect${key}`} className="bodySelect" id={el.content.replace(/\s/g, '').replace(/'/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}>
-                  <input type="checkbox" name="bodySelect" value={el.content} onChange={(e) => this.onMultiCheck(e)} id={`body${key}`}/>
+              (key < 6) && (<li key={`bodySelect${key}`} className={`bodySelect ${disabledList.includes(el.content)? `disabled` : ``}`} id={el.content.replace(/\s/g, '').replace(/'/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}>
+                  <input disabled={disabledList.includes(el.content)} type="checkbox" name="bodySelect" value={el.content} onChange={(e) => this.onBodyCheck(e)} id={`body${key}`}/>
                   <label htmlFor={`body${key}`}>{el.content}</label>
                 </li>))}
                 <BodyBack/>
                 </div>
                 <div className="body" id="bodyFront">
               {this.props.answerOptions.map((el,key,array) => 
-              (key >= 6) && (<li key={`bodySelect${key}`} className="bodySelect" id={el.content.replace(/\s/g, '').replace(/'/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}>
-                  <input type="checkbox" name="bodySelect" value={el.content} onChange={(e) => this.onMultiCheck(e)} id={`body${key}`}/>
+              (key >= 6) && (<li key={`bodySelect${key}`} className={`bodySelect ${disabledList.includes(el.content)? `disabled` : ``}`} id={el.content.replace(/\s/g, '').replace(/'/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}>
+                  <input disabled={disabledList.includes(el.content)}  type="checkbox" name="bodySelect" value={el.content} onChange={(e) => this.onBodyCheck(e)} id={`body${key}`}/>
                   <label htmlFor={`body${key}`}>{el.content}</label>
                 </li>))}
                 <BodyFront/>

@@ -1,7 +1,7 @@
 
 import React, { Component } from "react"
-import { makeStyles, withStyles, createMuiTheme } from '@material-ui/core/styles'
-import { TableContainer, Table, TableBody, TableCell, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Button, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Select as SelectMUI, Menu, MenuItem, InputLabel, Popover} from '@material-ui/core'
+import { withStyles } from '@material-ui/core/styles'
+import { TableContainer, Table, TableBody, TableCell, TableHead, TableRow, Paper, IconButton, Collapse, Box, Typography, Button, Tab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Select, Menu, MenuItem, InputLabel, Chip, Input} from '@material-ui/core'
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp'
@@ -14,7 +14,6 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/Add';
 import red from '@material-ui/core/colors/red';
 import green from '@material-ui/core/colors/green';
-import Select, { components } from 'react-select';
 import TextField from '@material-ui/core/TextField';
 
 import { withFirebase } from '../Firebase';
@@ -22,8 +21,8 @@ import firebase from "firebase/app";
 import { compose } from 'recompose';
 
 import Loading from '../Loading';
-import SelectStyle from '../select';
-import { Visibility } from "@material-ui/icons"
+import { Filter, Visibility } from "@material-ui/icons"
+import { number } from "prop-types"
 
 const NEW_QUESTION = {
   type : "",
@@ -70,6 +69,26 @@ const getItemStyle = (isDragging, draggableStyle) => ({
     })
 });
 
+const getStyles = (content, items) =>{
+  return {
+    fontWeight:
+    items.map((item) => { return item.content; }).indexOf(content) === -1
+        ? 500
+        : 900
+  };
+}
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
 
 const styles = (theme) => ({
     root: {
@@ -78,7 +97,7 @@ const styles = (theme) => ({
     formControl: {
       marginTop: theme.spacing(1),
       marginBottom: theme.spacing(1),
-      minWidth: 120,
+      minWidth: 160,
     },
     tableRow: {
       '& > *': {
@@ -98,6 +117,16 @@ const styles = (theme) => ({
       padding: {
         padding: theme.spacing(2),
       },
+      chips: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  chip: {
+    margin: 2,
+  },
+  noLabel: {
+    marginTop: theme.spacing(3),
+  },
   });
 
   const DeleteButton = withStyles((theme) => ({
@@ -128,15 +157,17 @@ class QuestionsBase extends Component {
             openDeleteDialog: false,
             deleteIndex: null,
             editIndex:  null,
-            idList : undefined,
+            idList : [],
             id : localStorage.getItem('id') ? localStorage.getItem('id') : undefined,
+            idListEmail : [],
             openNewQuestionDialog : false,
             openEditDialog : false,
             newQuestion : NEW_QUESTION,
-            items : {},
+            items : [],
             questions: {},
             conditions: {},
-            anchorMore: undefined
+            anchorMore: undefined,
+            saveConditions : false,
         }
         this.onDragEnd = this.onDragEnd.bind(this);
         this.handleChangeNewQuestionAnswers.bind(this);
@@ -148,7 +179,37 @@ class QuestionsBase extends Component {
 
     componentDidMount() {
         this.getQuestions();
+        this.getEmailing();
     }
+
+    handleChangeMultiple = (e, id, key) => {
+      const {conditions} = this.state;
+      const { value } = e.target;
+      let cp = conditions;
+      cp[id].conditions[key].value = value;
+      console.log(value);
+      this.setState({
+        conditions: cp
+      })
+    };
+
+    async getEmailing() {
+      let db = this.props.firebase.db;
+      let emailRef = db.ref("email");
+      await emailRef.on('value',(snap)=>{
+        let data = snap.val();
+        if(data) {
+          let email = Object.keys(data).map(i => data[i]);
+          if(email) {
+          let idListEmail =  Object.keys(email).map(i => {return{value : email[i]?.id, label: email[i]?.id}});
+          this.setState({
+            idListEmail,
+            email : data,
+          });
+          }
+        }
+      });
+  }
     
     resetNewQuestion = () => {
       this.setState({
@@ -263,7 +324,10 @@ class QuestionsBase extends Component {
       const {editIndex, questions} = this.state;
       let cp = questions;
       let answers = cp[editIndex].answers;
-      let length = Object.keys(answers).length;
+      let length=0;
+      if(answers) {
+      length = Object.keys(answers).length;
+      }
       cp[editIndex].answers[length] = {content : ""};
       this.setState({
         questions : cp,
@@ -276,11 +340,16 @@ class QuestionsBase extends Component {
       if(items) length = Object.keys(items).length;
       let db = this.props.firebase.db;
       let question = db.ref(`questions/${id}/questions/${length}`);
-      question.set(newQuestion);
+      question.set({...newQuestion });
       this.setState({
         openNewQuestionDialog:false,
       })
       this.resetNewQuestion();
+      setTimeout(() => { 
+        this.setState({
+          id
+        });
+        this.getQuestionsByRef(id);}, 1000);
     }
 
     addNewCondition = () => {
@@ -293,6 +362,17 @@ class QuestionsBase extends Component {
         conditions : NEW_CONDITION,
         sendEmail : "",
       });
+    }
+
+    onSaveConditions = () => {
+      const {id, conditions} = this.state;
+      let db = this.props.firebase.db;
+      let questionsRef = db.ref(`questions/${id}/conditions/`);
+      console.log(conditions);
+      questionsRef.set(conditions);
+      this.setState({
+        saveConditions : false
+      })
     }
 
     //edit
@@ -432,12 +512,8 @@ class QuestionsBase extends Component {
     onSave = () => {
       const {items,id} = this.state;
       let db = this.props.firebase.db;
-      let questionsRef = db.ref(`questions/${id}`);
-      questionsRef.set({
-        questions : items,
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
-        id
-      });
+      let questionsRef = db.ref(`questions/${id}/questions`);
+      questionsRef.set(items);
       this.setState({
         dragged:false
       })
@@ -449,6 +525,35 @@ class QuestionsBase extends Component {
       if(id){
         let questionsRef = db.ref(`questions/${id}`);
         questionsRef.remove();
+      }
+    }
+
+    deleteCondition = (_id,key) => {
+      let db = this.props.firebase.db;
+      const {id, conditions} = this.state;
+      let cp = JSON.parse(JSON.stringify(conditions));
+      if(key === 0) {
+        let ref = db.ref(`questions/${id}/conditions/${_id}`);
+        cp.splice(_id, 1)
+        this.setState({
+          conditions : cp,
+        })
+        ref.remove();
+      } else {
+          let j = 0;
+          const filtered = Object.keys(cp[_id].conditions)
+          .filter(id => Number(id) !== Number(key))
+          .reduce((obj, key) => {
+            obj[j] = cp[_id].conditions[key];
+            j++;
+            return obj;
+          }, []);
+          cp[_id].conditions = filtered;
+          this.setState({
+            conditions : cp
+          })
+          let ref = db.ref(`questions/${id}/conditions/${_id}/conditions/${key}`);
+          ref.remove();
       }
     }
 
@@ -476,8 +581,8 @@ class QuestionsBase extends Component {
         let newQuestionsRef = questionsRef.push();
         let newKey = newQuestionsRef.key;
         newQuestionsRef.set({
-          questions: [],
-          conditions: [],
+          questions: {},
+          conditions: {},
           createdAt: firebase.database.ServerValue.TIMESTAMP,
           id : newKey
         });
@@ -498,7 +603,9 @@ class QuestionsBase extends Component {
         let questionsRef = db.ref("questions");
         questionsRef.on('value',(snap)=>{
           let data = snap.val();
+          if(data) {
           let questions = Object.keys(data).map(i => data[i]);
+          if(questions) {
           let idList =  Object.keys(questions).map(i => {return{value : questions[i].id, label: questions[i].id}});
           let id = localStorage.getItem("id") ? localStorage.getItem("id") : questions[0].id;
           this.setState({
@@ -506,6 +613,13 @@ class QuestionsBase extends Component {
             id
           })
           this.getQuestionsByRef(id);
+          }
+          }
+          else {
+            this.setState({
+              loading:false,
+            })
+          }
         });
     }
 
@@ -516,19 +630,44 @@ class QuestionsBase extends Component {
           let data = snap.val();
           let questions = data?.questions;
           let conditions = data?.conditions;
-          let items = JSON.parse(JSON.stringify(questions));
+          let items = [];
+          if(questions && conditions) {
+            items = JSON.parse(JSON.stringify(questions));
           this.setState({
             loading : false,
             questions,
             conditions,
             items
           })
+          } else if(questions) {
+            items = JSON.parse(JSON.stringify(questions));
+            this.setState({
+              loading:false,
+              questions,
+              conditions : [],
+              items
+            })
+          } else if(conditions) {
+            this.setState({
+              loading:false,
+              conditions,
+              items : [],
+              questions : [],
+            })
+          } else {
+            this.setState({
+              loading:false,
+              items : [],
+              questions : [],
+              conditions : []
+            })
+          }
         });
     }
 
     render() {
         const {classes} = this.props;
-        const {dragged, items, loading, open, openDeleteDialog, openEditDialog, openNewQuestionDialog, deleteIndex, editIndex, anchorMore, idList, id, conditions} = this.state;
+        const {dragged, items, loading, open, saveConditions, openDeleteDialog, openEditDialog, openNewQuestionDialog, deleteIndex, editIndex, anchorMore, idList, id, conditions, idListEmail, questions} = this.state;
         return loading ? ( <Loading /> ) : ( 
             <>
             <h1>Questions</h1>
@@ -539,7 +678,7 @@ class QuestionsBase extends Component {
                 justifyContent:""
             }}>
           <FormControl required className={classes.formControl}>
-        <SelectMUI
+        <Select
           id="demo-simple-select"
           value={id}
           onChange={(e) => {
@@ -552,7 +691,7 @@ class QuestionsBase extends Component {
             {idList.map((el, id) => (
             <MenuItem key={id} value={el.value}>{`Questionnaire nº${id+1}`}</MenuItem>
             ))}
-        </SelectMUI>
+        </Select>
       </FormControl>
       <IconButton aria-controls="simple-menu" aria-haspopup="true" onClick={(e) => 
       {
@@ -645,7 +784,7 @@ class QuestionsBase extends Component {
                                     </IconButton>
                                 </TableCell>
                                 <TableCell scope="row">{index + 1}</TableCell>
-                                <TableCell>{item.question}</TableCell>
+                                <TableCell>{item?.question}</TableCell>
                                 <TableCell alignRight>
                                     <IconButton aria-label="edit" onClick={() => this.showEditDialog(index)} disabled={dragged} className={classes.deleteBtn}>
                                         <EditIcon fontSize="small" />
@@ -672,24 +811,24 @@ class QuestionsBase extends Component {
         component="label"
         onChange={(e) => this.handleUploadMain(e, index)}
       >
-        {item.mainImage ? "Remplacer" : "Téléverser"}
+        {item?.mainImage ? "Remplacer" : "Téléverser"}
         <input disabled={dragged}  accept="image/*" className={classes.input} type="file" />
       </Button>
-      {item.mainImage && 
+      {item?.mainImage && 
       (<IconButton disabled={dragged} variant="contained" onClick={() => this.setUploadMain("",index)}aria-label="delete" className={classes.deleteBtn}>
          <DeleteIcon fontSize="small" disabled={dragged}/>
       </IconButton>)
       }
-            {item.mainImage &&
+            {item?.mainImage &&
       (<div>
-        <img width="50" src={item.mainImage} />
+        <img width="50" src={item?.mainImage} />
       </div>)
     }
       </div>
       <div style={{marginBottom:"1.5em"}}>
       <p><b>Description</b></p> 
-      {item.description ? (
-      <p>{item.description}</p>
+      {item?.description ? (
+      <p>{item?.description}</p>
       ) : (
         <p>Aucune description</p>
       )}
@@ -701,11 +840,11 @@ class QuestionsBase extends Component {
                                             <TableRow>
                                                 <TableCell>Numéro</TableCell>
                                                 <TableCell>Nom/Contenu</TableCell>
-                                                {(item.type === "radio" || item.type==="checkbox") && (<TableCell>Image</TableCell>)}
+                                                {(item?.type === "radio" || item?.type==="checkbox") && (<TableCell>Image</TableCell>)}
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                  {item.answers.map((el, key, array) => {
+                                  {item?.answers.map((el, key, array) => {
                                       return(
                                         <TableRow key={key+"_answers"}>
                                           <TableCell scope="row">
@@ -715,7 +854,7 @@ class QuestionsBase extends Component {
                                               {el.content}
                                           </TableCell>
                                           <TableCell>
-                                          {(item.type === "radio" || item.type==="checkbox") && !el.image ? (
+                                          {(item?.type === "radio" || item?.type==="checkbox") && !el.image ? (
                                           <IconButton color="primary" disabled={dragged} aria-label="upload picture" component="label" onChange={(e) => this.handleUploadAnswer(e, index, key)}>
                                             <PhotoCamera />
                                             <input accept="image/*" className={classes.input} id="icon-button-file" type="file" />
@@ -752,84 +891,264 @@ class QuestionsBase extends Component {
       color="primary" 
       startIcon={<AddIcon/>}
       onClick={() => this.newQuestion()}>
-      Ajouter une question
+      Nouvelle question
     </Button>
+    <div style={{
+      display:"flex",
+      alignItems:"center"
+    }}>
             <h1>Emailing/Résumé</h1>
-            {conditions && conditions.map((el, id) => (
+            {saveConditions && (<SaveButton
+        variant="contained"
+        color="primary"
+        size="small"
+        disableElevation
+        className={classes.button}
+        startIcon={<SaveIcon/>}
+        onClick={() => this.onSaveConditions()}
+      >
+        Sauvegarder
+      </SaveButton>)}
+      </div>
+            {conditions?.map((el, id) => (
               <>
-                  <p>Si...</p>
-                  {el.conditions.map((condition, key) => (
+                  {el?.conditions?.map((condition, key) => (
                     <div style={{display:"flex", alignItems:"center"}}>
-                  <FormControl variant="outlined" required className={classes.formControl}>
-        <SelectMUI
-          labelId="simple-select-label"
-          id="simple-select"
-          value={conditions[id].conditions[key].question}
+                      {key === 0 && <b style={{marginRight: "0.5em"}}>Si</b>}
+                      {key >= 1 && <b style={{marginRight: "0.5em"}}>et</b>}
+                  <FormControl variant="outlined" className={classes.formControl}>
+        <Select
+          labelId="simple-select-label-1"
+          id="simple-select-1"
+          value={conditions[id]?.conditions[key]?.question || ""}
           onChange={(e) => {
             const {conditions} = this.state;
             let cp = conditions;
               let value = e.target.value;
               cp[id].conditions[key].question = value;
+              if(items[items.findIndex((item) => item?.question === value)]?.type === "checkbox") {
+                cp[id].conditions[key].value = [];
+              }
               this.setState({
-                condition : cp,
+                conditions : cp,
+                saveConditions : true,
               })
           }}>
-            {items && items.map((item) => (
-              <MenuItem value={item.question}>{item.question}</MenuItem>
+            {items.map((item) => (
+              <MenuItem value={item?.question}>{item?.question}</MenuItem>
             ))
             }
-        </SelectMUI>
+        </Select>
       </FormControl>
-      <FormControl variant="outlined" required className={classes.formControl}>
-        <SelectMUI
-          labelId="simple-select-label"
-          id="simple-select"
-          value={conditions[id].conditions[key].operator}
+      <FormControl variant="outlined" className={classes.formControl}>
+      { (items[items.findIndex((item) => item?.question === conditions[id]?.conditions[key]?.question)]?.type === "number") ?
+        (<Select
+          style={{marginLeft:"0.5em"}}
+          labelId="simple-select-label-2"
+          id="simple-select-2"
+          value={conditions[id]?.conditions[key]?.operator || ""}
           onChange={(e) => {
             const {conditions} = this.state;
             let cp = conditions;
               let value = e.target.value;
               cp[id].conditions[key].operator = value;
+              if(value === "><" || value === ">><<") {
+                conditions[id].conditions[key].value = [];
+              }
               this.setState({
-                condition : cp,
+                conditions : cp,
+                saveConditions : true,
               })
           }}>
-              <MenuItem value={"==="}><b>Strictement égal à</b></MenuItem>
-              <MenuItem value={">"}>Strictement supérieur à</MenuItem>
-              <MenuItem value={"<"}>Strictement inférieur à</MenuItem>
-              <MenuItem value={">="}>Supérieur ou égal à</MenuItem>
-              <MenuItem value={"<="}>Inférieur ou égal à</MenuItem>
-        </SelectMUI>
+              <MenuItem value={"==="}><b>est égal à</b></MenuItem>
+              <MenuItem value={">"}><b>est strictement supérieur à</b></MenuItem>
+              <MenuItem value={"<"}><b>est strictement inférieur à</b></MenuItem>
+              <MenuItem value={">="}><b>est supérieur ou égal à</b></MenuItem>
+              <MenuItem value={"<="}><b>est inférieur ou égal à</b></MenuItem>
+              <MenuItem value={">><<"}><b>est compris entre</b></MenuItem>
+              <MenuItem value={"><"}><b>est strictement compris entre</b></MenuItem>
+        </Select>) :
+                  (<Select
+                    style={{marginLeft:"0.5em"}}
+                    labelId="simple-select-label-2"
+                    id="simple-select-2"
+                    value={conditions[id]?.conditions[key]?.operator || ""}
+                    onChange={(e) => {
+                      const {conditions} = this.state;
+                      let cp = conditions;
+                        let value = e.target.value;
+                        cp[id].conditions[key].operator = value;
+                        this.setState({
+                          conditions : cp,
+                          saveConditions : true,
+                        })
+                    }}>
+                        <MenuItem value={"==="}><b>est égal à</b></MenuItem>
+                        </Select>) 
+    }
       </FormControl>
-      <TextField 
+      <FormControl variant="outlined" className={classes.formControl}>
+      {(items[items.findIndex((item) => item?.question === conditions[id]?.conditions[key]?.question)]?.type === "checkbox") ?
+      (
+        <Select
+        style={{marginLeft:"0.5em"}}
+          labelId="demo-mutiple-chip-label"
+          id="demo-mutiple-chip"
+          multiple
+          variant="outlined"
+          value={conditions[id]?.conditions[key]?.value || ""}
+          onChange={(e) => this.handleChangeMultiple(e, id, key)}
+          input={<Input id="select-multiple-chip" />}
+          renderValue={(selected) => (
+            <div className={classes.chips}>
+              {selected.map((value) => (
+                <Chip key={value} label={value} className={classes.chip} />
+              ))}
+            </div>
+          )}
+          MenuProps={MenuProps}
+        >
+          {items[items.findIndex((item) => item?.question === conditions[id]?.conditions[key]?.question)]?.answers.map((item) => (
+            <MenuItem key={item?.content} value={item?.content} style={getStyles(item?.content, items)} >
+              {item?.content}
+            </MenuItem>
+          ))}
+        </Select>
+      ) :
+      (items[items.findIndex((item) => item?.question === conditions[id]?.conditions[key]?.question)]?.type === "radio") ?
+      (
+        <Select
+        style={{marginLeft:"0.5em"}}
+        variant="outlined"
+        labelId="simple-select-label"
+        id="simple-select"
+        value={conditions[id]?.conditions[key]?.value || ""}
         onChange={(e) => {
           const {conditions} = this.state;
           let cp = conditions;
             let value = e.target.value;
             cp[id].conditions[key].value = value;
             this.setState({
-              condition : cp,
+              conditions : cp,
+              saveConditions : true,
+            })
+        }}>
+          {items[items.findIndex((item) => item?.question === conditions[id]?.conditions[key]?.question)]?.answers.map((item) => 
+          {
+            return(
+            <MenuItem value={item?.content}>{item?.content}</MenuItem>
+            )
+            })}
+      </Select>
+      ) : (
+        (conditions[id]?.conditions[key]?.operator !== "><") && (conditions[id]?.conditions[key]?.operator !== ">><<") ?
+        (<TextField
+        style={{marginLeft:"0.5em"}}
+      type={(items[items.findIndex((item) => item?.question === conditions[id]?.conditions[key]?.question)]?.type) || "text"} 
+        onChange={(e) => {
+          const {conditions} = this.state;
+          let cp = conditions;
+            let value = e.target.value;
+            cp[id].conditions[key].value = value;
+            this.setState({
+              conditions : cp,
+              saveConditions : true,
             })
         }}
-        id="outlined-basic" variant="outlined" value={conditions[id].conditions[key].value} />
-      </div>))}
-    <IconButton aria-label="add" 
-    onClick={() => {
+        id="outlined-basic" variant="outlined" value={conditions[id]?.conditions[key]?.value || ""} />):
+        (
+          <>
+          <TextField
+        style={{marginLeft:"0.5em"}}
+      type={(items[items.findIndex((item) => item?.question === conditions[id]?.conditions[key]?.question)]?.type) || "text"} 
+        onChange={(e) => {
+          const {conditions} = this.state;
+          let cp = conditions;
+            let value = e.target.value;
+            cp[id].conditions[key].value[0] = value;
+            this.setState({
+              conditions : cp,
+              saveConditions : true,
+            })
+        }}
+        id="outlined-basic" variant="outlined" value={conditions[id]?.conditions[key]?.value[0] || ""} />
+        <b style={{textAlign:"center", margin:"0.5em"}}>et</b>
+        <TextField
+        style={{marginLeft:"0.5em"}}
+      type={(items[items.findIndex((item) => item?.question === conditions[id]?.conditions[key]?.question)]?.type) || "text"} 
+        onChange={(e) => {
+          const {conditions} = this.state;
+          let cp = conditions;
+            let value = e.target.value;
+            cp[id].conditions[key].value[1] = value;
+            this.setState({
+              conditions : cp,
+              saveConditions : true,
+            })
+        }}
+        id="outlined-basic" variant="outlined" value={conditions[id]?.conditions[key]?.value[1] || ""} />
+          </>
+        )
+      )}
+      </FormControl>
+          <IconButton style={{marginLeft:"0.5em"}} aria-label="delete" onClick={() => {
+              this.deleteCondition(id,key)
+          }} className={classes.deleteBtn}>
+                <DeleteIcon fontSize="small" />
+          </IconButton>
+      </div>)
+      )}
+    <Button    
+    variant="outlined"     
+      className={classes.button}
+      size="small" 
+      disableElevation 
+      color="primary" 
+      startIcon={<AddIcon/>}
+      onClick={() => {
         const {conditions} = this.state;
         let cp = conditions;
-        let length = Object.keys(cp[id].conditions).length;
-        cp[id].conditions[length] = {
-          question : "",
-          operator : "",
-          value : "",
-          next : "",
+        let length = 0;
+        if(cp[id]?.conditions) {
+          length = Object.keys(cp[id].conditions).length;
+          cp[id].conditions[length] = {
+            question : "",
+            operator : "",
+            value : "",
+            next : "",
+          }
+        } else {
+          cp[id] = {
+            conditions : NEW_CONDITION
+          }
         }
         this.setState({
           conditions : cp,
-        }) }} className={classes.deleteBtn}>
-                                        <AddIcon fontSize="small" />
-    </IconButton>
+        }) 
+        }}>
+      Ajouter une condition
+    </Button>
       <p>Alors, afficher/envoyer :</p>
+      <FormControl className={classes.formControl} variant="outlined">
+        <Select
+          id="demo-simple-select"
+          value={conditions[id]?.sendEmail?.id || ""}
+          onChange={(e) => {
+            const {conditions, email} = this.state;
+            let cp = conditions;
+              let index = e.target.value;
+              cp[id].sendEmail = email[index];
+              this.setState({
+                conditions : cp,
+                saveConditions : true,
+              });
+          }}>
+            {idListEmail && idListEmail.map((el, id) => (
+            <MenuItem key={id} value={el.value}>{`Email nº${id+1}`}</MenuItem>
+            ))}
+        </Select>
+      </FormControl>
+      <hr/>
               </>
             ))}
             <br/>
@@ -841,7 +1160,7 @@ class QuestionsBase extends Component {
       color="primary" 
       startIcon={<AddIcon/>}
       onClick={() => this.addNewCondition()}>
-      Ajouter une condition
+      Nouvelle condition
     </Button>
             <Dialog
         open={openDeleteDialog}
@@ -881,7 +1200,7 @@ class QuestionsBase extends Component {
           openNewQuestionDialog : false,
         })
       }} aria-labelledby="form-dialog-title">
-        <DialogTitle id="form-dialog-title">Ajouter une question</DialogTitle>
+        <DialogTitle id="form-dialog-title">Nouvelle question</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -903,7 +1222,7 @@ class QuestionsBase extends Component {
           />
           <FormControl variant="outlined" required className={classes.formControl}>
         <InputLabel id="simple-select-label">Type</InputLabel>
-        <SelectMUI
+        <Select
           labelId="simple-select-label"
           id="simple-select"
           value={this.state.newQuestion?.type || ''}
@@ -925,7 +1244,7 @@ class QuestionsBase extends Component {
           <MenuItem value={'email'}>Email</MenuItem>
           <MenuItem value={'radio'}>Sélection</MenuItem>
           <MenuItem value={'checkbox'}>Multi-sélection</MenuItem>
-        </SelectMUI>
+        </Select>
       </FormControl>
       {this.state.newQuestion?.type === "number" && (
         <TextField
@@ -1041,155 +1360,119 @@ class QuestionsBase extends Component {
           </Button>
         </DialogActions>
       </Dialog>
-      
-      
-      
-      
-      
-      
-      <Dialog fullWidth open={openEditDialog} onClose={() => {
-        this.setState({
-          openEditDialog : false,
-        })
-      }} aria-labelledby="form-dialog-title">
-        <DialogTitle id="form-dialog-title">Modifier une question</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            required
-            margin="dense"
-            onChange={(e) => this.handleChangeNameQuestion(e)}
-            value={this.state.questions[editIndex]?.question || ''}
-            label="Question"
-            type="text"
-            fullWidth
-          />
-          <TextField
-            margin="dense"
-            onChange={(e) => this.handleChangeDescriptionQuestion(e)}
-            value={this.state.questions[editIndex]?.description || ''}
-            label="Description"
-            type="text"
-            fullWidth
-          />
-          <FormControl required className={classes.formControl}>
-        <InputLabel id="simple-select-label">Type</InputLabel>
-        <SelectMUI
-          labelId="simple-select-label"
-          id="simple-select"
-          value={this.state.questions[editIndex]?.type || ''}
-          onChange={(e) => {
-            let value = e.target.value;
-            this.setState((state, props) => ({
-              questions : {
-                ...state.questions,
-                [state.editIndex] : {
-                  ...state.questions[state.editIndex],
-                  type : value,
-                  answers: {
-                    0 : {
-                      content : ""
-                    }
+              <Dialog fullWidth open={openEditDialog} onClose={() => {
+                this.setState({
+                  openEditDialog : false,
+                })
+              }} aria-labelledby="form-dialog-title">
+                <DialogTitle id="form-dialog-title">Modifier une question</DialogTitle>
+                <DialogContent>
+                  <TextField
+                    autoFocus
+                    required
+                    margin="dense"
+                    onChange={(e) => this.handleChangeNameQuestion(e)}
+                    value={questions[editIndex]?.question || ''}
+                    label="Question"
+                    type="text"
+                    fullWidth
+                  />
+                  <TextField
+                    margin="dense"
+                    onChange={(e) => this.handleChangeDescriptionQuestion(e)}
+                    value={questions[editIndex]?.description || ''}
+                    label="Description"
+                    type="text"
+                    fullWidth
+                  />
+                  <FormControl required className={classes.formControl}>
+                <InputLabel id="simple-select-label">Type</InputLabel>
+                <Select
+                  labelId="simple-select-label"
+                  id="simple-select"
+                  value={questions[editIndex]?.type || ''}
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    this.setState((state, props) => ({
+                      questions : {
+                        ...state.questions,
+                        [state.editIndex] : {
+                          ...state.questions[state.editIndex],
+                          type : value,
+                          answers: {
+                            0 : {
+                              content : ""
+                            }
+                          }
+                        },
+                    },
+                    }));
+                  }}>
+                  <MenuItem value={'text'}>Entrée</MenuItem>
+                  <MenuItem value={'number'}>Nombre</MenuItem>
+                  <MenuItem value={'email'}>Email</MenuItem>
+                  <MenuItem value={'radio'}>Sélection</MenuItem>
+                  <MenuItem value={'checkbox'}>Multi-sélection</MenuItem>
+                </Select>
+              </FormControl>
+              {questions[editIndex]?.type === "number" && (
+                <TextField
+                required
+                margin="dense"
+                label="Ex. : âge"
+                type="text"
+                onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
+                value={
+                  questions[editIndex]?.answers[0]?.content || ''
+                }
+                fullWidth />
+              )}
+              {questions[editIndex]?.type === "text" && (
+                <TextField
+                required
+                margin="dense"
+                label="Ex. : Prénom"
+                type="text"
+                onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
+                value={
+                  questions[editIndex]?.answers[0]?.content || ''
+                }
+                fullWidth />
+              )}
+              {questions[editIndex]?.type === "email" && (
+                <TextField
+                  required
+                  margin="dense"
+                  label="Ex. : Email"
+                  type="text"
+                  onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
+                  value={
+                    questions[editIndex]?.answers[0]?.content || ''
                   }
-                },
-            },
-            }));
-          }}>
-          <MenuItem value={'text'}>Entrée</MenuItem>
-          <MenuItem value={'number'}>Nombre</MenuItem>
-          <MenuItem value={'email'}>Email</MenuItem>
-          <MenuItem value={'radio'}>Sélection</MenuItem>
-          <MenuItem value={'checkbox'}>Multi-sélection</MenuItem>
-        </SelectMUI>
-      </FormControl>
-      {this.state.questions[editIndex]?.type === "number" && (
-        <TextField
-        required
-        margin="dense"
-        label="Ex. : âge"
-        type="text"
-        onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
-        value={
-          this.state.questions[editIndex]?.answers[0]?.content || ''
-        }
-        fullWidth />
-      )}
-      {this.state.questions[editIndex]?.type === "text" && (
-        <TextField
-        required
-        margin="dense"
-        label="Ex. : Prénom"
-        type="text"
-        onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
-        value={
-          this.state.questions[editIndex]?.answers[0]?.content || ''
-        }
-        fullWidth />
-      )}
-      {this.state.questions[editIndex]?.type === "email" && (
-        <TextField
-          required
-          margin="dense"
-          label="Ex. : Email"
-          type="text"
-          onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
-          value={
-            this.state.questions[editIndex]?.answers[0]?.content || ''
-          }
-          fullWidth />
-      )}
-      {this.state.questions[editIndex]?.type === "checkbox" && (
-        <>
-        {Object.keys(this.state.questions[editIndex]?.answers).map((el,id) =>
-          (
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-          <TextField
-          required
-          margin="dense"
-          label={`Option n°${id+1}`}
-          value={
-            this.state.questions[editIndex]?.answers[`${id}`]?.content || ''
-          }
-          onChange={(e) => this.handleChangeQuestionAnswers(e, id)}
-          type="text"
-          fullWidth />
-                    <IconButton aria-label="delete" onClick={() => this.deleteQuestionAnswers(id)} className={classes.deleteBtn}>
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-          </div>
-          )
-        )}
-          <Button onClick={() => this.addQuestionAnswers()} color="primary" variant="contained" size="small">
-            Ajouter un champ
-          </Button>
-        </>
-      )}
-      {this.state.questions[editIndex]?.type === "radio" && (
+                  fullWidth />
+              )}
+              {questions[editIndex]?.type === "checkbox" && (
                 <>
-                {Object.keys(this.state.questions[editIndex]?.answers).map((el,id) =>
+                {Object.keys(questions[editIndex]?.answers).map((el,id) =>
                   (
                     <div style={{
-                      display:"flex",
-                      alignItems:"center",
-                      justifyContent:"center"
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}>
                   <TextField
                   required
                   margin="dense"
                   label={`Option n°${id+1}`}
                   value={
-                    this.state.questions[editIndex]?.answers[`${id}`]?.content || ''
+                    questions[editIndex]?.answers[`${id}`]?.content || ''
                   }
                   onChange={(e) => this.handleChangeQuestionAnswers(e, id)}
                   type="text"
                   fullWidth />
                             <IconButton aria-label="delete" onClick={() => this.deleteQuestionAnswers(id)} className={classes.deleteBtn}>
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
                   </div>
                   )
                 )}
@@ -1197,27 +1480,58 @@ class QuestionsBase extends Component {
                     Ajouter un champ
                   </Button>
                 </>
-      )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => {
-            this.setState({
-              openEditDialog: false,
-            });
-            this.resetQuestion();
-          }} color="primary">
-            Annuler
-          </Button>
-          <Button 
-          disabled={!this.state.questions[editIndex]?.answers[0]?.content || !this.state.questions[editIndex]?.question}
-          onClick={() => 
-          this.editQuestion()
-          } color="primary" variant="contained">
-            Modifier
-          </Button>
-        </DialogActions>
-      </Dialog>
-          
+              )}
+              {questions[editIndex]?.type === "radio" && (
+                        <>
+                        {Object.keys(questions[editIndex]?.answers).map((el,id) =>
+                          (
+                            <div style={{
+                              display:"flex",
+                              alignItems:"center",
+                              justifyContent:"center"
+                            }}>
+                          <TextField
+                          required
+                          margin="dense"
+                          label={`Option n°${id+1}`}
+                          value={
+                            questions[editIndex]?.answers[`${id}`]?.content || ''
+                          }
+                          onChange={(e) => this.handleChangeQuestionAnswers(e, id)}
+                          type="text"
+                          fullWidth />
+                                    <IconButton aria-label="delete" onClick={() => this.deleteQuestionAnswers(id)} className={classes.deleteBtn}>
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                          </div>
+                          )
+                        )}
+                          <Button onClick={() => this.addQuestionAnswers()} color="primary" variant="contained" size="small">
+                            Ajouter un champ
+                          </Button>
+                        </>
+              )}
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => {
+                    this.setState({
+                      openEditDialog: false,
+                    });
+                    this.resetQuestion();
+                  }} color="primary">
+                    Annuler
+                  </Button>
+                  <Button 
+                  disabled={!questions[editIndex]?.answers[0]?.content || !questions[editIndex]?.question}
+                  onClick={() => 
+                  this.editQuestion()
+                  } color="primary" variant="contained">
+                    Modifier
+                  </Button>
+                </DialogActions>
+              </Dialog>        
+
+
             </>
         )
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { Route, Switch } from 'react-router-dom';
  
 import App from './components/App';
 import Login from './components/Login';
@@ -14,11 +14,11 @@ class Root extends React.Component {
   }
   render() {
   return(
-  <Router>
+  <Switch>
       <Route exact path={ROUTES.QUIZ} component={App} />
       <Route path={ROUTES.LOG_IN} component={Login} />
       <Route path={ROUTES.ADMIN} component={AdminPanel} />
-  </Router>
+  </Switch>
   )
   }
 }

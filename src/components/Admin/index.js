@@ -23,12 +23,17 @@ import { AuthUserContext, withAuthorization } from '../Session';
 
 import { compose } from 'recompose';
 
+import DashboardRoundedIcon from '@material-ui/icons/DashboardRounded';
+import QuestionAnswerRoundedIcon from '@material-ui/icons/QuestionAnswerRounded';
+import HelpRoundedIcon from '@material-ui/icons/HelpRounded';
+import FormatPaintRoundedIcon from '@material-ui/icons/FormatPaintRounded';
+import EmailRoundedIcon from '@material-ui/icons/EmailRounded';
+
 const AdminPage = () => (
   <AuthUserContext.Consumer>
     {authUser => (
-  <div>
     <Admin />
-  </div>)}
+)}
   </AuthUserContext.Consumer>
 )
 
@@ -42,7 +47,8 @@ const styles = (theme) => ({
     textTransform:"none",
   },
   tabs: {
-    borderRight: `1px solid ${theme.palette.divider}`,
+    minWidth: 200,
+    borderRight: `2px solid ${theme.palette.divider}`,
     backgroundColor: "#051E34",
     color:"#eee",
     "& .MuiTab-wrapper": {
@@ -58,8 +64,7 @@ const styles = (theme) => ({
   },
   tab: {
     textTransform:"none",
-    textAlign:"left",
-    fontSize: 13
+    fontSize: 15
   }
 })
 
@@ -141,57 +146,33 @@ componentWillUnmount() {
     this.setState({tab:newValue});
     localStorage.setItem('tab',newValue);
   };
-  /* getDb() {
-    const answers = db.collection("answers");
-    answers
-    .orderBy('createdAt','desc')
-      .onSnapshot((docSnapshot) => {
-          let data = docSnapshot.docs.map(doc => doc.data())
-          if(data) {
-            this.setState({
-              totUsers: docSnapshot.docs.length,
-              answers : data,
-              loading: false,
-            })
-            localStorage.setItem("totUsers", docSnapshot.docs.length);
-            localStorage.setItem("answers", JSON.stringify(data));
-          }
-      }, err => {
-          console.log("Error getting documents: ", err);
-      })
-      const questions = db.collection("questions");
-      questions
-      .orderBy('createdAt')
-      .get()
-      .then((querySnapshot) => {
-      let data = querySnapshot.docs.map(doc => doc.data());
-      if(data) {
-        data.map(doc => console.log(doc.length))
-        this.setState({
-          totQuest : querySnapshot.docs.length,
-          questions: data
-        })
-      }
-      localStorage.setItem("totQuest", querySnapshot.docs.length);
-      localStorage.setItem("questions", JSON.stringify(data));
-    });
-    
-  } */
   getDb() {
     let db = this.props.firebase.db;
     let responsesRef = db.ref("responses");
     let questionsRef = db.ref("questions");
     responsesRef.on('value',(snap)=>{
       let data = snap.val();
+      if(data) {
       this.setState({
         totUsers : Object.keys(data).length
       })
-    });
+      } else {
+        this.setState({
+          totUsers : 0,
+        })
+      }
+    })
     questionsRef.on('value',(snap)=>{
       let data = snap.val();
+      if(data) {
       this.setState({
         totQuest : Object.keys(data).length
       })
+      } else {
+        this.setState({
+          totQuest : 0,
+        })
+      }
     });
   }
   render() {
@@ -207,11 +188,11 @@ componentWillUnmount() {
         onChange={this.handleChange}
         aria-label="Vertical tabs example"
         className={classes.tabs}>
-        <Tab label="Dashboard" {...a11yProps(0)} className={classes.tab} />
-        <Tab label="Réponses" {...a11yProps(1)} className={classes.tab}/>
-        <Tab label="Questions" {...a11yProps(2)} className={classes.tab}/>
-        <Tab label="Personnalisation" {...a11yProps(3)} className={classes.tab}/>
-        <Tab label="Emailing" {...a11yProps(4)} className={classes.tab}/>
+        <Tab icon={<DashboardRoundedIcon fontSize="13" style={{marginRight:"0.5em"}}/>} label="Dashboard" {...a11yProps(0)} className={classes.tab} />
+        <Tab icon={<QuestionAnswerRoundedIcon fontSize="13" style={{marginRight:"0.5em"}}/>}  label="Réponses" {...a11yProps(1)} className={classes.tab}/>
+        <Tab icon={<HelpRoundedIcon fontSize="13" style={{marginRight:"0.5em"}}/>} label="Questions" {...a11yProps(2)} className={classes.tab}/>
+        <Tab icon={<FormatPaintRoundedIcon fontSize="13" style={{marginRight:"0.5em"}}/>} label="Personnalisation" {...a11yProps(3)} className={classes.tab}/>
+        <Tab icon={<EmailRoundedIcon fontSize="13" style={{marginRight:"0.5em"}}/>} label="Emailing" {...a11yProps(4)} className={classes.tab}/>
         {/* <Tab label="Mon compte" {...a11yProps(4)} className={classes.tab}/> */}
       </Tabs>
       <TabPanel value={Number(this.state.tab)} index={0}>
