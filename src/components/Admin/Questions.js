@@ -368,8 +368,17 @@ class QuestionsBase extends Component {
       const {id, conditions} = this.state;
       let db = this.props.firebase.db;
       let questionsRef = db.ref(`questions/${id}/conditions/`);
-      console.log(conditions);
-      questionsRef.set(conditions);
+      let j = 0;
+      const filtered = Object.keys(conditions)
+          .reduce((obj, key) => {
+            if(conditions[key]) {
+              console.log(conditions[key])
+            obj[j] = conditions[key];
+            j++;
+            }
+            return obj;
+          }, []);
+      questionsRef.set(filtered);
       this.setState({
         saveConditions : false
       })
@@ -532,18 +541,13 @@ class QuestionsBase extends Component {
       let db = this.props.firebase.db;
       const {id, conditions} = this.state;
       let cp = JSON.parse(JSON.stringify(conditions));
-      if(key === 0) {
-        let ref = db.ref(`questions/${id}/conditions/${_id}`);
-        cp.splice(_id, 1)
-        this.setState({
-          conditions : cp,
-        })
-        ref.remove();
-      } else {
+      const length = Object.keys(cp[_id].conditions).length;
+      if(length > 1) {
           let j = 0;
           const filtered = Object.keys(cp[_id].conditions)
           .filter(id => Number(id) !== Number(key))
           .reduce((obj, key) => {
+            console.log(cp[_id].conditions[key]);
             obj[j] = cp[_id].conditions[key];
             j++;
             return obj;
@@ -552,9 +556,13 @@ class QuestionsBase extends Component {
           this.setState({
             conditions : cp
           })
-          let ref = db.ref(`questions/${id}/conditions/${_id}/conditions/${key}`);
-          ref.remove();
-      }
+          let ref = db.ref(`questions/${id}/conditions/${_id}/conditions`);
+          ref.set(filtered);
+        }
+        else {
+          let ref = db.ref(`questions/${id}/conditions/${_id}`);
+          ref.remove()
+        }
     }
 
     onDuplicate = () => {
@@ -708,14 +716,6 @@ class QuestionsBase extends Component {
   anchorEl={anchorMore}
   open={anchorMore}
   keepMounted
-  anchorOrigin={{
-    vertical: 'bottom',
-    horizontal: 'right',
-  }}
-  transformOrigin={{
-    vertical: 'top',
-    horizontal: 'right',
-  }}
   onClose={() => {
     this.setState({
       anchorMore: undefined,

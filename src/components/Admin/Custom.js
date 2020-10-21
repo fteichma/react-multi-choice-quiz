@@ -128,6 +128,8 @@ class CustomBase extends Component{
               this.setUpload(url, path)
             })
           })
+        } else {
+            this.setUpload("", path)
         }
       }
   
@@ -195,7 +197,9 @@ class CustomBase extends Component{
         <input  accept="image/*" className={classes.input} type="file" />
       </Button>
       {custom?.logo && 
-      (<IconButton variant="contained" onClick={() => {}}aria-label="delete" className={classes.deleteBtn}>
+      (<IconButton variant="contained" onClick={() => {
+          this.handleUpload(undefined, "logo/url")
+      }}aria-label="delete" className={classes.deleteBtn}>
          <DeleteIcon color={"default"} fontSize="small"/>
       </IconButton>)}
             <div className="categories-settings">

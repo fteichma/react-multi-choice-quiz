@@ -7,6 +7,7 @@ import {
     TextField,
     FormControl,
     Select as SelectMUI,
+    Menu,
     MenuItem,
 } from '@material-ui/core';
 
@@ -21,7 +22,7 @@ import {
     Add as AddIcon,
     MoreVert as MoreVertIcon,
     Visibility,
-    Menu 
+    Menu as MenuIcon
 } from '@material-ui/icons';
 
 import firebase from "firebase/app";
@@ -102,7 +103,7 @@ class EmailingBase extends Component{
             id : localStorage.getItem('id-email') ? localStorage.getItem('id-email') : undefined,
             email : undefined,
             loading : true,
-            anchorMore : undefined,
+            anchorMoreEmailing : undefined,
         }
         this.emailEditorRef = React.createRef();
         this.getEmailing = this.getEmailing.bind(this);
@@ -139,6 +140,41 @@ class EmailingBase extends Component{
         createdAt: firebase.database.ServerValue.TIMESTAMP,
         id
       });
+    }
+
+    onDuplicate = () => {
+      const {email, id} = this.state;
+      let db = this.props.firebase.db;
+      let questionsRef = db.ref("email");
+      let newQuestionsRef = questionsRef.push();
+      let newKey = newQuestionsRef.key;
+      let current = email[id]?.email;
+      newQuestionsRef.set({
+        email: current,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        id : newKey
+      });
+      setTimeout(() => { 
+        this.setState({
+          id: newKey
+        });
+        this.getEmailByRef(newKey)}, 1000);
+    }
+
+    onDelete = () => {
+      let db = this.props.firebase.db;
+      const {id} = this.state;
+      if(id){
+        let questionsRef = db.ref(`email/${id}`);
+        questionsRef.remove();
+      }
+    }
+
+    getEmailByRef = (key) => {
+      this.setState({
+        id : key
+      })
+      localStorage.setItem('id-email',key);
     }
 
     async getEmailing() {
@@ -187,7 +223,7 @@ class EmailingBase extends Component{
     render() {
         const {classes} = this.props;
         /* const {} = this.state; */
-        const {id, idList, anchorMore, loading, email} = this.state;
+        const {id, idList, anchorMoreEmailing, loading, email} = this.state;
         return(
             <>
             {loading ?
@@ -216,22 +252,23 @@ class EmailingBase extends Component{
             ))}
         </SelectMUI>
       </FormControl>
-      <IconButton aria-controls="simple-menu" aria-haspopup="true" onClick={(e) => 
+      <IconButton aria-controls="menu-emailing" aria-haspopup="true" onClick={(e) => 
       {
+        let currentTarget = e.currentTarget;
         this.setState({
-        anchorMore : e.currentTarget
+        anchorMoreEmailing : currentTarget
       })
     }
     }>
                                         <MoreVertIcon fontSize="small" />
                                     </IconButton>
 <Menu
-  id="simple-menu"
-  anchorEl={anchorMore}
-  open={Boolean(anchorMore)}
+  id="menu-emailing"
+  anchorEl={anchorMoreEmailing}
+  open={anchorMoreEmailing}
   onClose={() => {
     this.setState({
-      anchorMore: undefined,
+      anchorMoreEmailing: undefined,
     })}}
 >
   <MenuItem onClick={() => {
