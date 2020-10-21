@@ -117,6 +117,7 @@ class AdminBase extends Component {
         tab : 0,
         totUsers : 0,
         totQuest: 0,
+        totEmail: 0,
         loading: false,
     };
 }
@@ -124,19 +125,6 @@ componentDidMount() {
   this.setState({
     tab : localStorage.getItem('tab') ? localStorage.getItem('tab') : 0,
   })
-  //LOCALHOST SPEED
-/*   if(localStorage.getItem("answers")) {
-    this.setState({
-      totUsers: JSON.parse(localStorage.getItem("totUsers")),
-      answers : JSON.parse(localStorage.getItem("answers")),
-      loading: false,
-      questions: JSON.parse(localStorage.getItem("questions")),
-      totQuest : JSON.parse(localStorage.getItem("totQuest"))
-    })
-  }
-  else {
-    this.getDb();
-  } */
   this.getDb();
 }
 componentWillUnmount() {
@@ -149,6 +137,7 @@ componentWillUnmount() {
   getDb() {
     let db = this.props.firebase.db;
     let responsesRef = db.ref("responses");
+    let emailRef = db.ref("email");
     let questionsRef = db.ref("questions");
     responsesRef.on('value',(snap)=>{
       let data = snap.val();
@@ -159,6 +148,18 @@ componentWillUnmount() {
       } else {
         this.setState({
           totUsers : 0,
+        })
+      }
+    })
+    emailRef.on('value',(snap)=>{
+      let data = snap.val();
+      if(data) {
+      this.setState({
+        totEmail : Object.keys(data).length
+      })
+      } else {
+        this.setState({
+          totEmail : 0,
         })
       }
     })
@@ -196,7 +197,7 @@ componentWillUnmount() {
         {/* <Tab label="Mon compte" {...a11yProps(4)} className={classes.tab}/> */}
       </Tabs>
       <TabPanel value={Number(this.state.tab)} index={0}>
-        {loading ? <Loading /> : <Dashboard totUsers={this.state.totUsers} totQuest={this.state.totQuest} />}
+        {loading ? <Loading /> : <Dashboard totUsers={this.state.totUsers} totQuest={this.state.totQuest} totEmail={this.state.totEmail}/>}
       </TabPanel>
       <TabPanel value={Number(this.state.tab)} index={1}>
       <h1>Réponses</h1>

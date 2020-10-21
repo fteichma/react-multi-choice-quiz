@@ -28,7 +28,7 @@ const theme = createMuiTheme({
 
 class Dashboard extends React.Component {
     render() {
-        const { classes, totUsers, totQuest } = this.props;
+        const { classes, totUsers, totQuest, totEmail } = this.props;
     return(
         <>
         <h1>Dashboard</h1>
@@ -60,6 +60,20 @@ class Dashboard extends React.Component {
             fontWeight:400,
             color:theme.palette.primary.main
           }}>{totQuest}</p>
+        </Paper>
+        <Paper elevation={1} className={classes.paper}>
+          <h2 style={{
+            fontSize:18,
+            padding:0,
+            margin:0,
+          }}>Tot. emailing</h2>
+          <p style={{
+            fontSize:40,
+            padding:0,
+            margin:"0.2em 0 0",
+            fontWeight:400,
+            color:theme.palette.primary.main
+          }}>{totEmail}</p>
         </Paper>
         </Box>
         </>
