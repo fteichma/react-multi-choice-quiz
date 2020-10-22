@@ -266,8 +266,6 @@ style={{
             </p>
             <div className="categories-settings">
             <span>Arrière-plan</span>
-            {custom?.bgColor &&
-            (
                 <p style={{position:"relative"}}>
                  <button className="color-select"
                  style={{
@@ -311,13 +309,9 @@ style={{
                      )
                  }
                 </p>
-            )
-            }
             </div>
             <div className="categories-settings">
             <span>Couleur des titres</span>
-            {custom?.textColor &&
-            (
                 <div style={{position:"relative"}}>
                  <button className="color-select"
                  style={{
@@ -364,13 +358,9 @@ style={{
                      )
                  }
                 </div>
-            )
-            }
             </div>
             <div className="categories-settings">
             <span>Couleur des descriptions</span>
-            {custom?.textColor &&
-            (
                 <p style={{position:"relative"}}>
                  <button className="color-select"
                  style={{
@@ -417,8 +407,6 @@ style={{
                      )
                  }
                 </p>
-            )
-            }
             </div>
             <div className="categories-settings">
                 <span>

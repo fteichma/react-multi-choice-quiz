@@ -165,7 +165,7 @@ class QuestionsBase extends Component {
             newQuestion : NEW_QUESTION,
             items : [],
             questions: {},
-            conditions: {},
+            conditions: [],
             anchorMore: undefined,
             saveConditions : false,
         }
