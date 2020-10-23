@@ -242,16 +242,6 @@ input[type="checkbox"]:disabled, .disabled {
   pointer-events: none;
 }
 
-.radioOption::before { 
-  background: #00000090;
-  background: var(--select-primary);
-}
-
-.radioOption::after {
-  border: 3px solid #00000090;
-  border: 3px solid var(--select-primary);
-}
-
 .radioOption:hover:after {
   opacity: 1;
 }
@@ -277,19 +267,22 @@ input[type="checkbox"]:disabled, .disabled {
   height: 100%;
 }
 
-.multiOption input[type=checkbox] {
+.multiOption input{
+  display: none;
+}
+
+.multiOption label {
+  cursor: pointer;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.multiOption label {
   transition: all 0.1s linear;
 }
 
-.multiOption input[type=checkbox]:checked::after, .multiOption:hover input[type=checkbox]::after {
-  opacity: 1;
-}
-
-.multiOption input[type=checkbox]:checked::before, .multiOption:hover input[type=checkbox]::before {
-  opacity: 0.09;
-}
-
-.multiOption input[type=checkbox]::after, .multiOption input[type=checkbox]::before {
+.multiOption label::after , .multiOption label::before {
   content: "";
   width: 100%;
   height: 100%;
@@ -303,37 +296,16 @@ input[type="checkbox"]:disabled, .disabled {
   pointer-events: none;
 }
 
-.multiOption input[type=checkbox]::before {
-  background : #00000090;
-  background: var(--select-primary);
+.multiOption input:checked ~ label::after,
+.multiOption input:checked ~ * label::after,
+ .multiOption:hover label::after {
+  opacity: 1;
 }
 
-
-.multiOption input[type=checkbox]::after {
-  border : 3px solid #00000090;
-  border: 3px solid var(--select-primary);
-}
-
-
-.multiOption input[type=checkbox]:checked::after {
-  border: 3px solid #2ef391;
-  border: 3px solid var(--select-secondary);
-}
-
-.multiOptioninput[type=checkbox]:checked::before {
-  background: #2ef39125;
-  background: var(--select-secondary);
-}
-
-.multiOption input[type=checkbox] {
-  margin:0;
-  padding:0;
-  width: 0;
-  height: 0;
-}
-
-.multiOption label {
-  cursor: pointer;
+.multiOption input:checked ~ label::before,
+.multiOption input:checked ~ * label::before, 
+.multiOption:hover label::before {
+  opacity: 0.2;
 }
 
 .radioCustomButton,
@@ -398,28 +370,32 @@ body {
   overflow: hidden;
 }
 
-
-
-
 .body {
   width: 208.8px;
   height: 489.6px;
   margin : 0 2em;
 }
 
-.body input[type=checkbox] {
+.body label {
   transition: all 0.1s linear;
 }
 
-.body input[type=checkbox]:checked::after, .bodySelect:hover input[type=checkbox]::after {
+.body input:checked ~ * label::after,
+.body input:checked ~ label::after,  
+.bodySelect:hover label::after {
   opacity: 1;
 }
 
-.body input[type=checkbox]:checked::before, .bodySelect:hover input[type=checkbox]::before {
-  opacity: 0.09;
+.body label {
+  width: 100%;
+  height: 100%;
 }
 
-.bodySelect input[type=checkbox]::after, .bodySelect input[type=checkbox]::before {
+.body input:checked::before, .bodySelect:hover label::before {
+  opacity: 0.2;
+}
+
+.bodySelect label::after, .bodySelect label::before {
   content: "";
   width: 100%;
   height: 100%;
@@ -433,42 +409,18 @@ body {
   pointer-events: none;
 }
 
-.bodySelect input[type=checkbox]::before {
-  background : #00000090;
-  background: var(--select-primary);
-}
-
-
-.bodySelect input[type=checkbox]::after {
-  border : 2px solid #00000090;
-  border: 2px solid var(--select-primary);
-}
-
-
-.body input[type=checkbox]:checked::after {
-  border: 2px solid #2ef391;
-  border: 2px solid var(--select-secondary);
-}
-
-.body input[type=checkbox]:checked::before {
-  background: #2ef39125;
-  background: var(--select-secondary);
-}
-
-.bodySelect input[type=checkbox] {
-  width: 0px;
-  height: 0px;
-  margin:0;
-  padding:0;
+.bodySelect input {
+  display: none;
 }
 
 .bodySelect {
   position: absolute;
   list-style-type: none;
   width: fit-content;
+  width: auto;
   padding: 4px 10px;
   background: white;
-  opacity: 0.85;
+  opacity: 0.8;
   border-radius: 20px;
   line-height: 1;
   border:none;
@@ -669,14 +621,11 @@ line {
 }
 
 .btn-checkbox-body {
-  width: auto;
   border-radius: 50px;
   padding: 0 1.5em;
   height: 50px;
   position: absolute;
   bottom: 16px;
-  left: 0;
-  right: 0;
   margin: auto;
 }
 

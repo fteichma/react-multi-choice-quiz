@@ -56,7 +56,6 @@ getCustom() {
       this.setState({
         custom : data
       })
-      document.getElementsByTagName("body")[0].style = `--select-primary:${data?.select?.primary};--select-secondary:${data?.select?.secondary};`;
     }
     });
 }
@@ -152,7 +151,6 @@ getQuestionsByRef(id) {
     let email = Object.keys(answers).filter((el, key) => {
       return answers[key].type === "email"
     });
-    console.log(email);
     let listAnswers = "<table>" +
     "<thead>" +
     "<tr>" +
@@ -187,7 +185,7 @@ getQuestionsByRef(id) {
       },
       answer: target,
       answers : [...state.answers, 
-        {question : state.question, value : checkedList?.length ? JSON.stringify(checkedList) : target.value, type: target.type, name: target.name}
+        {question : state.question, value : checkedList?.length ? checkedList : target.value, type: target.type, name: target.name}
       ],
     }));
   }
@@ -198,7 +196,6 @@ getQuestionsByRef(id) {
     const questions = this.state.questions;
     const answers = this.state.answers;
     answers.pop();
-    console.log(answers);
     this.setState((state, props) => ({
       counter: counter,
       questionId: questionId,

@@ -1,3 +1,5 @@
+/** @jsx jsx */
+
 import React from 'react';
 import QuestionCount from './QuestionCount';
 import { ChevronLeft, ChevronRight } from 'react-feather';
@@ -6,6 +8,8 @@ import {ReactComponent as BodyBack} from '../../svg/body_back.svg';
 
 import { ToastContainer } from 'react-toastify';
 import Notify from "../../notify";
+
+import { css, jsx } from '@emotion/core'
 
 class Quiz extends React.Component {
   constructor(props) {
@@ -24,7 +28,8 @@ class Quiz extends React.Component {
       target : e.target,
     });
     if(e?.target?.checked) {
-    let ary = [...checkedList, e.target.value];
+    let value = e.target.value;
+    let ary = [...checkedList, value];
     this.setState((state) => ({
       checkedList : ary
     }))
@@ -65,7 +70,6 @@ class Quiz extends React.Component {
       this.setState({
         checkedList : ary,
       })
-      console.log(ary);
       if(ary.length === 0) {
         this.setState({
           disabledList : []
@@ -78,21 +82,20 @@ class Quiz extends React.Component {
     const {back, error, disabledList} = this.state;
     if(!this.props.notFound){
         return(
-        <>
-    <div className="container" style={{backgroundColor: custom?.bgColor ? custom?.bgColor : "#ffffff"}}>
+    <div className="container">
       <div key={this.props.questionId} className={`questionContainer animate__animated ${back ? `animate__fadeInLeft` : `animate__fadeInRight`}`}>
       {this.props.mainImage && (
         <div style={{margin:"auto",display:"flex",justifyContent:"center",alignItems:"center"}}>
         <img width='60' src={this.props.mainImage} alt=""/>
         </div>
       )}
-      <h2 className="question" style={{
-        color : custom?.textColor?.title ? custom?.textColor?.title : "#4b4b4b"
-      }}>{this.props.question}</h2>
+      <h2 className="question" css={css`
+        color : ${custom?.textColor?.title}
+      `}>{this.props.question}</h2>
       {this.props.description &&
-      (<p className="question-description" style={{
-        color : custom?.textColor?.p ? custom?.textColor?.p : "#999999"
-      }}>{this.props.description}</p>)}
+      (<p className="question-description" css={css`
+        color : ${custom?.textColor?.p}
+      `}>{this.props.description}</p>)}
         <ul className="answerOptions">
             {this.props?.answerOptions.map((el, key, array) => { 
               if(this.props.type === "text" || this.props.type === "email" || this.props.type === "number") {
@@ -137,7 +140,15 @@ class Quiz extends React.Component {
                   ) }
                    else if(this.props.type === "radio") {
             return (
-              <li className="answerOption radioOption" key={`radioOption${key}`}>
+              <li className={"answerOption radioOption"}
+              css={css`
+                &::before {
+                  background: ${custom?.select?.primary};
+                }
+                &::after {
+                  border: 3px solid ${custom?.select?.primary};
+                }`}
+               key={`radioOption${key}`}>
                 <input
                   type={this.props.type}
                   className="radioCustomButton"
@@ -165,7 +176,8 @@ class Quiz extends React.Component {
             else if (this.props.type === "checkbox") {
               return (
                     <li className="answerOption multiOption" key={`multiOption${key}`}>
-                      <input className="multiCustomButton" type={this.props.type} id={`multiCustom${key}`} name={`multiCustom${key}`} value={array[key].content}
+                      <input className="multiCustomButton"
+                      type={this.props.type} id={`multiCustom${key}`} name={`multiCustom${key}`} value={array[key].content}
                                         onChange={(e) => {
                                           this.onMultiCheck(e);
                                         }} 
@@ -173,7 +185,21 @@ class Quiz extends React.Component {
                       {array[key].image &&
                 <img src={array[key].image} className="answerImage" alt="Answer" width="50%"/>
                 }
-                      <label htmlFor={`multiCustom${key}`} className="multiCustomLabel">{array[key].content}</label>
+                      <label                                     css={css`
+                                    &::before {
+                                      background: ${custom?.select?.primary};
+                                    }
+                                    &::after {
+                                      border: 3px solid ${custom?.select?.primary};
+                                    }
+                                    .multiOption input:checked ~ &{
+                                      &::before {
+                                        background: ${custom?.select?.secondary};
+                                      }
+                                      &::after {
+                                        border: 3px solid ${custom?.select?.secondary};
+                                      }
+                                    }`} htmlFor={`multiCustom${key}`} className="multiCustomLabel">{array[key].content}</label>
                     </li>
               )
             }
@@ -181,22 +207,18 @@ class Quiz extends React.Component {
               {(this.props.type === "text" || this.props.type === "email" || this.props.type === "number") && 
               (
                   <button className="btn-nav btn-next"
-                  style={{
-                    backgroundColor: `${custom?.btn?.primary}` ? `${custom?.btn?.primary}` : "#ffffff"
-                  }}
+                  css={css`
+                    background-color: ${custom?.btn?.primary}
+                  `}
                   onClick={() => {
                     const {target} = this.state;
                     if(target?.value) {
                     this.setState({
                       checkedList : [],
+                      target:undefined,
                       back : false
                     })
-                    setTimeout(()=> {
-                      this.setState({
-                        target : undefined
-                      })
-                    }, 300);
-                      this.props.onAnswerSelected(this.state.target, this.state.checkedList);
+                      this.props.onAnswerSelected(this.state.target);
                       } else {
                         this.setState({
                           error:true,
@@ -215,36 +237,66 @@ class Quiz extends React.Component {
                 <div className="body" id="bodyBack">
                 {this.props.answerOptions.map((el,key,array) => 
               (key < 6) && (<li key={`bodySelect${key}`} className={`bodySelect ${disabledList.includes(el.content)? `disabled` : ``}`} id={el.content.replace(/\s/g, '').replace(/'/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}>
-                  <input disabled={disabledList.includes(el.content)} type="checkbox" name="bodySelect" value={el.content} onChange={(e) => this.onBodyCheck(e)} id={`body${key}`}/>
-                  <label htmlFor={`body${key}`}>{el.content}</label>
+                  <input
+                  disabled={disabledList.includes(el.content)} type="checkbox" name="bodySelect" value={el.content} onChange={(e) => this.onBodyCheck(e)} id={`body${key}`} hidden/>
+                  <label
+                                                                        css={css`
+                                                                        &::before {
+                                                                          background: ${custom?.select?.primary};
+                                                                        }
+                                                                        &::after {
+                                                                          border: 2px solid ${custom?.select?.primary};
+                                                                        }
+                                                                        .body input:checked ~ &{
+                                                                          &::before {
+                                                                            background: ${custom?.select?.secondary};
+                                                                          }
+                                                                          &::after {
+                                                                            border: 2px solid ${custom?.select?.secondary};
+                                                                          }
+                                                                        }`} 
+                  htmlFor={`body${key}`}>{el.content}</label>
                 </li>))}
                 <BodyBack/>
                 </div>
                 <div className="body" id="bodyFront">
               {this.props.answerOptions.map((el,key,array) => 
               (key >= 6) && (<li key={`bodySelect${key}`} className={`bodySelect ${disabledList.includes(el.content)? `disabled` : ``}`} id={el.content.replace(/\s/g, '').replace(/'/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}>
-                  <input disabled={disabledList.includes(el.content)}  type="checkbox" name="bodySelect" value={el.content} onChange={(e) => this.onBodyCheck(e)} id={`body${key}`}/>
-                  <label htmlFor={`body${key}`}>{el.content}</label>
+                  <input 
+                  disabled={disabledList.includes(el.content)}  type="checkbox" name="bodySelect" value={el.content} onChange={(e) => this.onBodyCheck(e)} id={`body${key}`}/>
+                  <label 
+                  css={css`
+                  &::before {
+                    background: ${custom?.select?.primary};
+                  }
+                  &::after {
+                    border: 2px solid ${custom?.select?.primary};
+                  }
+                  .body input:checked ~ &{
+                    &::before {
+                      background: ${custom?.select?.secondary};
+                    }
+                    &::after {
+                      border: 2px solid ${custom?.select?.secondary};
+                    }
+                  }`} 
+                  htmlFor={`body${key}`}>{el.content}</label>
                 </li>))}
                 <BodyFront/>
                 </div>
                   <button className="btn-nav btn-checkbox-body"
-                  style={{
-                    backgroundColor: `${custom?.btn?.primary}` ? `${custom?.btn?.primary}` : "#ffffff"
-                  }}
+                  css={css`
+                    background-color: ${custom?.btn?.primary}
+                  `}
                   onClick={() => {
-                    const {target} = this.state;
-                    if(target?.value) {
-                    this.setState({
-                      checkedList : [],
-                      back : false
-                    })
-                    setTimeout(()=> {
+                    const {target, checkedList} = this.state;
+                    if(target?.value && checkedList.length) {
+                      this.props.onAnswerSelected(target, checkedList);
                       this.setState({
+                        checkedList : [],
+                        back : false,
                         target : undefined
                       })
-                    }, 300);
-                      this.props.onAnswerSelected(this.state.target, this.state.checkedList);
                       } else {
                         this.setState({
                           error:true,
@@ -253,9 +305,9 @@ class Quiz extends React.Component {
                         Notify("Veuillez sélectionner au moins une réponse...", "error");
                       }
                       }}>
-                        <span style={{
-                          color:custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"
-                        }}>{this.props.questionId === this.props.questionId?.length ? ` Terminer ` : `Continuer `}</span>
+                        <span css={css`
+                          color: ${custom?.btn?.secondary}
+                        `}>{this.props.questionId === (this.props.questionTotal) ? ` Terminer ` : `Continuer `}</span>
                         <ChevronRight size={20} color={custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"}/>
                     </button>
               </ul>
@@ -264,22 +316,18 @@ class Quiz extends React.Component {
         </ul>
         {(this.props.type === "checkbox") && (
                 <button className="btn-nav btn-checkbox"
-                style={{
-                  backgroundColor: `${custom?.btn?.primary}` ? `${custom?.btn?.primary}` : "#ffffff"
-                }}
+                css={css`
+                  background-color: ${custom?.btn?.primary}
+                `}
                 onClick={() => {
-                  const {target} = this.state;
-                  if(target?.value) {
-                  this.setState({
-                    checkedList : [],
-                    back : false
-                  })
-                  setTimeout(()=> {
+                  const {target, checkedList} = this.state;
+                  if(target?.value && checkedList.length) {
+                    this.props.onAnswerSelected(target, checkedList);
                     this.setState({
-                      target : undefined
+                      checkedList : [],
+                      back : false,
+                      target: undefined
                     })
-                  }, 300);
-                    this.props.onAnswerSelected(this.state.target, this.state.checkedList);
                     } else {
                       this.setState({
                         error:true,
@@ -288,9 +336,9 @@ class Quiz extends React.Component {
                       Notify("Veuillez sélectionner au moins une réponse...", "error");
                     }
                     }}>
-                      <span style={{
-                        color:custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"
-                      }}>{this.props.questionId === this.props.questionId?.length ? ` Terminer ` : ` Continuer `}</span>
+                      <span css={css`
+                        color: ${custom?.btn?.secondary}
+                      `}>{this.props.questionId === this.props.questionId?.length ? ` Terminer ` : ` Continuer `}</span>
                       <ChevronRight size={20} color={custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"}/>
                   </button>
             )}
@@ -298,31 +346,26 @@ class Quiz extends React.Component {
       <ToastContainer />
       {this.props.questionId>1 &&
       (<button onClick={()=>{
+        this.props.onBack();
         this.setState({
           checkedList : [],
           back:true,
           error:false,
+          target : undefined
         });
-        this.props.onBack();
-        setTimeout(()=> {
-          this.setState({
-            target : undefined
-          })
-        }, 300);
       }}
       className="btn-nav btn-prev"
-      style={{
-        backgroundColor: `${custom?.btn?.primary}` ? `${custom?.btn?.primary}` : "#ffffff"
-      }}
+      css={css`
+        background-color: ${custom?.btn?.primary}
+      `}
       >
         <ChevronLeft size={20} color={custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"}/>
-        <span style={{
-          color: custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"
-        }}>{`Précédent `}</span>
+        <span css={css`
+          color: ${custom?.btn?.secondary}
+        `}>{`Précédent `}</span>
       </button>)}
       <QuestionCount counter={this.props.questionId} total={this.props.questionTotal} btn={this.props.custom?.btn}/>
     </div>
-      </>
         )} else {
       return(
         <div className="container">
