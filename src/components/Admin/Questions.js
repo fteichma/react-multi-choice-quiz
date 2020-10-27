@@ -1037,89 +1037,78 @@ class QuestionsBase extends Component {
                               </TableHead>
                               <TableBody>
                                 {item?.type !== "body" &&
-                                  item?.answers.map((el, key, array) => {
-                                    return (
-                                      <TableRow key={key + "_answers"}>
-                                        <TableCell scope="row">
-                                          {`${key + 1}`}
-                                        </TableCell>
-                                        <TableCell>{el.content}</TableCell>
-                                        <TableCell>
-                                          {(item?.type === "radio" ||
-                                            item?.type === "checkbox") &&
-                                          !el.image ? (
-                                            <IconButton
-                                              color="primary"
-                                              disabled={dragged}
-                                              aria-label="upload picture"
-                                              component="label"
-                                              onChange={(e) =>
-                                                this.handleUploadAnswer(
-                                                  e,
-                                                  index,
-                                                  key
-                                                )
-                                              }
-                                            >
-                                              <PhotoCamera />
-                                              <input
-                                                accept="image/*"
-                                                className={classes.input}
-                                                id="icon-button-file"
-                                                type="file"
-                                              />
-                                            </IconButton>
-                                          ) : (
-                                            el.image && (
-                                              <>
-                                                <img
-                                                  src={el.image}
-                                                  style={{ maxWidth: 80 }}
-                                                  alt="Answer img"
-                                                />
-                                                <IconButton
-                                                  disabled={dragged}
-                                                  variant="contained"
-                                                  onClick={() =>
-                                                    this.setUploadAnswer(
-                                                      "",
-                                                      index,
-                                                      key
-                                                    )
-                                                  }
-                                                  aria-label="delete"
-                                                  className={classes.deleteBtn}
-                                                >
-                                                  <DeleteIcon
-                                                    fontSize="small"
-                                                    disabled={dragged}
-                                                  />
-                                                </IconButton>
-                                              </>
-                                            )
-                                          )}
-                                        </TableCell>
-                                      </TableRow>
-                                    );
-                                  })}
-                                {item?.type === "body" &&
                                   item?.answers.map((el, key, array) => (
                                     <TableRow key={key + "_answers"}>
                                       <TableCell scope="row">
                                         {`${key + 1}`}
                                       </TableCell>
+                                      <TableCell>{el.content}</TableCell>
                                       <TableCell>
-                                        {el.answers.map((ele, id) => (
-                                          <div
-                                            key={
-                                              "setXY" +
-                                              index +
-                                              "" +
-                                              key +
-                                              "" +
-                                              id
+                                        {(item?.type === "radio" ||
+                                          item?.type === "checkbox") &&
+                                        !el.image ? (
+                                          <IconButton
+                                            color="primary"
+                                            disabled={dragged}
+                                            aria-label="upload picture"
+                                            component="label"
+                                            onChange={(e) =>
+                                              this.handleUploadAnswer(
+                                                e,
+                                                index,
+                                                key
+                                              )
                                             }
                                           >
+                                            <PhotoCamera />
+                                            <input
+                                              accept="image/*"
+                                              className={classes.input}
+                                              id="icon-button-file"
+                                              type="file"
+                                            />
+                                          </IconButton>
+                                        ) : (
+                                          el.image && (
+                                            <>
+                                              <img
+                                                src={el.image}
+                                                style={{ maxWidth: 80 }}
+                                                alt="Answer img"
+                                              />
+                                              <IconButton
+                                                disabled={dragged}
+                                                variant="contained"
+                                                onClick={() =>
+                                                  this.setUploadAnswer(
+                                                    "",
+                                                    index,
+                                                    key
+                                                  )
+                                                }
+                                                aria-label="delete"
+                                                className={classes.deleteBtn}
+                                              >
+                                                <DeleteIcon
+                                                  fontSize="small"
+                                                  disabled={dragged}
+                                                />
+                                              </IconButton>
+                                            </>
+                                          )
+                                        )}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                {item?.type === "body" &&
+                                  item?.answers.map((el, key, array) => (
+                                    <TableRow key={"answers_" + key}>
+                                      <TableCell scope="row">
+                                        {`${key + 1}`}
+                                      </TableCell>
+                                      <TableCell>
+                                        {el.answers.map((ele, id) => (
+                                          <div key={`setXY${index}${key}${id}`}>
                                             {ele.content}
                                             <div
                                               style={{
