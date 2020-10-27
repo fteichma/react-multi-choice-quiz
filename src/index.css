@@ -31,8 +31,10 @@ body {
 }
 
 h1 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 32px;
+  font-weight: 500;
+  color: #1b3a57;
+  font-family: "Roboto";
 }
 
 * {
@@ -311,6 +313,11 @@ input[type="checkbox"]:disabled,
 .multiOption input:checked ~ * label::before,
 .multiOption:hover label::before {
   opacity: 0.2;
+}
+
+.MuiSvgIcon-root {
+  padding: 0;
+  margin-bottom: 0 !important;
 }
 
 .radioCustomButton,

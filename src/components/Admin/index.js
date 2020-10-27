@@ -43,8 +43,8 @@ const styles = (theme) => ({
     textTransform: "none",
   },
   tabs: {
-    minWidth: 200,
-    borderRight: `2px solid ${theme.palette.divider}`,
+    minWidth: 220,
+    minHeight: 40,
     backgroundColor: "#051E34",
     color: "#eee",
     "& .MuiTab-wrapper": {
@@ -61,6 +61,11 @@ const styles = (theme) => ({
   tab: {
     textTransform: "none",
     fontSize: 15,
+  },
+  iconSmall: {
+    marginRight: "0.5em",
+    width: 18,
+    heigth: 18,
   },
 });
 
@@ -184,56 +189,31 @@ class AdminBase extends Component {
             className={classes.tabs}
           >
             <Tab
-              icon={
-                <DashboardRoundedIcon
-                  fontSize="13"
-                  style={{ marginRight: "0.5em" }}
-                />
-              }
+              icon={<DashboardRoundedIcon style={classes.iconSmall} />}
               label="Dashboard"
               {...a11yProps(0)}
               className={classes.tab}
             />
             <Tab
-              icon={
-                <QuestionAnswerRoundedIcon
-                  fontSize="13"
-                  style={{ marginRight: "0.5em" }}
-                />
-              }
+              icon={<QuestionAnswerRoundedIcon style={classes.iconSmall} />}
               label="Réponses"
               {...a11yProps(1)}
               className={classes.tab}
             />
             <Tab
-              icon={
-                <HelpRoundedIcon
-                  fontSize="13"
-                  style={{ marginRight: "0.5em" }}
-                />
-              }
+              icon={<HelpRoundedIcon style={classes.iconSmall} />}
               label="Questions"
               {...a11yProps(2)}
               className={classes.tab}
             />
             <Tab
-              icon={
-                <FormatPaintRoundedIcon
-                  fontSize="13"
-                  style={{ marginRight: "0.5em" }}
-                />
-              }
+              icon={<FormatPaintRoundedIcon style={classes.iconSmall} />}
               label="Personnalisation"
               {...a11yProps(3)}
               className={classes.tab}
             />
             <Tab
-              icon={
-                <EmailRoundedIcon
-                  fontSize="13"
-                  style={{ marginRight: "0.5em" }}
-                />
-              }
+              icon={<EmailRoundedIcon style={classes.iconSmall} />}
               label="Emailing"
               {...a11yProps(4)}
               className={classes.tab}

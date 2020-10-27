@@ -1040,7 +1040,7 @@ class QuestionsBase extends Component {
                                   item?.answers.map((el, key, array) => (
                                     <TableRow key={key + "_answers"}>
                                       <TableCell scope="row">
-                                        {`${key + 1}`}
+                                        {key + 1}
                                       </TableCell>
                                       <TableCell>{el.content}</TableCell>
                                       <TableCell>
