@@ -1110,9 +1110,14 @@ class QuestionsBase extends Component {
                                       </TableCell>
                                       <TableCell>
                                         {el.answers.map((ele, id) => (
-                                          <div key={`setXY${index}${key}${id}`}>
-                                            {ele.content}
+                                          <div
+                                            key={`set_XY_${index}${key}${id}`}
+                                          >
+                                            <p>{ele.content}</p>
+
                                             <form
+                                              id={`setXY${index}${key}${id}`}
+                                              key={`setXY${index}${key}${id}`}
                                               noValidate
                                               autoComplete="off"
                                               style={{
@@ -1122,6 +1127,8 @@ class QuestionsBase extends Component {
                                               }}
                                             >
                                               <TextField
+                                                id={`setX${index}${key}${id}`}
+                                                key={`setX${index}${key}${id}`}
                                                 size="small"
                                                 label={"Position en x"}
                                                 style={{
@@ -1140,6 +1147,8 @@ class QuestionsBase extends Component {
                                                 value={ele?.x || ""}
                                               />
                                               <TextField
+                                                id={`setY${index}${key}${id}`}
+                                                key={`setY${index}${key}${id}`}
                                                 size="small"
                                                 label={"Position en y"}
                                                 style={{
