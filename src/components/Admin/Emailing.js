@@ -304,7 +304,6 @@ class EmailingBase extends Component {
                 className={classes.button}
                 variant="contained"
                 size="small"
-                disableElevation
                 color="primary"
                 startIcon={<AddIcon />}
                 onClick={() => {
@@ -317,7 +316,6 @@ class EmailingBase extends Component {
                 variant="contained"
                 color="primary"
                 size="small"
-                disableElevation
                 className={classes.button}
                 startIcon={<SaveIcon />}
                 onClick={() => this.onSave()}

@@ -809,7 +809,13 @@ class QuestionsBase extends Component {
             justifyContent: "",
           }}
         >
-          <FormControl required className={classes.formControl}>
+          <FormControl
+            required
+            variant="outlined"
+            className={classes.formControl}
+            margin="dense"
+            size="small"
+          >
             <Select
               id="demo-simple-select"
               value={id}
@@ -872,7 +878,6 @@ class QuestionsBase extends Component {
             target="_blank"
             href={`${window.location.origin}/?id=${id}`}
             size="small"
-            disableElevation
             color="secondary"
             startIcon={<Visibility />}
           >
@@ -882,7 +887,6 @@ class QuestionsBase extends Component {
             className={classes.button}
             variant="contained"
             size="small"
-            disableElevation
             color="primary"
             startIcon={<AddIcon />}
             onClick={() => this.newQuestions()}
@@ -894,7 +898,6 @@ class QuestionsBase extends Component {
               variant="contained"
               color="primary"
               size="small"
-              disableElevation
               className={classes.button}
               startIcon={<SaveIcon />}
               disabled={!dragged}
@@ -904,7 +907,7 @@ class QuestionsBase extends Component {
             </SaveButton>
           )}
         </div>
-        <Paper className={classes.root}>
+        <Paper className={classes.root} elevation={3}>
           <TableContainer className={classes.container}>
             <Table>
               <TableHead>
@@ -971,7 +974,6 @@ class QuestionsBase extends Component {
                                 variant="contained"
                                 color="default"
                                 size="small"
-                                disableElevation
                                 className={classes.button}
                                 startIcon={<CloudUploadIcon />}
                                 disabled={dragged}
@@ -1110,7 +1112,9 @@ class QuestionsBase extends Component {
                                         {el.answers.map((ele, id) => (
                                           <div key={`setXY${index}${key}${id}`}>
                                             {ele.content}
-                                            <div
+                                            <form
+                                              noValidate
+                                              autoComplete="off"
                                               style={{
                                                 display: "flex",
                                                 alignItems: "center",
@@ -1161,7 +1165,7 @@ class QuestionsBase extends Component {
                                                 id="outlined-basic"
                                                 value={ele?.y || ""}
                                               />
-                                            </div>
+                                            </form>
                                           </div>
                                         ))}
                                       </TableCell>
@@ -1239,7 +1243,6 @@ class QuestionsBase extends Component {
           className={classes.button}
           variant="contained"
           size="small"
-          disableElevation
           color="primary"
           startIcon={<AddIcon />}
           onClick={() => this.newQuestion()}
@@ -1258,7 +1261,6 @@ class QuestionsBase extends Component {
               variant="contained"
               color="primary"
               size="small"
-              disableElevation
               className={classes.button}
               startIcon={<SaveIcon />}
               onClick={() => this.onSaveConditions()}
@@ -1558,7 +1560,6 @@ class QuestionsBase extends Component {
               variant="outlined"
               className={classes.button}
               size="small"
-              disableElevation
               color="primary"
               startIcon={<AddIcon />}
               onClick={() => {
@@ -1617,7 +1618,6 @@ class QuestionsBase extends Component {
           className={classes.button}
           variant="contained"
           size="small"
-          disableElevation
           color="primary"
           startIcon={<AddIcon />}
           onClick={() => this.addNewCondition()}

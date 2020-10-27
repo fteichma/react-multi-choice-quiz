@@ -158,7 +158,6 @@ class CustomBase extends Component {
               variant="contained"
               color="primary"
               size="small"
-              disableElevation
               className={classes.button}
               startIcon={<SaveIcon />}
               onClick={() => this.onSave()}
@@ -183,7 +182,6 @@ class CustomBase extends Component {
           variant="contained"
           color="default"
           size="small"
-          disableElevation
           className={classes.button}
           startIcon={<CloudUploadIcon />}
           component="label"

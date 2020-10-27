@@ -34,6 +34,9 @@ const AdminPage = () => (
 );
 
 const styles = (theme) => ({
+  typography: {
+    fontFamily: "Poppins",
+  },
   root: {
     flexGrow: 1,
     backgroundColor: "#f5f5f5",
@@ -174,7 +177,7 @@ class AdminBase extends Component {
     const { loading } = this.state;
     return (
       <MuiThemeProvider theme={theme}>
-        <div className={("Admin", classes.root)}>
+        <div className={classes.root} id="Admin">
           <Tabs
             orientation="vertical"
             variant="scrollable"
