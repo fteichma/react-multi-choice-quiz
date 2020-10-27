@@ -876,10 +876,6 @@ class QuestionsBase extends Component {
               Supprimer
             </MenuItem>
           </Menu>
-          <p>
-            {" "}
-            jjjs <br />
-          </p>
           <Button
             className={classes.button}
             variant="contained"
