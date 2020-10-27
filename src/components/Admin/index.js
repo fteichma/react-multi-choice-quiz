@@ -62,11 +62,6 @@ const styles = (theme) => ({
     textTransform: "none",
     fontSize: 15,
   },
-  iconSmall: {
-    marginRight: "0.5em",
-    width: 18,
-    heigth: 18,
-  },
 });
 
 const theme = createMuiTheme({
@@ -179,7 +174,7 @@ class AdminBase extends Component {
     const { loading } = this.state;
     return (
       <MuiThemeProvider theme={theme}>
-        <div className={classes.root}>
+        <div className={("Admin", classes.root)}>
           <Tabs
             orientation="vertical"
             variant="scrollable"
@@ -189,31 +184,71 @@ class AdminBase extends Component {
             className={classes.tabs}
           >
             <Tab
-              icon={<DashboardRoundedIcon style={classes.iconSmall} />}
+              icon={
+                <DashboardRoundedIcon
+                  style={{
+                    marginRight: "0.5em",
+                    width: 20,
+                    height: 20,
+                  }}
+                />
+              }
               label="Dashboard"
               {...a11yProps(0)}
               className={classes.tab}
             />
             <Tab
-              icon={<QuestionAnswerRoundedIcon style={classes.iconSmall} />}
+              icon={
+                <QuestionAnswerRoundedIcon
+                  style={{
+                    marginRight: "0.5em",
+                    width: 20,
+                    height: 20,
+                  }}
+                />
+              }
               label="Réponses"
               {...a11yProps(1)}
               className={classes.tab}
             />
             <Tab
-              icon={<HelpRoundedIcon style={classes.iconSmall} />}
+              icon={
+                <HelpRoundedIcon
+                  style={{
+                    marginRight: "0.5em",
+                    width: 20,
+                    height: 20,
+                  }}
+                />
+              }
               label="Questions"
               {...a11yProps(2)}
               className={classes.tab}
             />
             <Tab
-              icon={<FormatPaintRoundedIcon style={classes.iconSmall} />}
+              icon={
+                <FormatPaintRoundedIcon
+                  style={{
+                    marginRight: "0.5em",
+                    width: 20,
+                    height: 20,
+                  }}
+                />
+              }
               label="Personnalisation"
               {...a11yProps(3)}
               className={classes.tab}
             />
             <Tab
-              icon={<EmailRoundedIcon style={classes.iconSmall} />}
+              icon={
+                <EmailRoundedIcon
+                  style={{
+                    marginRight: "0.5em",
+                    width: 20,
+                    height: 20,
+                  }}
+                />
+              }
               label="Emailing"
               {...a11yProps(4)}
               className={classes.tab}

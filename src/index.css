@@ -320,6 +320,10 @@ input[type="checkbox"]:disabled,
   margin-bottom: 0 !important;
 }
 
+.MuiTab-labelIcon {
+  min-height: 60px !important;
+}
+
 .radioCustomButton,
 .radioCustomLabel,
 .multiCustomButton,
