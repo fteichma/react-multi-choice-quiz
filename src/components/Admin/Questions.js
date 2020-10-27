@@ -11,9 +11,7 @@ import {
   IconButton,
   Collapse,
   Box,
-  Typography,
   Button,
-  Tab,
   Dialog,
   DialogActions,
   DialogContent,
@@ -40,7 +38,6 @@ import AddIcon from "@material-ui/icons/Add";
 import red from "@material-ui/core/colors/red";
 import green from "@material-ui/core/colors/green";
 import TextField from "@material-ui/core/TextField";
-import update, { extend } from "immutability-helper";
 
 import Resizer from "react-image-file-resizer";
 
@@ -49,7 +46,7 @@ import firebase from "firebase/app";
 import { compose } from "recompose";
 
 import Loading from "../Loading";
-import { Filter, Visibility } from "@material-ui/icons";
+import { Visibility } from "@material-ui/icons";
 
 const NEW_QUESTION = {
   type: "",
@@ -218,9 +215,9 @@ class QuestionsBase extends Component {
     this.handleChangeX = this.handleChangeX.bind(this);
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  /* shouldComponentUpdate(nextProps, nextState) {
     return nextState.items !== this.state.items;
-  }
+  } */
 
   componentDidMount() {
     this.getQuestions();
@@ -551,10 +548,6 @@ class QuestionsBase extends Component {
     if (!result.destination) {
       return;
     }
-
-    console.log(
-      `dragEnd ${result.source.index} to  ${result.destination.index}`
-    );
     const items = reorder(
       this.state.items,
       result.source.index,
@@ -597,7 +590,7 @@ class QuestionsBase extends Component {
   };
 
   editItem = () => {
-    const { items, editIndex } = this.state;
+    const { items } = this.state;
     this.setState(
       {
         items,
@@ -768,19 +761,17 @@ class QuestionsBase extends Component {
     });
   }
 
-  handleChangeY = (e, index, key, id) => {
-    let value = e.target.value;
+  handleChangeY = (value, index, key, id) => {
     this.setState((prevState) => {
-      let items = JSON.parse(JSON.stringify(prevState.items));
+      let items = [...prevState.items];
       items[index].answers[key].answers[id].y = value;
       return { items };
     });
   };
 
-  handleChangeX = (e, index, key, id) => {
-    let value = e.target.value;
+  handleChangeX = (value, index, key, id) => {
     this.setState((prevState) => {
-      let items = JSON.parse(JSON.stringify(prevState.items));
+      let items = [...prevState.items];
       items[index].answers[key].answers[id].x = value;
       return { items };
     });
@@ -797,7 +788,6 @@ class QuestionsBase extends Component {
       openDeleteDialog,
       openEditDialog,
       openNewQuestionDialog,
-      deleteIndex,
       editIndex,
       anchorMore,
       idList,
@@ -1014,7 +1004,11 @@ class QuestionsBase extends Component {
                               )}
                               {item?.mainImage && (
                                 <div>
-                                  <img width="50" src={item?.mainImage} />
+                                  <img
+                                    width="50"
+                                    src={item?.mainImage}
+                                    alt="Main"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -1081,6 +1075,7 @@ class QuestionsBase extends Component {
                                                 <img
                                                   src={el.image}
                                                   style={{ maxWidth: 80 }}
+                                                  alt="Answer img"
                                                 />
                                                 <IconButton
                                                   disabled={dragged}
@@ -1108,132 +1103,137 @@ class QuestionsBase extends Component {
                                     );
                                   })}
                                 {item?.type === "body" &&
-                                  item?.answers.map((el, key, array) => {
-                                    return (
-                                      <TableRow key={key + "_answers"}>
-                                        <TableCell scope="row">
-                                          {`${key + 1}`}
-                                        </TableCell>
-                                        <TableCell>
-                                          {el.answers.map((ele, id) => {
-                                            return (
-                                              <>
-                                                {ele.content}
-                                                <div
-                                                  style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    margin: "0.5em 0",
-                                                  }}
-                                                >
-                                                  <TextField
-                                                    size="small"
-                                                    label={"Position en x"}
-                                                    style={{
-                                                      marginLeft: "0.5em",
-                                                    }}
-                                                    type={"number"}
-                                                    onChange={(e) => {
-                                                      this.handleChangeX(
-                                                        e,
-                                                        index,
-                                                        key,
-                                                        id
-                                                      );
-                                                    }}
-                                                    id="outlined-basic"
-                                                    value={ele?.x || ""}
-                                                  />
-                                                  <TextField
-                                                    size="small"
-                                                    label={"Position en y"}
-                                                    style={{
-                                                      marginLeft: "0.5em",
-                                                    }}
-                                                    type={"number"}
-                                                    onChange={(e) => {
-                                                      this.handleChangeY(
-                                                        e,
-                                                        index,
-                                                        key,
-                                                        id
-                                                      );
-                                                    }}
-                                                    onBlur={(e) => {
-                                                      this.handleChangeY(
-                                                        e,
-                                                        index,
-                                                        key,
-                                                        id
-                                                      );
-                                                    }}
-                                                    id="outlined-basic"
-                                                    value={ele?.y || ""}
-                                                  />
-                                                </div>
-                                              </>
-                                            );
-                                          })}
-                                        </TableCell>
-                                        <TableCell>
-                                          {(item?.type === "radio" ||
-                                            item?.type === "checkbox" ||
-                                            item?.type === "body") &&
-                                          !el.image ? (
-                                            <IconButton
-                                              color="primary"
-                                              disabled={dragged}
-                                              aria-label="upload picture"
-                                              component="label"
-                                              onChange={(e) =>
-                                                this.handleUploadAnswer(
-                                                  e,
-                                                  index,
-                                                  key
-                                                )
-                                              }
+                                  item?.answers.map((el, key, array) => (
+                                    <TableRow key={key + "_answers"}>
+                                      <TableCell scope="row">
+                                        {`${key + 1}`}
+                                      </TableCell>
+                                      <TableCell>
+                                        {el.answers.map((ele, id) => (
+                                          <div
+                                            key={
+                                              "setXY" +
+                                              index +
+                                              "" +
+                                              key +
+                                              "" +
+                                              id
+                                            }
+                                          >
+                                            {ele.content}
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                margin: "0.5em 0",
+                                              }}
                                             >
-                                              <PhotoCamera />
-                                              <input
-                                                accept="image/*"
-                                                className={classes.input}
-                                                id="icon-button-file"
-                                                type="file"
+                                              <TextField
+                                                size="small"
+                                                label={"Position en x"}
+                                                style={{
+                                                  marginLeft: "0.5em",
+                                                }}
+                                                type={"number"}
+                                                onChange={(e) => {
+                                                  this.handleChangeX(
+                                                    e.target.value,
+                                                    index,
+                                                    key,
+                                                    id
+                                                  );
+                                                }}
+                                                id="outlined-basic"
+                                                value={ele?.x || ""}
                                               />
-                                            </IconButton>
-                                          ) : (
-                                            el.image && (
-                                              <>
-                                                <img
-                                                  src={el.image}
-                                                  style={{ width: 210 }}
-                                                  alt=""
-                                                />
-                                                <IconButton
+                                              <TextField
+                                                size="small"
+                                                label={"Position en y"}
+                                                style={{
+                                                  marginLeft: "0.5em",
+                                                }}
+                                                type={"number"}
+                                                onChange={(e) => {
+                                                  this.handleChangeY(
+                                                    e.target.value,
+                                                    index,
+                                                    key,
+                                                    id
+                                                  );
+                                                }}
+                                                onBlur={(e) => {
+                                                  this.handleChangeY(
+                                                    e.target.value,
+                                                    index,
+                                                    key,
+                                                    id
+                                                  );
+                                                }}
+                                                id="outlined-basic"
+                                                value={ele?.y || ""}
+                                              />
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </TableCell>
+                                      <TableCell>
+                                        {(item?.type === "radio" ||
+                                          item?.type === "checkbox" ||
+                                          item?.type === "body") &&
+                                        !el.image ? (
+                                          <IconButton
+                                            color="primary"
+                                            disabled={dragged}
+                                            aria-label="upload picture"
+                                            component="label"
+                                            onChange={(e) =>
+                                              this.handleUploadAnswer(
+                                                e,
+                                                index,
+                                                key
+                                              )
+                                            }
+                                          >
+                                            <PhotoCamera />
+                                            <input
+                                              accept="image/*"
+                                              className={classes.input}
+                                              id="icon-button-file"
+                                              type="file"
+                                            />
+                                          </IconButton>
+                                        ) : (
+                                          el.image && (
+                                            <>
+                                              <img
+                                                src={el.image}
+                                                style={{ width: 210 }}
+                                                alt=""
+                                              />
+                                              <IconButton
+                                                disabled={dragged}
+                                                variant="contained"
+                                                onClick={() =>
+                                                  this.setUploadAnswer(
+                                                    "",
+                                                    index,
+                                                    key
+                                                  )
+                                                }
+                                                aria-label="delete"
+                                                className={classes.deleteBtn}
+                                              >
+                                                <DeleteIcon
+                                                  fontSize="small"
                                                   disabled={dragged}
-                                                  variant="contained"
-                                                  onClick={() =>
-                                                    this.setUploadAnswer(
-                                                      "",
-                                                      index,
-                                                      key
-                                                    )
-                                                  }
-                                                  aria-label="delete"
-                                                  className={classes.deleteBtn}
-                                                >
-                                                  <DeleteIcon
-                                                    fontSize="small"
-                                                    disabled={dragged}
-                                                  />
-                                                </IconButton>
-                                              </>
-                                            )
-                                          )}
-                                        </TableCell>
-                                      </TableRow>
-                                    );
-                                  })}
+                                                />
+                                              </IconButton>
+                                            </>
+                                          )
+                                        )}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
                               </TableBody>
                             </Table>
                           </Box>
@@ -2110,9 +2110,7 @@ const DraggableComponent = (id, index) => (props) => {
   );
 };
 
-const DroppableComponent = (onDragEnd: (result, provided) => void) => (
-  props
-) => {
+const DroppableComponent = (onDragEnd) => (props) => {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Droppable droppableId={"1"} direction="vertical">
