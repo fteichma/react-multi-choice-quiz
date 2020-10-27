@@ -761,7 +761,8 @@ class QuestionsBase extends Component {
     });
   }
 
-  handleChangeY = (value, index, key, id) => {
+  handleChangeY = (e, index, key, id) => {
+    let value = e.target.value;
     this.setState((prevState) => {
       let items = [...prevState.items];
       items[index].answers[key].answers[id].y = value;
@@ -769,7 +770,8 @@ class QuestionsBase extends Component {
     });
   };
 
-  handleChangeX = (value, index, key, id) => {
+  handleChangeX = (e, index, key, id) => {
+    let value = e.target.value;
     this.setState((prevState) => {
       let items = [...prevState.items];
       items[index].answers[key].answers[id].x = value;
@@ -1115,9 +1117,8 @@ class QuestionsBase extends Component {
                                           >
                                             <p>{ele.content}</p>
 
-                                            <form
+                                            <div
                                               id={`setXY${index}${key}${id}`}
-                                              key={`setXY${index}${key}${id}`}
                                               noValidate
                                               autoComplete="off"
                                               style={{
@@ -1126,7 +1127,7 @@ class QuestionsBase extends Component {
                                                 margin: "0.5em 0",
                                               }}
                                             >
-                                              <TextField
+                                              {/* <TextField
                                                 id={`setX${index}${key}${id}`}
                                                 key={`setX${index}${key}${id}`}
                                                 size="small"
@@ -1137,16 +1138,63 @@ class QuestionsBase extends Component {
                                                 type={"number"}
                                                 onChange={(e) => {
                                                   this.handleChangeX(
-                                                    e.target.value,
+                                                    e,
                                                     index,
                                                     key,
                                                     id
                                                   );
+                                                  
                                                 }}
                                                 id="outlined-basic"
-                                                value={ele?.x || ""}
-                                              />
-                                              <TextField
+                                                defaultValue={ele?.x || ""}
+                                              /> */}
+                                              <FormControl>
+                                                <InputLabel
+                                                  htmlFor={`setX${index}${key}${id}`}
+                                                >
+                                                  Position en X
+                                                </InputLabel>
+                                                <Input
+                                                  style={{
+                                                    marginLeft: "0.5em",
+                                                  }}
+                                                  id={`setX${index}${key}${id}`}
+                                                  defaultValue={ele?.x || ""}
+                                                  type="number"
+                                                  onChange={(e) => {
+                                                    this.handleChangeX(
+                                                      e,
+                                                      index,
+                                                      key,
+                                                      id
+                                                    );
+                                                  }}
+                                                />
+                                              </FormControl>
+                                              <FormControl>
+                                                <InputLabel
+                                                  htmlFor={`setY${index}${key}${id}`}
+                                                >
+                                                  Position en Y
+                                                </InputLabel>
+                                                <Input
+                                                  style={{
+                                                    marginLeft: "0.5em",
+                                                  }}
+                                                  id={`setY${index}${key}${id}`}
+                                                  defaultValue={ele?.y || ""}
+                                                  type="number"
+                                                  onChange={(e) => {
+                                                    this.handleChangeY(
+                                                      e,
+                                                      index,
+                                                      key,
+                                                      id
+                                                    );
+                                                  }}
+                                                />
+                                              </FormControl>
+                                              {/* <TextField
                                                 id={`setY${index}${key}${id}`}
                                                 key={`setY${index}${key}${id}`}
                                                 size="small"
@@ -1157,24 +1205,16 @@ class QuestionsBase extends Component {
                                                 type={"number"}
                                                 onChange={(e) => {
                                                   this.handleChangeY(
-                                                    e.target.value,
+                                                    e,
                                                     index,
                                                     key,
                                                     id
                                                   );
                                                 }}
-                                                onBlur={(e) => {
-                                                  this.handleChangeY(
-                                                    e.target.value,
-                                                    index,
-                                                    key,
-                                                    id
-                                                  );
-                                                }}
-                                                id="outlined-basic"
-                                                value={ele?.y || ""}
-                                              />
-                                            </form>
+                                                id="outlined-basic"                                     
+                                                defaultValue={ele?.y || ""}
+                                              /> */}
+                                            </div>
                                           </div>
                                         ))}
                                       </TableCell>
