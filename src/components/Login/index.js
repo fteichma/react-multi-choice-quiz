@@ -1,18 +1,13 @@
-import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
-import { compose } from 'recompose';
+import React, { Component } from "react";
+import { withRouter } from "react-router-dom";
+import { compose } from "recompose";
 
-import { withFirebase } from '../Firebase';
-import * as ROUTES from '../../constants/routes';
+import { withFirebase } from "../Firebase";
+import * as ROUTES from "../../constants/routes";
 
 import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import {
-  Box,
-  withStyles,
-  TextField,
-  Button,
-} from "@material-ui/core";
-import { ToastContainer } from 'react-toastify';
+import { Box, withStyles, TextField, Button } from "@material-ui/core";
+import { ToastContainer } from "react-toastify";
 import Notify from "../../notify";
 
 const LogInPage = () => (
@@ -22,9 +17,9 @@ const LogInPage = () => (
 );
 
 const INITIAL_STATE = {
-  username: '',
-  email: '',
-  error: '',
+  username: "",
+  email: "",
+  error: "",
 };
 
 const styles = (theme) => ({
@@ -58,34 +53,36 @@ const theme = createMuiTheme({
 });
 
 class LogInFormBase extends Component {
-    constructor(props) {
-        super();
-        this.state = { ...INITIAL_STATE };
-        this.handleChange = this.handleChange.bind(this);    
-    }
-    handleChange = (event) => {
-      const { target: { name, value } } = event
-      this.setState({ [name]: value })
-    }
-    onSubmit = event => {
-      const { email, password } = this.state;
-   
-      this.props.firebase
-        .doSignInWithEmailAndPassword(email, password)
-        .then(() => {
-          this.setState({ ...INITIAL_STATE });
-          this.props.history.push(ROUTES.ADMIN);
-        })
-        .catch(error => {
-          Notify(error.message, "error");   
-        });
-   
-      event.preventDefault();
-    };
+  constructor(props) {
+    super();
+    this.state = { ...INITIAL_STATE };
+    this.handleChange = this.handleChange.bind(this);
+  }
+  handleChange = (event) => {
+    const {
+      target: { name, value },
+    } = event;
+    this.setState({ [name]: value });
+  };
+  onSubmit = (event) => {
+    const { email, password } = this.state;
+
+    this.props.firebase
+      .doSignInWithEmailAndPassword(email, password)
+      .then(() => {
+        this.setState({ ...INITIAL_STATE });
+        this.props.history.push(ROUTES.ADMIN);
+      })
+      .catch((error) => {
+        Notify(error.message, "error");
+      });
+
+    event.preventDefault();
+  };
   render() {
     const { classes } = this.props;
     const { email, password } = this.state;
-    const isInvalid = password === "" || email === '';
+    const isInvalid = password === "" || email === "";
     return (
       <MuiThemeProvider theme={theme}>
         <div className={classes.container}>
@@ -102,14 +99,14 @@ class LogInFormBase extends Component {
                 label="Adresse email"
                 className="mb-4"
                 onChange={this.handleChange}
-                value={email || ''}
+                value={email || ""}
                 type="email"
                 fullWidth
                 required
                 variant="outlined"
                 size="small"
                 style={{
-                  marginBottom:30
+                  marginBottom: 30,
                 }}
               />
               <TextField
@@ -118,27 +115,27 @@ class LogInFormBase extends Component {
                 label="Mot de passe"
                 className="mb-4"
                 onChange={this.handleChange}
-                value={password || ''}
+                value={password || ""}
                 type="password"
                 fullWidth
                 required
                 variant="outlined"
                 size="small"
                 style={{
-                  marginBottom:30
+                  marginBottom: 30,
                 }}
               />
               <Button
-             /* onClick={this.login} */
-             variant="contained"
-             color="primary"
-             fullWidth
-             style={{ textTransform: "none" }}
-             type="submit"
-             disabled={isInvalid}
-           >
-            Se connecter
-           </Button>
+                /* onClick={this.login} */
+                variant="contained"
+                color="primary"
+                fullWidth
+                style={{ textTransform: "none" }}
+                type="submit"
+                disabled={isInvalid}
+              >
+                Se connecter
+              </Button>
             </form>
           </Box>
         </div>
@@ -156,4 +153,4 @@ const LogInForm = compose(
 
 export default LogInPage;
 
-export {LogInForm}
+export { LogInForm };

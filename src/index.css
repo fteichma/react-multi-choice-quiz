@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
-
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap");
 
 body {
   margin: 0;
@@ -40,8 +39,8 @@ h1 {
   box-sizing: border-box;
 }
 
-.App *{
-  font-family: 'Montserrat', sans-serif;
+.App * {
+  font-family: "Montserrat", sans-serif;
 }
 
 .App {
@@ -50,16 +49,16 @@ h1 {
 }
 
 .Quiz {
-  max-width: 1150px;
   width: 100%;
   position: relative;
   margin: auto;
+  height: 100vh;
 }
 
 .answerImage {
-  margin:  15px auto 0;
+  margin: 15px auto 0;
   display: flex;
-  padding:10px;
+  padding: 10px;
   max-width: 100px;
 }
 
@@ -70,13 +69,13 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 100%;
   margin: auto;
   width: 100%;
 }
 
 ::placeholder {
-  color:#ccc;
+  color: #ccc;
 }
 
 .info-error {
@@ -100,7 +99,7 @@ h1 {
 }
 
 ::ms-input-placeholder {
-  color:#ccc;
+  color: #ccc;
 }
 
 /* Result Component */
@@ -131,7 +130,8 @@ h1 {
   flex-direction: column;
 }
 
-.thankYou p, .thankYou h2 {
+.thankYou p,
+.thankYou h2 {
   margin: 0;
   padding: 5px;
   max-width: 90%;
@@ -139,11 +139,11 @@ h1 {
 
 a {
   text-decoration: none;
-  color:rgb(14, 14, 61);
+  color: rgb(14, 14, 61);
 }
 
 .questionContainer {
-  margin-top:-40px;
+  margin-top: -250px;
   max-width: 80%;
 }
 
@@ -187,14 +187,18 @@ a {
   line-height: 1.5;
   color: #000000bb;
   font-size: 32px;
+  max-width: 1150px;
 }
 
-input[type="checkbox"]:disabled, .disabled, .disabled label {
-  cursor: not-allowed!important;
+input[type="checkbox"]:disabled,
+.disabled,
+.disabled label {
+  cursor: not-allowed !important;
 }
 
-input[type="checkbox"]:disabled, .disabled {
-  opacity: 0.5!important;
+input[type="checkbox"]:disabled,
+.disabled {
+  opacity: 0.5 !important;
 }
 
 /* AnswerOption Component */
@@ -203,13 +207,13 @@ input[type="checkbox"]:disabled, .disabled {
   position: relative;
 }
 
-.answerOptions input[type=text], 
-.answerOptions input[type=email],
-.answerOptions input[type=number]{
-  border:none;
+.answerOptions input[type="text"],
+.answerOptions input[type="email"],
+.answerOptions input[type="number"] {
+  border: none;
   height: 45px;
   border-radius: 30px;
-  padding:0 1em;
+  padding: 0 1em;
   width: 200px;
   text-align: center;
   font-size: 17px;
@@ -218,8 +222,9 @@ input[type="checkbox"]:disabled, .disabled {
   border-radius: 30px;
 }
 
-.radioOption, .multiOption {
-  border:none;
+.radioOption,
+.multiOption {
+  border: none;
   box-shadow: 0 4px 8px #00000010;
   background-color: white;
   margin: 10px;
@@ -228,7 +233,8 @@ input[type="checkbox"]:disabled, .disabled {
   position: relative;
 }
 
-.radioOption::after, .radioOption::before {
+.radioOption::after,
+.radioOption::before {
   content: "";
   width: 100%;
   height: 100%;
@@ -250,11 +256,9 @@ input[type="checkbox"]:disabled, .disabled {
   opacity: 0.09;
 }
 
-
-
-.answerOptions input[type=text]:focus,
-.answerOptions input[type=email]:focus,
-.answerOptions input[type=number]:focus {
+.answerOptions input[type="text"]:focus,
+.answerOptions input[type="email"]:focus,
+.answerOptions input[type="number"]:focus {
   border: none;
   outline: none;
 }
@@ -267,7 +271,7 @@ input[type="checkbox"]:disabled, .disabled {
   height: 100%;
 }
 
-.multiOption input{
+.multiOption input {
   display: none;
 }
 
@@ -282,7 +286,8 @@ input[type="checkbox"]:disabled, .disabled {
   transition: all 0.1s linear;
 }
 
-.multiOption label::after , .multiOption label::before {
+.multiOption label::after,
+.multiOption label::before {
   content: "";
   width: 100%;
   height: 100%;
@@ -298,12 +303,12 @@ input[type="checkbox"]:disabled, .disabled {
 
 .multiOption input:checked ~ label::after,
 .multiOption input:checked ~ * label::after,
- .multiOption:hover label::after {
+.multiOption:hover label::after {
   opacity: 1;
 }
 
 .multiOption input:checked ~ label::before,
-.multiOption input:checked ~ * label::before, 
+.multiOption input:checked ~ * label::before,
 .multiOption:hover label::before {
   opacity: 0.2;
 }
@@ -373,7 +378,7 @@ body {
 .body {
   width: 208.8px;
   height: 489.6px;
-  margin : 0 2em;
+  margin: 0 2em;
 }
 
 .body label {
@@ -381,7 +386,7 @@ body {
 }
 
 .body input:checked ~ * label::after,
-.body input:checked ~ label::after,  
+.body input:checked ~ label::after,
 .bodySelect:hover label::after {
   opacity: 1;
 }
@@ -391,11 +396,13 @@ body {
   height: 100%;
 }
 
-.body input:checked::before, .bodySelect:hover label::before {
+.body input:checked::before,
+.bodySelect:hover label::before {
   opacity: 0.2;
 }
 
-.bodySelect label::after, .bodySelect label::before {
+.bodySelect label::after,
+.bodySelect label::before {
   content: "";
   width: 100%;
   height: 100%;
@@ -423,7 +430,7 @@ body {
   opacity: 0.8;
   border-radius: 20px;
   line-height: 1;
-  border:none;
+  border: none;
   box-shadow: 0 4px 8px #00000010;
   z-index: 9;
 }
@@ -439,7 +446,7 @@ body {
 }
 
 .color-select {
-  border:3px solid rgb(255, 255, 255);
+  border: 3px solid rgb(255, 255, 255);
   box-shadow: 0 0px 5px #000000cc;
   width: 20px;
   height: 20px;
@@ -448,7 +455,7 @@ body {
 
 .color-picker {
   position: absolute;
-  left:0;
+  left: 0;
   right: 0;
   z-index: 78;
 }
@@ -458,6 +465,7 @@ body {
   margin: 0 auto 1.5em;
   width: 80%;
   line-height: 1.5;
+  max-width: 1150px;
 }
 
 .categories-settings {
@@ -466,7 +474,7 @@ body {
   position: relative;
 }
 
-.categories-settings>span {
+.categories-settings > span {
   margin-right: 1em;
   font-size: 14px;
 }
@@ -486,71 +494,6 @@ body {
   margin-bottom: 100px;
 }
 
-#Cou{
-  top: 70px;
-  left: 84px;
-}
-
-#Plidusoutien-gorge{
-  left: 8px;
-  top: 147px;
-}
-
-#Ailesdange{
-  left: 80px;
-  top:115px;
-}
-
-#Poigneesdamour {
-  top: 195px;
-  left: 15px;
-}
-
-#Culottedecheval {
-  top: 255px;
-  left: 79px;
-}
-
-#Genoux {
-  top: 324px;
-  left: 20px;
-}
-
-#Menton {
-  top: 78px;
-  left: 72px;
-}
-
-#Decollete {
-  top:120px;
-  left: 75px;
-}
-
-#Pseudogynecomastie {
-  top: 136px;
-  left: -75px;
-}
-
-#Bras {
-  left: 160px;
-  top: 165px;
-}
-
-#Ventre {
-    top: 211px;
-    left: 65px;
-}
-
-#Cuisses{
-  top: 300px;
-  left: 122px;
-}
-
-#Mollets {
-  top: 395px;
-  left: 44px;
-}
-
 .body {
   position: relative;
 }
@@ -564,7 +507,8 @@ line {
   display: none;
 }
 
-#Capa_1, #Capa_2 {
+#Capa_1,
+#Capa_2 {
   pointer-events: none;
 }
 
@@ -583,12 +527,12 @@ line {
 }
 
 .btn-nav:hover {
-  filter : brightness(0.95)
+  filter: brightness(0.95);
 }
 
 .btn-nav-demo {
   position: relative;
-  margin : 0 1em;
+  margin: 0 1em;
   display: block;
 }
 
@@ -597,7 +541,7 @@ line {
   padding: 0 1.5em;
   height: 50px;
   position: fixed;
-  bottom:75px;
+  bottom: 75px;
   left: 25px;
 }
 
@@ -617,14 +561,13 @@ line {
 }
 
 .btn-next svg {
-  margin-left:4px;
+  margin-left: 4px;
 }
 
 .btn-checkbox-body {
   border-radius: 50px;
   padding: 0 1.5em;
   height: 50px;
-  position: absolute;
   bottom: 16px;
   margin: auto;
 }
@@ -637,38 +580,62 @@ line {
   margin: 1.5em auto;
 }
 
-.btn-checkbox span, .btn-checkbox-body span{
+.btn-checkbox span,
+.btn-checkbox-body span {
   margin: 0 0.5em;
 }
 
-@media screen and (max-width:768px) {
+@media screen and (max-width: 768px) {
   body {
     overflow: auto;
   }
   .answerOptions {
-    flex-direction : column;
+    flex-direction: column;
     margin: auto;
     width: fit-content;
   }
   .container {
     align-items: flex-start;
-    padding-top:100px;
+    padding-top: 100px;
   }
   .questionCount {
     bottom: 30px;
     box-shadow: 0 4px 8px #00000010;
   }
   .questionContainer {
-    margin-top:0
+    margin-top: 0;
   }
   .brand-logo {
-    left:0;
-    right: 0;
     margin: auto;
+    left: 0;
+    right: 0;
+    top: 30px;
   }
   .btn-checkbox-body {
     position: relative;
-    margin: 0 auto 8em;
+    margin: 4em auto 8em;
     width: fit-content;
+  }
+  .btn-prev span {
+    display: none;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .btn-prev {
+    height: 38px;
+    width: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    top: 25px;
+  }
+  .btn-prev svg {
+    width: 18px;
+    height: 18px;
+    margin: auto;
   }
 }
