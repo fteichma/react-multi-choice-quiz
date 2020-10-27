@@ -25,7 +25,6 @@
     "lint-staged": "^10.5.0",
     "lodash": "^4.17.20",
     "nodemailer": "^6.4.13",
-    "prettier": "^2.1.2",
     "prop-types": "^15.6.2",
     "query-string": "^6.13.5",
     "react": "^16.13.1",
@@ -66,8 +65,11 @@
     "not op_mini all"
   ],
   "husky": {
-        "hooks": {
-          "pre-commit": "lint-staged"
-        }
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "devDependencies": {
+    "prettier": "2.1.2"
   }
 }
