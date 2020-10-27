@@ -17,7 +17,6 @@
     "date-fns": "^2.16.1",
     "dayjs": "^1.9.1",
     "emotion": "^10.0.27",
-    "eslint-plugin-prettier": "^3.1.4",
     "express": "^4.17.1",
     "feather-icons": "^4.28.0",
     "firebase": "^7.24.0",
@@ -72,6 +71,7 @@
     }
   },
   "devDependencies": {
+    "eslint-plugin-prettier": "^3.1.4",
     "prettier": "2.1.2"
   }
 }
