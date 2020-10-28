@@ -48,6 +48,8 @@ import { compose } from "recompose";
 import Loading from "../Loading";
 import { Visibility } from "@material-ui/icons";
 
+import update, { extend } from "immutability-helper";
+
 const NEW_QUESTION = {
   type: "",
   answers: {
@@ -229,7 +231,6 @@ class QuestionsBase extends Component {
     const { value } = e.target;
     let cp = conditions;
     cp[id].conditions[key].value = value;
-    console.log(value);
     this.setState({
       conditions: cp,
     });
@@ -316,7 +317,6 @@ class QuestionsBase extends Component {
     const { answers } = this.state.newQuestion;
     let cp = answers;
     delete cp[id];
-    console.log(cp);
     this.setState((state, props) => ({
       newQuestion: {
         ...state.newQuestion,
@@ -416,7 +416,6 @@ class QuestionsBase extends Component {
     let j = 0;
     const filtered = Object.keys(conditions).reduce((obj, key) => {
       if (conditions[key]) {
-        console.log(conditions[key]);
         obj[j] = conditions[key];
         j++;
       }
@@ -631,7 +630,6 @@ class QuestionsBase extends Component {
       const filtered = Object.keys(cp[_id].conditions)
         .filter((id) => Number(id) !== Number(key))
         .reduce((obj, key) => {
-          console.log(cp[_id].conditions[key]);
           obj[j] = cp[_id].conditions[key];
           j++;
           return obj;
@@ -762,21 +760,45 @@ class QuestionsBase extends Component {
   }
 
   handleChangeY = (e, index, key, id) => {
+    e.preventDefault();
     let value = e.target.value;
-    this.setState((prevState) => {
-      let items = [...prevState.items];
-      items[index].answers[key].answers[id].y = value;
-      return { items };
+    let questions = update(this.state.questions, {
+      [index]: {
+        answers: {
+          [key]: {
+            answers: {
+              [id]: {
+                y: {
+                  $set: value,
+                },
+              },
+            },
+          },
+        },
+      },
     });
+    this.setState({ questions });
   };
 
   handleChangeX = (e, index, key, id) => {
+    e.preventDefault();
     let value = e.target.value;
-    this.setState((prevState) => {
-      let items = [...prevState.items];
-      items[index].answers[key].answers[id].x = value;
-      return { items };
+    let questions = update(this.state.questions, {
+      [index]: {
+        answers: {
+          [key]: {
+            answers: {
+              [id]: {
+                x: {
+                  $set: value,
+                },
+              },
+            },
+          },
+        },
+      },
     });
+    this.setState({ questions });
   };
 
   render() {
@@ -1113,108 +1135,27 @@ class QuestionsBase extends Component {
                                       <TableCell>
                                         {el.answers.map((ele, id) => (
                                           <div
-                                            key={`set_XY_${index}${key}${id}`}
+                                            style={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                            }}
+                                            key={`XY_${index}${key}${id}`}
                                           >
                                             <p>{ele.content}</p>
-
-                                            <div
-                                              id={`setXY${index}${key}${id}`}
-                                              noValidate
-                                              autoComplete="off"
+                                            <p
                                               style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                margin: "0.5em 0",
+                                                marginLeft: "0.5em",
                                               }}
                                             >
-                                              {/* <TextField
-                                                id={`setX${index}${key}${id}`}
-                                                key={`setX${index}${key}${id}`}
-                                                size="small"
-                                                label={"Position en x"}
-                                                style={{
-                                                  marginLeft: "0.5em",
-                                                }}
-                                                type={"number"}
-                                                onChange={(e) => {
-                                                  this.handleChangeX(
-                                                    e,
-                                                    index,
-                                                    key,
-                                                    id
-                                                  );
-                                                  
-                                                }}
-                                                id="outlined-basic"
-                                                defaultValue={ele?.x || ""}
-                                              /> */}
-                                              <FormControl>
-                                                <InputLabel
-                                                  htmlFor={`setX${index}${key}${id}`}
-                                                >
-                                                  Position en X
-                                                </InputLabel>
-                                                <Input
-                                                  style={{
-                                                    marginLeft: "0.5em",
-                                                  }}
-                                                  id={`setX${index}${key}${id}`}
-                                                  defaultValue={ele?.x || ""}
-                                                  type="number"
-                                                  onChange={(e) => {
-                                                    this.handleChangeX(
-                                                      e,
-                                                      index,
-                                                      key,
-                                                      id
-                                                    );
-                                                  }}
-                                                />
-                                              </FormControl>
-                                              <FormControl>
-                                                <InputLabel
-                                                  htmlFor={`setY${index}${key}${id}`}
-                                                >
-                                                  Position en Y
-                                                </InputLabel>
-                                                <Input
-                                                  style={{
-                                                    marginLeft: "0.5em",
-                                                  }}
-                                                  id={`setY${index}${key}${id}`}
-                                                  defaultValue={ele?.y || ""}
-                                                  type="number"
-                                                  onChange={(e) => {
-                                                    this.handleChangeY(
-                                                      e,
-                                                      index,
-                                                      key,
-                                                      id
-                                                    );
-                                                  }}
-                                                />
-                                              </FormControl>
-                                              {/* <TextField
-                                                id={`setY${index}${key}${id}`}
-                                                key={`setY${index}${key}${id}`}
-                                                size="small"
-                                                label={"Position en y"}
-                                                style={{
-                                                  marginLeft: "0.5em",
-                                                }}
-                                                type={"number"}
-                                                onChange={(e) => {
-                                                  this.handleChangeY(
-                                                    e,
-                                                    index,
-                                                    key,
-                                                    id
-                                                  );
-                                                }}
-                                                id="outlined-basic"                                     
-                                                defaultValue={ele?.y || ""}
-                                              /> */}
-                                            </div>
+                                              x: {ele?.x}
+                                            </p>
+                                            <p
+                                              style={{
+                                                marginLeft: "0.5em",
+                                              }}
+                                            >
+                                              y: {ele?.y}
+                                            </p>
                                           </div>
                                         ))}
                                       </TableCell>
@@ -1981,6 +1922,7 @@ class QuestionsBase extends Component {
                 <MenuItem value={"email"}>Email</MenuItem>
                 <MenuItem value={"radio"}>Sélection</MenuItem>
                 <MenuItem value={"checkbox"}>Multi-sélection</MenuItem>
+                <MenuItem value={"body"}>Parties du corps</MenuItem>
               </Select>
             </FormControl>
             {questions[editIndex]?.type === "number" && (
@@ -2096,6 +2038,97 @@ class QuestionsBase extends Component {
                 </Button>
               </>
             )}
+            {questions[editIndex]?.type === "body" && (
+              <>
+                {questions[editIndex]?.answers.map((el, key, array) => (
+                  <TableRow key={"answers_" + key}>
+                    <TableCell>
+                      {el.answers.map((ele, id) => (
+                        <div key={`set_XY_${editIndex}${key}${id}`}>
+                          <p>{ele.content}</p>
+
+                          <form
+                            id={`setXY${editIndex}${key}${id}`}
+                            noValidate
+                            autoComplete="off"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              margin: "0.5em 0",
+                            }}
+                          >
+                            <TextField
+                              id={`setX${editIndex}${key}${id}`}
+                              key={`setX${editIndex}${key}${id}`}
+                              size="small"
+                              label={"Position en x"}
+                              style={{
+                                marginLeft: "0.5em",
+                              }}
+                              type={"number"}
+                              onChange={(e) => {
+                                this.handleChangeX(e, editIndex, key, id);
+                              }}
+                              value={ele?.x || ""}
+                            />
+                            <TextField
+                              id={`setY${editIndex}${key}${id}`}
+                              key={`setY${editIndex}${key}${id}`}
+                              size="small"
+                              label={"Position en y"}
+                              style={{
+                                marginLeft: "0.5em",
+                              }}
+                              type={"number"}
+                              onChange={(e) => {
+                                this.handleChangeY(e, editIndex, key, id);
+                              }}
+                              value={ele?.y || ""}
+                            />
+                          </form>
+                        </div>
+                      ))}
+                    </TableCell>
+                    <TableCell>
+                      {el.image && (
+                        <div
+                          style={{ position: "relative" }}
+                          className={"body"}
+                        >
+                          {el.answers.map((ele, id) => (
+                            <div
+                              key={`bodySelect${id}`}
+                              className={`bodySelect`}
+                              id={`bodySelect${id}`}
+                              style={{
+                                left: `${ele.x}px`,
+                                top: `${ele.y}px`,
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                name="bodySelect"
+                                value={ele.content}
+                                id={`part${key}${id}`}
+                              />
+                              <label htmlFor={`part${key}${id}`}>
+                                {ele.content}
+                              </label>
+                            </div>
+                          ))}
+                          <img
+                            src={el.image}
+                            width="100%"
+                            height="100%"
+                            alt=""
+                          />
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
+            )}
           </DialogContent>
           <DialogActions>
             <Button
@@ -2111,8 +2144,9 @@ class QuestionsBase extends Component {
             </Button>
             <Button
               disabled={
-                !questions[editIndex]?.answers[0]?.content ||
-                !questions[editIndex]?.question
+                questions[editIndex]?.type !== "body" &&
+                (!questions[editIndex]?.answers[0]?.content ||
+                  !questions[editIndex]?.question)
               }
               onClick={() => this.editQuestion()}
               color="primary"

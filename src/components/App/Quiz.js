@@ -342,67 +342,61 @@ class Quiz extends React.Component {
               )}
               {/* BODY */}
               {this.props?.type === "body" && (
-                <ul className="answerOptions">
+                <div className="answerOptions">
                   {this.props.answerOptions.map((el, id) => (
                     <React.Fragment>
                       <div id={`body${id}`} className="body">
                         {this.props.answerOptions[id]?.answers.map(
                           (value, index, arr) => (
-                            <div>
-                              <li
-                                key={`bodySelect${index}`}
-                                className={`bodySelect ${
-                                  disabledList.includes(el.content)
-                                    ? `disabled`
-                                    : ``
-                                }`}
-                                id={`bodySelect${index}`}
+                            <div
+                              key={`bodySelect${index}`}
+                              className={`bodySelect ${
+                                disabledList.includes(el.content)
+                                  ? `disabled`
+                                  : ``
+                              }`}
+                              id={`bodySelect${index}`}
+                              css={css`
+                                left: ${value.x}px;
+                                top: ${value.y}px;
+                              `}
+                            >
+                              <input
+                                disabled={disabledList.includes(value.content)}
+                                type="checkbox"
+                                name="bodySelect"
+                                value={value.content}
+                                onChange={(e) => this.onBodyCheck(e)}
+                                id={`part${id}${index}`}
+                              />
+                              <label
                                 css={css`
-                                  left: ${value.x}px;
-                                  top: ${value.y}px;
-                                `}
-                              >
-                                <input
-                                  disabled={disabledList.includes(
-                                    value.content
-                                  )}
-                                  type="checkbox"
-                                  name="bodySelect"
-                                  value={value.content}
-                                  onChange={(e) => this.onBodyCheck(e)}
-                                  id={`part${id}${index}`}
-                                />
-                                <label
-                                  css={css`
+                                  &::before {
+                                    background: ${custom?.select?.primary};
+                                  }
+                                  &::after {
+                                    border: 2px solid ${custom?.select?.primary};
+                                  }
+                                  .body input:checked ~ & {
+                                    opacity: 1;
                                     &::before {
-                                      background: ${custom?.select?.primary};
+                                      background: ${custom?.select?.secondary};
+                                      opacity: 0.2;
                                     }
                                     &::after {
                                       border: 2px solid
-                                        ${custom?.select?.primary};
+                                        ${custom?.select?.secondary};
                                     }
-                                    .body input:checked ~ & {
-                                      opacity: 1;
-                                      &::before {
-                                        background: ${custom?.select
-                                          ?.secondary};
-                                        opacity: 0.2;
-                                      }
-                                      &::after {
-                                        border: 2px solid
-                                          ${custom?.select?.secondary};
-                                      }
-                                    }
-                                    .body input:disabled ~ & {
-                                      cursor: not-allowed;
-                                      opacity: 0.5;
-                                    }
-                                  `}
-                                  htmlFor={`part${id}${index}`}
-                                >
-                                  {value.content}
-                                </label>
-                              </li>
+                                  }
+                                  .body input:disabled ~ & {
+                                    cursor: not-allowed;
+                                    opacity: 0.5;
+                                  }
+                                `}
+                                htmlFor={`part${id}${index}`}
+                              >
+                                {value.content}
+                              </label>
                             </div>
                           )
                         )}
@@ -460,7 +454,7 @@ class Quiz extends React.Component {
                       }
                     />
                   </button>
-                </ul>
+                </div>
               )}
             </ul>
             {this.props.type === "checkbox" && (
