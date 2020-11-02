@@ -259,25 +259,6 @@ class App extends Component {
           backgroundColor: custom?.bgColor,
         }}
       >
-        {custom?.logo?.url && (
-          <div
-            className="brand-logo"
-            style={{
-              width: custom?.logo?.width,
-            }}
-          >
-            <a href={custom?.logo?.link} target="_blank">
-              <img
-                style={{
-                  width: custom?.logo?.width,
-                }}
-                width="100%"
-                src={custom?.logo?.url}
-                alt="Logo"
-              />
-            </a>
-          </div>
-        )}
         <div className="Quiz">
           {!this.state.end ? (
             <Quiz

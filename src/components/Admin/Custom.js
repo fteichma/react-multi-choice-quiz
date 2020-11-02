@@ -166,9 +166,16 @@ class CustomBase extends Component {
             </SaveButton>
           )}
         </div>
-        <p>Logo de la marque</p>
+        <p>Logo</p>
         {custom?.logo?.url ? (
-          <p>
+          <p
+            style={{
+              backgroundColor: custom?.bgColor,
+              padding: 10,
+              width: custom?.logo?.width + 20,
+              borderRadius: 6,
+            }}
+          >
             <img
               src={custom?.logo?.url}
               alt="logo"

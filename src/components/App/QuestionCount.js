@@ -2,12 +2,7 @@ import React from "react";
 
 function QuestionCount(props) {
   return (
-    <div
-      className="questionCount"
-      style={{
-        backgroundColor: props.btn?.primary ? props.btn?.primary : "#ffffff",
-      }}
-    >
+    <div className="questionCount">
       {[...Array(props.total)].map((x, i) => {
         if (i + 1 < props.counter) {
           return (
@@ -15,8 +10,8 @@ function QuestionCount(props) {
               key={i}
               className={"questionDot active"}
               style={{
-                backgroundColor: props.btn?.secondary
-                  ? props.btn?.secondary
+                backgroundColor: props.btn?.primary
+                  ? props.btn?.primary
                   : "#333333",
               }}
             />
@@ -27,8 +22,8 @@ function QuestionCount(props) {
               key={i}
               className={"questionDot current"}
               style={{
-                backgroundColor: props.btn?.secondary
-                  ? props.btn?.secondary
+                backgroundColor: props.btn?.primary
+                  ? props.btn?.primary
                   : "#333333",
               }}
             />
@@ -39,8 +34,8 @@ function QuestionCount(props) {
             key={i}
             className={"questionDot"}
             style={{
-              backgroundColor: props.btn?.secondary
-                ? props.btn?.secondary
+              backgroundColor: props.btn?.primary
+                ? props.btn?.primary
                 : "#333333",
             }}
           />

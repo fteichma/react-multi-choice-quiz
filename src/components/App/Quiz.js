@@ -117,6 +117,25 @@ class Quiz extends React.Component {
     if (!this.props.notFound) {
       return (
         <div className="container">
+          {custom?.logo?.url && (
+            <div
+              className="brand-logo"
+              style={{
+                width: custom?.logo?.width,
+              }}
+            >
+              <a href={custom?.logo?.link} target="_blank">
+                <img
+                  style={{
+                    width: custom?.logo?.width,
+                  }}
+                  width="100%"
+                  src={custom?.logo?.url}
+                  alt="Logo"
+                />
+              </a>
+            </div>
+          )}
           <div
             key={this.props.questionId}
             className={`questionContainer animate__animated ${
@@ -439,6 +458,7 @@ class Quiz extends React.Component {
                     <span
                       css={css`
                         color: ${custom?.btn?.secondary};
+                        font-weight: 500;
                       `}
                     >
                       {this.props.questionId === this.props.questionTotal
@@ -487,6 +507,7 @@ class Quiz extends React.Component {
                 <span
                   css={css`
                     color: ${custom?.btn?.secondary};
+                    font-weight: 500;
                   `}
                 >
                   {this.props.questionId === this.props.questionId?.length
@@ -516,18 +537,20 @@ class Quiz extends React.Component {
               }}
               className="btn-nav btn-prev"
               css={css`
-                background-color: ${custom?.btn?.primary};
+                border-color: ${custom?.btn?.primary};
+                border-width: 3px;
+                border-style: solid;
+                background-color: transparent;
               `}
             >
               <ChevronLeft
                 size={20}
-                color={
-                  custom?.btn?.secondary ? custom?.btn?.secondary : "#333333"
-                }
+                color={custom?.btn?.primary ? custom?.btn?.primary : "#333333"}
               />
               <span
                 css={css`
-                  color: ${custom?.btn?.secondary};
+                  color: ${custom?.btn?.primary};
+                  font-weight: 600;
                 `}
               >{`Précédent `}</span>
             </button>
