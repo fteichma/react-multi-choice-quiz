@@ -48,7 +48,7 @@ import { compose } from "recompose";
 import Loading from "../Loading";
 import { Visibility } from "@material-ui/icons";
 
-import update, { extend } from "immutability-helper";
+import update from "immutability-helper";
 
 const NEW_QUESTION = {
   type: "",
@@ -215,6 +215,7 @@ class QuestionsBase extends Component {
     );
     this.handleChangeY = this.handleChangeY.bind(this);
     this.handleChangeX = this.handleChangeX.bind(this);
+    this.handleChangePart = this.handleChangePart.bind(this);
   }
 
   /* shouldComponentUpdate(nextProps, nextState) {
@@ -227,13 +228,19 @@ class QuestionsBase extends Component {
   }
 
   handleChangeMultiple = (e, id, key) => {
-    const { conditions } = this.state;
-    const { value } = e.target;
-    let cp = conditions;
-    cp[id].conditions[key].value = value;
-    this.setState({
-      conditions: cp,
+    let value = e.target.value;
+    let questions = update(this.state.conditions, {
+      [id]: {
+        conditions: {
+          [key]: {
+            value: {
+              $set: value,
+            },
+          },
+        },
+      },
     });
+    this.setState({ questions });
   };
 
   async getEmailing() {
@@ -270,34 +277,35 @@ class QuestionsBase extends Component {
 
   handleChangeNameNewQuestion = (e) => {
     let value = e.target.value;
-    this.setState((state) => ({
-      newQuestion: {
-        ...state.newQuestion,
-        question: value,
+    let newQuestion = update(this.state.newQuestion, {
+      question: {
+        $set: value,
       },
-    }));
+    });
+    this.setState({ newQuestion });
   };
   handleChangeDescriptionNewQuestion = (e) => {
     let value = e.target.value;
-    this.setState((state) => ({
-      newQuestion: {
-        ...state.newQuestion,
-        description: value,
+    let newQuestion = update(this.state.newQuestion, {
+      description: {
+        $set: value,
       },
-    }));
+    });
+    this.setState({ newQuestion });
   };
 
   handleChangeNewQuestionAnswers = (e, id) => {
-    const { answers } = this.state.newQuestion;
-    let value = e?.target?.value;
-    let cp = answers;
-    cp[id] = { content: value };
-    this.setState((state, props) => ({
-      newQuestion: {
-        ...state.newQuestion,
-        answers: cp,
+    let value = e.target.value;
+    let newQuestion = update(this.state.newQuestion, {
+      answers: {
+        [id]: {
+          content: {
+            $set: value,
+          },
+        },
       },
-    }));
+    });
+    this.setState({ newQuestion });
   };
 
   addNewQuestionAnswers = () => {
@@ -335,33 +343,46 @@ class QuestionsBase extends Component {
   };
 
   handleChangeNameQuestion = (e) => {
-    const { editIndex, questions } = this.state;
-    let cp = questions;
-    let value = e?.target?.value;
-    cp[editIndex].question = value;
-    this.setState({
-      questions: cp,
+    const { editIndex } = this.state;
+    let value = e.target.value;
+    let questions = update(this.state.questions, {
+      [editIndex]: {
+        question: {
+          $set: value,
+        },
+      },
     });
+    this.setState({ questions });
   };
 
   handleChangeDescriptionQuestion = (e) => {
-    const { editIndex, questions } = this.state;
-    let cp = questions;
-    let value = e?.target?.value;
-    cp[editIndex].description = value;
-    this.setState({
-      questions: cp,
+    const { editIndex } = this.state;
+    let value = e.target.value;
+    let questions = update(this.state.questions, {
+      [editIndex]: {
+        description: {
+          $set: value,
+        },
+      },
     });
+    this.setState({ questions });
   };
 
   handleChangeQuestionAnswers = (e, id) => {
-    const { editIndex, questions } = this.state;
-    let cp = questions;
-    let value = e?.target?.value;
-    cp[editIndex].answers[id] = { content: value };
-    this.setState({
-      questions: cp,
+    const { editIndex } = this.state;
+    let value = e.target.value;
+    let questions = update(this.state.questions, {
+      [editIndex]: {
+        answers: {
+          [id]: {
+            content: {
+              $set: value,
+            },
+          },
+        },
+      },
     });
+    this.setState({ questions });
   };
 
   addQuestionAnswers = () => {
@@ -799,6 +820,29 @@ class QuestionsBase extends Component {
       },
     });
     this.setState({ questions });
+  };
+
+  handleChangePart = (e, index, key, id) => {
+    e.preventDefault();
+    let value = e.target.value;
+    let questions = update(this.state.questions, {
+      [index]: {
+        answers: {
+          [key]: {
+            answers: {
+              [id]: {
+                content: {
+                  $set: value,
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    this.setState({
+      questions,
+    });
   };
 
   render() {
@@ -1658,6 +1702,7 @@ class QuestionsBase extends Component {
           </DialogActions>
         </Dialog>
         <Dialog
+          maxWidth="md"
           fullWidth
           open={openNewQuestionDialog}
           onClose={() => {
@@ -1698,17 +1743,49 @@ class QuestionsBase extends Component {
                 id="simple-select"
                 value={this.state.newQuestion?.type || ""}
                 onChange={(e) => {
-                  this.setState((state, props) => ({
-                    newQuestion: {
-                      ...state.newQuestion,
-                      type: e.target.value,
-                      answers: {
-                        0: {
-                          content: "",
+                  let value = e.target.value;
+                  if (value === "body") {
+                    this.setState((state, props) => ({
+                      newQuestion: {
+                        ...state.newQuestion,
+                        type: value,
+                        answers: {
+                          0: {
+                            answers: {
+                              0: {
+                                content: "",
+                                x: 0,
+                                y: 0,
+                              },
+                            },
+                            image: "",
+                          },
+                          1: {
+                            answers: {
+                              0: {
+                                content: "",
+                                x: 0,
+                                y: 0,
+                              },
+                            },
+                            image: "",
+                          },
                         },
                       },
-                    },
-                  }));
+                    }));
+                  } else {
+                    this.setState((state, props) => ({
+                      newQuestion: {
+                        ...state.newQuestion,
+                        type: value,
+                        answers: {
+                          0: {
+                            content: "",
+                          },
+                        },
+                      },
+                    }));
+                  }
                 }}
               >
                 <MenuItem value={"text"}>Entrée</MenuItem>
@@ -1716,6 +1793,7 @@ class QuestionsBase extends Component {
                 <MenuItem value={"email"}>Email</MenuItem>
                 <MenuItem value={"radio"}>Sélection</MenuItem>
                 <MenuItem value={"checkbox"}>Multi-sélection</MenuItem>
+                <MenuItem value={"body"}>Parties du corps</MenuItem>
               </Select>
             </FormControl>
             {this.state.newQuestion?.type === "number" && (
@@ -1835,6 +1913,119 @@ class QuestionsBase extends Component {
                 </Button>
               </>
             )}
+            {this.state.newQuestion?.type === "body" && (
+              <>
+                {questions[editIndex]?.answers.map((el, key, array) => (
+                  <TableRow key={"answers_" + key}>
+                    <TableCell
+                      style={{
+                        minWidth: 300,
+                      }}
+                    >
+                      {el.answers.map((ele, id) => (
+                        <div
+                          key={`set_XY_${editIndex}${key}${id}`}
+                          style={{
+                            marginRight: "1em",
+                          }}
+                        >
+                          <TextField
+                            id={`setPart${editIndex}${key}${id}`}
+                            key={`setPart${editIndex}${key}${id}`}
+                            variant="outlined"
+                            size="small"
+                            label={"Nom de la partie"}
+                            value={ele?.content || ""}
+                            onChange={(e) => {
+                              this.handleChangePart(e, editIndex, key, id);
+                            }}
+                          />
+                          <form
+                            id={`setXY${editIndex}${key}${id}`}
+                            noValidate
+                            variant="outlined"
+                            autoComplete="off"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              margin: "0.5em 0 1.5em",
+                            }}
+                          >
+                            <TextField
+                              id={`setX${editIndex}${key}${id}`}
+                              key={`setX${editIndex}${key}${id}`}
+                              size="small"
+                              variant="outlined"
+                              label={"X"}
+                              style={{
+                                width: 75,
+                              }}
+                              type={"number"}
+                              onChange={(e) => {
+                                this.handleChangeX(e, editIndex, key, id);
+                              }}
+                              value={ele?.x || ""}
+                            />
+                            <TextField
+                              id={`setY${editIndex}${key}${id}`}
+                              key={`setY${editIndex}${key}${id}`}
+                              size="small"
+                              variant="outlined"
+                              label={"Y"}
+                              style={{
+                                marginLeft: "0.5em",
+                                width: 75,
+                              }}
+                              type={"number"}
+                              onChange={(e) => {
+                                this.handleChangeY(e, editIndex, key, id);
+                              }}
+                              value={ele?.y || ""}
+                            />
+                          </form>
+                        </div>
+                      ))}
+                    </TableCell>
+                    <TableCell>
+                      {el.image && (
+                        <div
+                          style={{ position: "relative" }}
+                          className={"body"}
+                        >
+                          {el.answers.map((ele, id) => (
+                            <div
+                              key={`bodySelect${id}`}
+                              className={`bodySelect`}
+                              id={`bodySelect${id}`}
+                              style={{
+                                left: `${ele.x}px`,
+                                top: `${ele.y}px`,
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                name="bodySelect"
+                                value={ele.content}
+                                id={`part${key}${id}`}
+                              />
+                              <label htmlFor={`part${key}${id}`}>
+                                {ele.content}
+                              </label>
+                            </div>
+                          ))}
+                          <img
+                            src={el.image}
+                            width="100%"
+                            height="100%"
+                            alt=""
+                          />
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
+            )}
           </DialogContent>
           <DialogActions>
             <Button
@@ -1864,6 +2055,7 @@ class QuestionsBase extends Component {
         <Dialog
           fullWidth
           open={openEditDialog}
+          maxWidth="md"
           onClose={() => {
             this.setState({
               openEditDialog: false,
@@ -1901,20 +2093,54 @@ class QuestionsBase extends Component {
                 value={questions[editIndex]?.type || ""}
                 onChange={(e) => {
                   let value = e.target.value;
-                  this.setState((state, props) => ({
-                    questions: {
-                      ...state.questions,
-                      [state.editIndex]: {
-                        ...state.questions[state.editIndex],
-                        type: value,
-                        answers: {
-                          0: {
-                            content: "",
+                  if (value === "body") {
+                    this.setState((state, props) => ({
+                      questions: {
+                        ...state.questions,
+                        [state.editIndex]: {
+                          ...state.questions[state.editIndex],
+                          type: value,
+                          answers: {
+                            0: {
+                              answers: {
+                                0: {
+                                  content: "",
+                                  x: 0,
+                                  y: 0,
+                                },
+                              },
+                              image: "",
+                            },
+                            1: {
+                              answers: {
+                                0: {
+                                  content: "",
+                                  x: 0,
+                                  y: 0,
+                                },
+                              },
+                              image: "",
+                            },
                           },
                         },
                       },
-                    },
-                  }));
+                    }));
+                  } else {
+                    this.setState((state, props) => ({
+                      questions: {
+                        ...state.questions,
+                        [state.editIndex]: {
+                          ...state.questions[state.editIndex],
+                          type: value,
+                          answers: {
+                            0: {
+                              content: "",
+                            },
+                          },
+                        },
+                      },
+                    }));
+                  }
                 }}
               >
                 <MenuItem value={"text"}>Entrée</MenuItem>
@@ -2042,28 +2268,48 @@ class QuestionsBase extends Component {
               <>
                 {questions[editIndex]?.answers.map((el, key, array) => (
                   <TableRow key={"answers_" + key}>
-                    <TableCell>
+                    <TableCell
+                      style={{
+                        minWidth: 300,
+                      }}
+                    >
                       {el.answers.map((ele, id) => (
-                        <div key={`set_XY_${editIndex}${key}${id}`}>
-                          <p>{ele.content}</p>
-
+                        <div
+                          key={`set_XY_${editIndex}${key}${id}`}
+                          style={{
+                            marginRight: "1em",
+                          }}
+                        >
+                          <TextField
+                            id={`setPart${editIndex}${key}${id}`}
+                            key={`setPart${editIndex}${key}${id}`}
+                            variant="outlined"
+                            size="small"
+                            label={"Nom de la partie"}
+                            value={ele?.content || ""}
+                            onChange={(e) => {
+                              this.handleChangePart(e, editIndex, key, id);
+                            }}
+                          />
                           <form
                             id={`setXY${editIndex}${key}${id}`}
                             noValidate
+                            variant="outlined"
                             autoComplete="off"
                             style={{
                               display: "flex",
                               alignItems: "center",
-                              margin: "0.5em 0",
+                              margin: "0.5em 0 1.5em",
                             }}
                           >
                             <TextField
                               id={`setX${editIndex}${key}${id}`}
                               key={`setX${editIndex}${key}${id}`}
                               size="small"
-                              label={"Position en x"}
+                              variant="outlined"
+                              label={"X"}
                               style={{
-                                marginLeft: "0.5em",
+                                width: 75,
                               }}
                               type={"number"}
                               onChange={(e) => {
@@ -2075,9 +2321,11 @@ class QuestionsBase extends Component {
                               id={`setY${editIndex}${key}${id}`}
                               key={`setY${editIndex}${key}${id}`}
                               size="small"
-                              label={"Position en y"}
+                              variant="outlined"
+                              label={"Y"}
                               style={{
                                 marginLeft: "0.5em",
+                                width: 75,
                               }}
                               type={"number"}
                               onChange={(e) => {
