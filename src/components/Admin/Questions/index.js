@@ -24,9 +24,10 @@ import {
   Chip,
   Input,
   Link,
-  Typography,
+  AppBar,
+  Tab,
+  Tabs,
 } from "@material-ui/core";
-import { palette } from "@material-ui/system";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@material-ui/icons/KeyboardArrowUp";
@@ -87,6 +88,29 @@ const QuestionsPage = () => (
     <Questions />
   </div>
 );
+
+function a11yProps(index) {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
+  };
+}
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <div>{children}</div>}
+    </div>
+  );
+}
 
 // a little function to help us with reordering the result
 const reorder = (list, startIndex, endIndex) => {
@@ -168,6 +192,12 @@ const styles = (theme) => ({
   noLabel: {
     marginTop: theme.spacing(3),
   },
+  tab: {
+    textTransform: "none",
+  },
+  tabs: {
+    flexGrow: 1,
+  },
 });
 
 const DeleteButton = withStyles((theme) => ({
@@ -193,6 +223,7 @@ class QuestionsBase extends Component {
     super();
     this.state = {
       show: 0,
+      tab: 0,
       loading: true,
       open: {},
       openDeleteDialog: false,
@@ -1026,11 +1057,19 @@ class QuestionsBase extends Component {
       this.setState({ newQuestion });
     }
   };
+
+  handleChangeTab = (event, newValue) => {
+    this.setState({
+      tab: newValue,
+    });
+  };
+
   render() {
     const { classes } = this.props;
     const {
       dragged,
       items,
+      tab,
       loading,
       open,
       saveConditions,
@@ -1074,6 +1113,7 @@ class QuestionsBase extends Component {
             size="small"
           >
             <Select
+              inputProps={{ "aria-label": "Without label" }}
               style={{
                 background: "white",
               }}
@@ -1087,6 +1127,9 @@ class QuestionsBase extends Component {
                 localStorage.setItem("id", e.target.value);
               }}
             >
+              <MenuItem value="" disabled>
+                Questionnaire
+              </MenuItem>
               {idList.map((el, id) => (
                 <MenuItem key={id} value={el.value}>{`Questionnaire nº${
                   id + 1
@@ -1164,67 +1207,430 @@ class QuestionsBase extends Component {
             </SaveButton>
           )}
         </div>
-        <Paper className={classes.root} elevation={3}>
-          <TableContainer className={classes.container}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell />
-                  <TableCell>#</TableCell>
-                  <TableCell
-                    style={{
-                      width: "100%",
-                    }}
-                  >
-                    Questions
-                  </TableCell>
-                  <TableCell
-                    alignRight
-                    style={{
-                      minWidth: 125,
-                    }}
-                  />
-                </TableRow>
-              </TableHead>
-              <TableBody component={DroppableComponent(this.onDragEnd)}>
-                {items.length === 0 ? (
+        <Paper className={classes.tabs}>
+          <Tabs
+            indicatorColor="primary"
+            textColor="primary"
+            value={tab}
+            onChange={this.handleChangeTab}
+            aria-label="simple tabs example"
+            style={{
+              marginBottom: "1em",
+            }}
+          >
+            <Tab className={classes.tab} label="Questions" {...a11yProps(0)} />
+            <Tab className={classes.tab} label="Variables" {...a11yProps(1)} />
+            <Tab className={classes.tab} label="Email" {...a11yProps(2)} />
+            <Tab
+              className={classes.tab}
+              label="Récapitulatif"
+              {...a11yProps(3)}
+            />
+          </Tabs>
+        </Paper>
+        <TabPanel value={tab} index={0}>
+          <Paper className={classes.root} elevation={3}>
+            <TableContainer className={classes.container}>
+              <Table>
+                <TableHead>
                   <TableRow>
-                    <TableCell colSpan="2" />
+                    <TableCell />
+                    <TableCell>#</TableCell>
                     <TableCell
-                      colSpan="3"
                       style={{
-                        color: "rgba(0, 0, 0, 0.54)",
+                        width: "100%",
                       }}
                     >
-                      Aucune question.
+                      Questions
                     </TableCell>
+                    <TableCell
+                      alignRight
+                      style={{
+                        minWidth: 125,
+                      }}
+                    />
                   </TableRow>
-                ) : (
-                  items?.map((item, index) => (
-                    <React.Fragment key={index}>
-                      <TableRow
-                        className={classes.tableRow}
-                        component={DraggableComponent(index.toString(), index)}
+                </TableHead>
+                <TableBody component={DroppableComponent(this.onDragEnd)}>
+                  {items.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan="2" />
+                      <TableCell
+                        colSpan="3"
+                        style={{
+                          color: "rgba(0, 0, 0, 0.54)",
+                        }}
                       >
-                        <TableCell>
-                          <IconButton
-                            aria-label="expand row"
-                            size="small"
-                            onClick={() => this.setOpen(index)}
+                        Aucune question.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    items?.map((item, index) => (
+                      <React.Fragment key={index}>
+                        <TableRow
+                          className={classes.tableRow}
+                          component={DraggableComponent(
+                            index.toString(),
+                            index
+                          )}
+                        >
+                          <TableCell>
+                            <IconButton
+                              aria-label="expand row"
+                              size="small"
+                              onClick={() => this.setOpen(index)}
+                            >
+                              {open[index] ? (
+                                <KeyboardArrowUpIcon />
+                              ) : (
+                                <KeyboardArrowDownIcon />
+                              )}
+                            </IconButton>
+                          </TableCell>
+                          <TableCell scope="row">{index + 1}</TableCell>
+                          <TableCell>{item?.question}</TableCell>
+                          <TableCell alignRight>
+                            <IconButton
+                              aria-label="edit"
+                              onClick={() => this.showEditDialog(index)}
+                              disabled={dragged}
+                              className={classes.deleteBtn}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              aria-label="delete"
+                              onClick={() => this.showDeleteDialog(index)}
+                              disabled={dragged}
+                              className={classes.deleteBtn}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell
+                            style={{ paddingBottom: 0, paddingTop: 0 }}
+                            colSpan={6}
                           >
-                            {open[index] ? (
-                              <KeyboardArrowUpIcon />
-                            ) : (
-                              <KeyboardArrowDownIcon />
-                            )}
-                          </IconButton>
-                        </TableCell>
-                        <TableCell scope="row">{index + 1}</TableCell>
-                        <TableCell>{item?.question}</TableCell>
+                            <Collapse
+                              in={open[index]}
+                              timeout="auto"
+                              unmountOnExit
+                            >
+                              <Box margin={1}>
+                                <div>
+                                  <span>
+                                    <b>Image principale</b>
+                                  </span>
+                                  <Button
+                                    variant="contained"
+                                    color="default"
+                                    size="small"
+                                    className={classes.button}
+                                    startIcon={<CloudUploadIcon />}
+                                    disabled={dragged}
+                                    component="label"
+                                    onChange={(e) =>
+                                      this.handleUploadMain(e, index)
+                                    }
+                                  >
+                                    {item?.mainImage
+                                      ? "Remplacer"
+                                      : "Téléverser"}
+                                    <input
+                                      disabled={dragged}
+                                      accept="image/*"
+                                      className={classes.input}
+                                      type="file"
+                                    />
+                                  </Button>
+                                  {item?.mainImage && (
+                                    <IconButton
+                                      disabled={dragged}
+                                      variant="contained"
+                                      onClick={() =>
+                                        this.setUploadMain("", index)
+                                      }
+                                      aria-label="delete"
+                                      className={classes.deleteBtn}
+                                    >
+                                      <DeleteIcon
+                                        fontSize="small"
+                                        disabled={dragged}
+                                      />
+                                    </IconButton>
+                                  )}
+                                  {item?.mainImage && (
+                                    <div>
+                                      <img
+                                        width="50"
+                                        src={item?.mainImage}
+                                        alt="Main"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                                <div style={{ marginBottom: "1.5em" }}>
+                                  <p>
+                                    <b>Description</b>
+                                  </p>
+                                  {item?.description ? (
+                                    <p>{item?.description}</p>
+                                  ) : (
+                                    <p>Aucune description</p>
+                                  )}
+                                </div>
+
+                                <Table size="small" aria-label="purchases">
+                                  <TableHead>
+                                    <TableRow>
+                                      <TableCell>Numéro</TableCell>
+                                      <TableCell>Nom/Contenu</TableCell>
+                                      {(item?.type === "radio" ||
+                                        item?.type === "checkbox" ||
+                                        item?.type === "body") && (
+                                        <TableCell>Image</TableCell>
+                                      )}
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {item?.type !== "body" &&
+                                      item?.answers.map((el, key, array) => (
+                                        <TableRow key={key + "_answers"}>
+                                          <TableCell scope="row">
+                                            {key + 1}
+                                          </TableCell>
+                                          <TableCell>{el.content}</TableCell>
+                                          <TableCell>
+                                            {(item?.type === "radio" ||
+                                              item?.type === "checkbox") &&
+                                            !el.image ? (
+                                              <IconButton
+                                                color="primary"
+                                                disabled={dragged}
+                                                aria-label="upload picture"
+                                                component="label"
+                                                onChange={(e) =>
+                                                  this.handleUploadAnswer(
+                                                    e,
+                                                    index,
+                                                    key
+                                                  )
+                                                }
+                                              >
+                                                <PhotoCamera />
+                                                <input
+                                                  accept="image/*"
+                                                  className={classes.input}
+                                                  id="icon-button-file"
+                                                  type="file"
+                                                />
+                                              </IconButton>
+                                            ) : (
+                                              el.image && (
+                                                <>
+                                                  <img
+                                                    src={el.image}
+                                                    style={{ maxWidth: 80 }}
+                                                    alt="Answer img"
+                                                  />
+                                                  <IconButton
+                                                    disabled={dragged}
+                                                    variant="contained"
+                                                    onClick={() =>
+                                                      this.setUploadAnswer(
+                                                        "",
+                                                        index,
+                                                        key
+                                                      )
+                                                    }
+                                                    aria-label="delete"
+                                                    className={
+                                                      classes.deleteBtn
+                                                    }
+                                                  >
+                                                    <DeleteIcon
+                                                      fontSize="small"
+                                                      disabled={dragged}
+                                                    />
+                                                  </IconButton>
+                                                </>
+                                              )
+                                            )}
+                                          </TableCell>
+                                        </TableRow>
+                                      ))}
+                                    {item?.type === "body" &&
+                                      item?.answers.map((el, key, array) => (
+                                        <TableRow key={"answers_" + key}>
+                                          <TableCell scope="row">
+                                            {`${key + 1}`}
+                                          </TableCell>
+                                          <TableCell>
+                                            {el.answers.map((ele, id) => (
+                                              <div
+                                                style={{
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                }}
+                                                key={`XY_${index}${key}${id}`}
+                                              >
+                                                <p>{ele.content}</p>
+                                                <p
+                                                  style={{
+                                                    marginLeft: "0.5em",
+                                                  }}
+                                                >
+                                                  x: {ele?.x}
+                                                </p>
+                                                <p
+                                                  style={{
+                                                    marginLeft: "0.5em",
+                                                  }}
+                                                >
+                                                  y: {ele?.y}
+                                                </p>
+                                              </div>
+                                            ))}
+                                          </TableCell>
+                                          <TableCell>
+                                            {(item?.type === "radio" ||
+                                              item?.type === "checkbox" ||
+                                              item?.type === "body") &&
+                                            !el.image ? (
+                                              <IconButton
+                                                color="primary"
+                                                disabled={dragged}
+                                                aria-label="upload picture"
+                                                component="label"
+                                                onChange={(e) =>
+                                                  this.handleUploadAnswer(
+                                                    e,
+                                                    index,
+                                                    key
+                                                  )
+                                                }
+                                              >
+                                                <PhotoCamera />
+                                                <input
+                                                  accept="image/*"
+                                                  className={classes.input}
+                                                  id="icon-button-file"
+                                                  type="file"
+                                                />
+                                              </IconButton>
+                                            ) : (
+                                              el.image && (
+                                                <>
+                                                  <img
+                                                    src={el.image}
+                                                    style={{ width: 210 }}
+                                                    alt=""
+                                                  />
+                                                  <IconButton
+                                                    disabled={dragged}
+                                                    variant="contained"
+                                                    onClick={() =>
+                                                      this.setUploadAnswer(
+                                                        "",
+                                                        index,
+                                                        key
+                                                      )
+                                                    }
+                                                    aria-label="delete"
+                                                    className={
+                                                      classes.deleteBtn
+                                                    }
+                                                  >
+                                                    <DeleteIcon
+                                                      fontSize="small"
+                                                      disabled={dragged}
+                                                    />
+                                                  </IconButton>
+                                                </>
+                                              )
+                                            )}
+                                          </TableCell>
+                                        </TableRow>
+                                      ))}
+                                  </TableBody>
+                                </Table>
+                              </Box>
+                            </Collapse>
+                          </TableCell>
+                        </TableRow>
+                      </React.Fragment>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+          <Button
+            className={classes.button}
+            style={{
+              marginBottom: "1em",
+            }}
+            variant="contained"
+            size="small"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => this.newQuestion()}
+          >
+            Nouvelle question
+          </Button>
+        </TabPanel>
+        <TabPanel value={tab} index={1}>
+          <Paper className={classes.root} elevation={3}>
+            <TableContainer className={classes.container}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell />
+                    <TableCell>#</TableCell>
+                    <TableCell
+                      fullWidth
+                      style={{
+                        width: "100%",
+                      }}
+                    >
+                      Variable
+                    </TableCell>
+                    <TableCell
+                      alignRight
+                      style={{
+                        minWidth: 125,
+                      }}
+                    />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {variablesItems.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan="2" />{" "}
+                      <TableCell
+                        colSpan="3"
+                        style={{
+                          color: "rgba(0, 0, 0, 0.54)",
+                        }}
+                      >
+                        Aucune variable.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    variablesItems?.map((el, index) => (
+                      <TableRow
+                        key={`variable${index}`}
+                        className={classes.tableRow}
+                      >
+                        <TableCell />
+                        <TableCell>{`${index + 1}`}</TableCell>
+                        <TableCell fullWidth>{el?.name}</TableCell>
                         <TableCell alignRight>
                           <IconButton
                             aria-label="edit"
-                            onClick={() => this.showEditDialog(index)}
+                            onClick={() => this.showEditVariableDialog(index)}
                             disabled={dragged}
                             className={classes.deleteBtn}
                           >
@@ -1232,7 +1638,7 @@ class QuestionsBase extends Component {
                           </IconButton>
                           <IconButton
                             aria-label="delete"
-                            onClick={() => this.showDeleteDialog(index)}
+                            onClick={() => this.showDeleteVariableDialog(index)}
                             disabled={dragged}
                             className={classes.deleteBtn}
                           >
@@ -1240,727 +1646,460 @@ class QuestionsBase extends Component {
                           </IconButton>
                         </TableCell>
                       </TableRow>
-                      <TableRow>
-                        <TableCell
-                          style={{ paddingBottom: 0, paddingTop: 0 }}
-                          colSpan={6}
-                        >
-                          <Collapse
-                            in={open[index]}
-                            timeout="auto"
-                            unmountOnExit
-                          >
-                            <Box margin={1}>
-                              <div>
-                                <span>
-                                  <b>Image principale</b>
-                                </span>
-                                <Button
-                                  variant="contained"
-                                  color="default"
-                                  size="small"
-                                  className={classes.button}
-                                  startIcon={<CloudUploadIcon />}
-                                  disabled={dragged}
-                                  component="label"
-                                  onChange={(e) =>
-                                    this.handleUploadMain(e, index)
-                                  }
-                                >
-                                  {item?.mainImage ? "Remplacer" : "Téléverser"}
-                                  <input
-                                    disabled={dragged}
-                                    accept="image/*"
-                                    className={classes.input}
-                                    type="file"
-                                  />
-                                </Button>
-                                {item?.mainImage && (
-                                  <IconButton
-                                    disabled={dragged}
-                                    variant="contained"
-                                    onClick={() =>
-                                      this.setUploadMain("", index)
-                                    }
-                                    aria-label="delete"
-                                    className={classes.deleteBtn}
-                                  >
-                                    <DeleteIcon
-                                      fontSize="small"
-                                      disabled={dragged}
-                                    />
-                                  </IconButton>
-                                )}
-                                {item?.mainImage && (
-                                  <div>
-                                    <img
-                                      width="50"
-                                      src={item?.mainImage}
-                                      alt="Main"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              <div style={{ marginBottom: "1.5em" }}>
-                                <p>
-                                  <b>Description</b>
-                                </p>
-                                {item?.description ? (
-                                  <p>{item?.description}</p>
-                                ) : (
-                                  <p>Aucune description</p>
-                                )}
-                              </div>
-
-                              <Table size="small" aria-label="purchases">
-                                <TableHead>
-                                  <TableRow>
-                                    <TableCell>Numéro</TableCell>
-                                    <TableCell>Nom/Contenu</TableCell>
-                                    {(item?.type === "radio" ||
-                                      item?.type === "checkbox" ||
-                                      item?.type === "body") && (
-                                      <TableCell>Image</TableCell>
-                                    )}
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {item?.type !== "body" &&
-                                    item?.answers.map((el, key, array) => (
-                                      <TableRow key={key + "_answers"}>
-                                        <TableCell scope="row">
-                                          {key + 1}
-                                        </TableCell>
-                                        <TableCell>{el.content}</TableCell>
-                                        <TableCell>
-                                          {(item?.type === "radio" ||
-                                            item?.type === "checkbox") &&
-                                          !el.image ? (
-                                            <IconButton
-                                              color="primary"
-                                              disabled={dragged}
-                                              aria-label="upload picture"
-                                              component="label"
-                                              onChange={(e) =>
-                                                this.handleUploadAnswer(
-                                                  e,
-                                                  index,
-                                                  key
-                                                )
-                                              }
-                                            >
-                                              <PhotoCamera />
-                                              <input
-                                                accept="image/*"
-                                                className={classes.input}
-                                                id="icon-button-file"
-                                                type="file"
-                                              />
-                                            </IconButton>
-                                          ) : (
-                                            el.image && (
-                                              <>
-                                                <img
-                                                  src={el.image}
-                                                  style={{ maxWidth: 80 }}
-                                                  alt="Answer img"
-                                                />
-                                                <IconButton
-                                                  disabled={dragged}
-                                                  variant="contained"
-                                                  onClick={() =>
-                                                    this.setUploadAnswer(
-                                                      "",
-                                                      index,
-                                                      key
-                                                    )
-                                                  }
-                                                  aria-label="delete"
-                                                  className={classes.deleteBtn}
-                                                >
-                                                  <DeleteIcon
-                                                    fontSize="small"
-                                                    disabled={dragged}
-                                                  />
-                                                </IconButton>
-                                              </>
-                                            )
-                                          )}
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
-                                  {item?.type === "body" &&
-                                    item?.answers.map((el, key, array) => (
-                                      <TableRow key={"answers_" + key}>
-                                        <TableCell scope="row">
-                                          {`${key + 1}`}
-                                        </TableCell>
-                                        <TableCell>
-                                          {el.answers.map((ele, id) => (
-                                            <div
-                                              style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                              }}
-                                              key={`XY_${index}${key}${id}`}
-                                            >
-                                              <p>{ele.content}</p>
-                                              <p
-                                                style={{
-                                                  marginLeft: "0.5em",
-                                                }}
-                                              >
-                                                x: {ele?.x}
-                                              </p>
-                                              <p
-                                                style={{
-                                                  marginLeft: "0.5em",
-                                                }}
-                                              >
-                                                y: {ele?.y}
-                                              </p>
-                                            </div>
-                                          ))}
-                                        </TableCell>
-                                        <TableCell>
-                                          {(item?.type === "radio" ||
-                                            item?.type === "checkbox" ||
-                                            item?.type === "body") &&
-                                          !el.image ? (
-                                            <IconButton
-                                              color="primary"
-                                              disabled={dragged}
-                                              aria-label="upload picture"
-                                              component="label"
-                                              onChange={(e) =>
-                                                this.handleUploadAnswer(
-                                                  e,
-                                                  index,
-                                                  key
-                                                )
-                                              }
-                                            >
-                                              <PhotoCamera />
-                                              <input
-                                                accept="image/*"
-                                                className={classes.input}
-                                                id="icon-button-file"
-                                                type="file"
-                                              />
-                                            </IconButton>
-                                          ) : (
-                                            el.image && (
-                                              <>
-                                                <img
-                                                  src={el.image}
-                                                  style={{ width: 210 }}
-                                                  alt=""
-                                                />
-                                                <IconButton
-                                                  disabled={dragged}
-                                                  variant="contained"
-                                                  onClick={() =>
-                                                    this.setUploadAnswer(
-                                                      "",
-                                                      index,
-                                                      key
-                                                    )
-                                                  }
-                                                  aria-label="delete"
-                                                  className={classes.deleteBtn}
-                                                >
-                                                  <DeleteIcon
-                                                    fontSize="small"
-                                                    disabled={dragged}
-                                                  />
-                                                </IconButton>
-                                              </>
-                                            )
-                                          )}
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
-                                </TableBody>
-                              </Table>
-                            </Box>
-                          </Collapse>
-                        </TableCell>
-                      </TableRow>
-                    </React.Fragment>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-        <Button
-          className={classes.button}
-          style={{
-            marginBottom: "1em",
-          }}
-          variant="contained"
-          size="small"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => this.newQuestion()}
-        >
-          Nouvelle question
-        </Button>
-        <Paper className={classes.root} elevation={3}>
-          <TableContainer className={classes.container}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell />
-                  <TableCell>#</TableCell>
-                  <TableCell
-                    fullWidth
-                    style={{
-                      width: "100%",
-                    }}
-                  >
-                    Variable
-                  </TableCell>
-                  <TableCell
-                    alignRight
-                    style={{
-                      minWidth: 125,
-                    }}
-                  />
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {variablesItems.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan="2" />{" "}
-                    <TableCell
-                      colSpan="3"
-                      style={{
-                        color: "rgba(0, 0, 0, 0.54)",
-                      }}
-                    >
-                      Aucune variable.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  variablesItems?.map((el, index) => (
-                    <TableRow
-                      key={`variable${index}`}
-                      className={classes.tableRow}
-                    >
-                      <TableCell />
-                      <TableCell>{`${index + 1}`}</TableCell>
-                      <TableCell fullWidth>{el?.name}</TableCell>
-                      <TableCell alignRight>
-                        <IconButton
-                          aria-label="edit"
-                          onClick={() => this.showEditVariableDialog(index)}
-                          disabled={dragged}
-                          className={classes.deleteBtn}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          aria-label="delete"
-                          onClick={() => this.showDeleteVariableDialog(index)}
-                          disabled={dragged}
-                          className={classes.deleteBtn}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-        <Button
-          className={classes.button}
-          variant="contained"
-          size="small"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => this.newVariable()}
-        >
-          Nouvelle variable
-        </Button>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <h1>Emailing/Résumé</h1>
-          {saveConditions && (
-            <SaveButton
-              variant="contained"
-              color="primary"
-              size="small"
-              className={classes.button}
-              startIcon={<SaveIcon />}
-              onClick={() => this.onSaveConditions()}
-            >
-              Sauvegarder
-            </SaveButton>
-          )}
-        </div>
-        {conditions?.map((el, id) => (
-          <>
-            {el?.conditions?.map((condition, key) => (
-              <div style={{ display: "flex", alignItems: "center" }}>
-                {key === 0 && <b style={{ marginRight: "0.5em" }}>Si</b>}
-                {key >= 1 && <b style={{ marginRight: "0.5em" }}>et</b>}
-                <FormControl variant="outlined" className={classes.formControl}>
-                  <Select
-                    labelId="simple-select-label-1"
-                    id="simple-select-1"
-                    value={conditions[id]?.conditions[key]?.question || ""}
-                    onChange={(e) => {
-                      const { conditions } = this.state;
-                      let cp = conditions;
-                      let value = e.target.value;
-                      cp[id].conditions[key].question = value;
-                      if (
-                        items[
-                          items.findIndex((item) => item?.question === value)
-                        ]?.type === "checkbox"
-                      ) {
-                        cp[id].conditions[key].value = [];
-                      }
-                      this.setState({
-                        conditions: cp,
-                        saveConditions: true,
-                      });
-                    }}
-                  >
-                    {items.map((item) => (
-                      <MenuItem value={item?.question}>
-                        {item?.question}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl variant="outlined" className={classes.formControl}>
-                  {items[
-                    items.findIndex(
-                      (item) =>
-                        item?.question ===
-                        conditions[id]?.conditions[key]?.question
-                    )
-                  ]?.type === "number" ? (
-                    <Select
-                      style={{ marginLeft: "0.5em" }}
-                      labelId="simple-select-label-2"
-                      id="simple-select-2"
-                      value={conditions[id]?.conditions[key]?.operator || ""}
-                      onChange={(e) => {
-                        const { conditions } = this.state;
-                        let cp = conditions;
-                        let value = e.target.value;
-                        cp[id].conditions[key].operator = value;
-                        if (value === "><" || value === ">><<") {
-                          conditions[id].conditions[key].value = [];
-                        }
-                        this.setState({
-                          conditions: cp,
-                          saveConditions: true,
-                        });
-                      }}
-                    >
-                      <MenuItem value={"==="}>
-                        <b>est égal à</b>
-                      </MenuItem>
-                      <MenuItem value={">"}>
-                        <b>est strictement supérieur à</b>
-                      </MenuItem>
-                      <MenuItem value={"<"}>
-                        <b>est strictement inférieur à</b>
-                      </MenuItem>
-                      <MenuItem value={">="}>
-                        <b>est supérieur ou égal à</b>
-                      </MenuItem>
-                      <MenuItem value={"<="}>
-                        <b>est inférieur ou égal à</b>
-                      </MenuItem>
-                      <MenuItem value={">><<"}>
-                        <b>est compris entre</b>
-                      </MenuItem>
-                      <MenuItem value={"><"}>
-                        <b>est strictement compris entre</b>
-                      </MenuItem>
-                    </Select>
-                  ) : (
-                    <Select
-                      style={{ marginLeft: "0.5em" }}
-                      labelId="simple-select-label-2"
-                      id="simple-select-2"
-                      value={conditions[id]?.conditions[key]?.operator || ""}
-                      onChange={(e) => {
-                        const { conditions } = this.state;
-                        let cp = conditions;
-                        let value = e.target.value;
-                        cp[id].conditions[key].operator = value;
-                        this.setState({
-                          conditions: cp,
-                          saveConditions: true,
-                        });
-                      }}
-                    >
-                      <MenuItem value={"==="}>
-                        <b>est égal à</b>
-                      </MenuItem>
-                    </Select>
+                    ))
                   )}
-                </FormControl>
-                <FormControl variant="outlined" className={classes.formControl}>
-                  {items[
-                    items.findIndex(
-                      (item) =>
-                        item?.question ===
-                        conditions[id]?.conditions[key]?.question
-                    )
-                  ]?.type === "checkbox" ? (
-                    <Select
-                      style={{ marginLeft: "0.5em" }}
-                      labelId="demo-mutiple-chip-label"
-                      id="demo-mutiple-chip"
-                      multiple
-                      variant="outlined"
-                      value={conditions[id]?.conditions[key]?.value || ""}
-                      onChange={(e) => this.handleChangeMultiple(e, id, key)}
-                      input={<Input id="select-multiple-chip" />}
-                      renderValue={(selected) => (
-                        <div className={classes.chips}>
-                          {selected.map((value) => (
-                            <Chip
-                              key={value}
-                              label={value}
-                              className={classes.chip}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      MenuProps={MenuProps}
-                    >
-                      {items[
-                        items.findIndex(
-                          (item) =>
-                            item?.question ===
-                            conditions[id]?.conditions[key]?.question
-                        )
-                      ]?.answers.map((item) => (
-                        <MenuItem
-                          key={item?.content}
-                          value={item?.content}
-                          style={getStyles(item?.content, items)}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+          <Button
+            className={classes.button}
+            variant="contained"
+            size="small"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => this.newVariable()}
+          >
+            Nouvelle variable
+          </Button>
+        </TabPanel>
+        <TabPanel value={tab} index={2}>
+          <Paper className={classes.root} elevation={3}>
+            <div
+              style={{
+                padding: "1em",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                {saveConditions && (
+                  <SaveButton
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    className={classes.button}
+                    startIcon={<SaveIcon />}
+                    onClick={() => this.onSaveConditions()}
+                  >
+                    Sauvegarder
+                  </SaveButton>
+                )}
+              </div>
+              {conditions?.map((el, id) => (
+                <>
+                  {el?.conditions?.map((condition, key) => (
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      {key === 0 && <b style={{ marginRight: "0.5em" }}>Si</b>}
+                      {key >= 1 && <b style={{ marginRight: "0.5em" }}>et</b>}
+                      <FormControl
+                        variant="outlined"
+                        className={classes.formControl}
+                      >
+                        <Select
+                          inputProps={{ "aria-label": "Without label" }}
+                          id="simple-select-1"
+                          value={
+                            conditions[id]?.conditions[key]?.question || ""
+                          }
+                          onChange={(e) => {
+                            const { conditions } = this.state;
+                            let cp = conditions;
+                            let value = e.target.value;
+                            cp[id].conditions[key].question = value;
+                            if (
+                              items[
+                                items.findIndex(
+                                  (item) => item?.question === value
+                                )
+                              ]?.type === "checkbox"
+                            ) {
+                              cp[id].conditions[key].value = [];
+                            }
+                            this.setState({
+                              conditions: cp,
+                              saveConditions: true,
+                            });
+                          }}
                         >
-                          {item?.content}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  ) : items[
-                      items.findIndex(
-                        (item) =>
-                          item?.question ===
-                          conditions[id]?.conditions[key]?.question
-                      )
-                    ]?.type === "radio" ? (
-                    <Select
-                      style={{ marginLeft: "0.5em" }}
-                      variant="outlined"
-                      labelId="simple-select-label"
-                      id="simple-select"
-                      value={conditions[id]?.conditions[key]?.value || ""}
-                      onChange={(e) => {
-                        const { conditions } = this.state;
-                        let cp = conditions;
-                        let value = e.target.value;
-                        cp[id].conditions[key].value = value;
-                        this.setState({
-                          conditions: cp,
-                          saveConditions: true,
-                        });
-                      }}
-                    >
-                      {items[
-                        items.findIndex(
-                          (item) =>
-                            item?.question ===
-                            conditions[id]?.conditions[key]?.question
-                        )
-                      ]?.answers.map((item) => {
-                        return (
-                          <MenuItem value={item?.content}>
-                            {item?.content}
+                          <MenuItem value="" disabled>
+                            Question
                           </MenuItem>
-                        );
-                      })}
-                    </Select>
-                  ) : conditions[id]?.conditions[key]?.operator !== "><" &&
-                    conditions[id]?.conditions[key]?.operator !== ">><<" ? (
-                    <TextField
-                      style={{ marginLeft: "0.5em" }}
-                      type={
-                        items[
+                          {items.map((item) => (
+                            <MenuItem value={item?.question}>
+                              {item?.question}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <FormControl
+                        variant="outlined"
+                        className={classes.formControl}
+                      >
+                        {items[
                           items.findIndex(
                             (item) =>
                               item?.question ===
                               conditions[id]?.conditions[key]?.question
                           )
-                        ]?.type || "text"
+                        ]?.type === "number" ? (
+                          <Select
+                            style={{ marginLeft: "0.5em" }}
+                            inputProps={{ "aria-label": "Without label" }}
+                            id="simple-select-2"
+                            value={
+                              conditions[id]?.conditions[key]?.operator || ""
+                            }
+                            onChange={(e) => {
+                              const { conditions } = this.state;
+                              let cp = conditions;
+                              let value = e.target.value;
+                              cp[id].conditions[key].operator = value;
+                              if (value === "><" || value === ">><<") {
+                                conditions[id].conditions[key].value = [];
+                              }
+                              this.setState({
+                                conditions: cp,
+                                saveConditions: true,
+                              });
+                            }}
+                          >
+                            <MenuItem value="" disabled>
+                              Condition
+                            </MenuItem>
+                            <MenuItem value={"==="}>
+                              <b>est égal à</b>
+                            </MenuItem>
+                            <MenuItem value={">"}>
+                              <b>est strictement supérieur à</b>
+                            </MenuItem>
+                            <MenuItem value={"<"}>
+                              <b>est strictement inférieur à</b>
+                            </MenuItem>
+                            <MenuItem value={">="}>
+                              <b>est supérieur ou égal à</b>
+                            </MenuItem>
+                            <MenuItem value={"<="}>
+                              <b>est inférieur ou égal à</b>
+                            </MenuItem>
+                            <MenuItem value={">><<"}>
+                              <b>est compris entre</b>
+                            </MenuItem>
+                            <MenuItem value={"><"}>
+                              <b>est strictement compris entre</b>
+                            </MenuItem>
+                          </Select>
+                        ) : (
+                          <Select
+                            style={{ marginLeft: "0.5em" }}
+                            inputProps={{ "aria-label": "Without label" }}
+                            id="simple-select-2"
+                            value={
+                              conditions[id]?.conditions[key]?.operator || ""
+                            }
+                            onChange={(e) => {
+                              const { conditions } = this.state;
+                              let cp = conditions;
+                              let value = e.target.value;
+                              cp[id].conditions[key].operator = value;
+                              this.setState({
+                                conditions: cp,
+                                saveConditions: true,
+                              });
+                            }}
+                          >
+                            <MenuItem value="" disabled>
+                              Condition
+                            </MenuItem>
+                            <MenuItem value={"==="}>
+                              <b>est égal à</b>
+                            </MenuItem>
+                          </Select>
+                        )}
+                      </FormControl>
+                      <FormControl
+                        variant="outlined"
+                        className={classes.formControl}
+                      >
+                        {items[
+                          items.findIndex(
+                            (item) =>
+                              item?.question ===
+                              conditions[id]?.conditions[key]?.question
+                          )
+                        ]?.type === "checkbox" ? (
+                          <Select
+                            style={{ marginLeft: "0.5em" }}
+                            labelId="demo-mutiple-chip-label"
+                            id="demo-mutiple-chip"
+                            inputProps={{ "aria-label": "Without label" }}
+                            multiple
+                            variant="outlined"
+                            value={conditions[id]?.conditions[key]?.value || ""}
+                            onChange={(e) =>
+                              this.handleChangeMultiple(e, id, key)
+                            }
+                            input={<Input id="select-multiple-chip" />}
+                            renderValue={(selected) => (
+                              <div className={classes.chips}>
+                                {selected.map((value) => (
+                                  <Chip
+                                    key={value}
+                                    label={value}
+                                    className={classes.chip}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                            MenuProps={MenuProps}
+                          >
+                            <MenuItem value="" disabled>
+                              Réponses
+                            </MenuItem>
+                            {items[
+                              items.findIndex(
+                                (item) =>
+                                  item?.question ===
+                                  conditions[id]?.conditions[key]?.question
+                              )
+                            ]?.answers.map((item) => (
+                              <MenuItem
+                                key={item?.content}
+                                value={item?.content}
+                                style={getStyles(item?.content, items)}
+                              >
+                                {item?.content}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        ) : items[
+                            items.findIndex(
+                              (item) =>
+                                item?.question ===
+                                conditions[id]?.conditions[key]?.question
+                            )
+                          ]?.type === "radio" ? (
+                          <Select
+                            style={{ marginLeft: "0.5em" }}
+                            variant="outlined"
+                            inputProps={{ "aria-label": "Without label" }}
+                            id="simple-select"
+                            value={conditions[id]?.conditions[key]?.value || ""}
+                            onChange={(e) => {
+                              const { conditions } = this.state;
+                              let cp = conditions;
+                              let value = e.target.value;
+                              cp[id].conditions[key].value = value;
+                              this.setState({
+                                conditions: cp,
+                                saveConditions: true,
+                              });
+                            }}
+                          >
+                            <MenuItem value="" disabled>
+                              Réponse
+                            </MenuItem>
+                            {items[
+                              items.findIndex(
+                                (item) =>
+                                  item?.question ===
+                                  conditions[id]?.conditions[key]?.question
+                              )
+                            ]?.answers.map((item) => {
+                              return (
+                                <MenuItem value={item?.content}>
+                                  {item?.content}
+                                </MenuItem>
+                              );
+                            })}
+                          </Select>
+                        ) : conditions[id]?.conditions[key]?.operator !==
+                            "><" &&
+                          conditions[id]?.conditions[key]?.operator !==
+                            ">><<" ? (
+                          <TextField
+                            style={{ marginLeft: "0.5em" }}
+                            type={
+                              items[
+                                items.findIndex(
+                                  (item) =>
+                                    item?.question ===
+                                    conditions[id]?.conditions[key]?.question
+                                )
+                              ]?.type || "text"
+                            }
+                            onChange={(e) => {
+                              const { conditions } = this.state;
+                              let cp = conditions;
+                              let value = e.target.value;
+                              cp[id].conditions[key].value = value;
+                              this.setState({
+                                conditions: cp,
+                                saveConditions: true,
+                              });
+                            }}
+                            id="outlined-basic"
+                            variant="outlined"
+                            value={conditions[id]?.conditions[key]?.value || ""}
+                          />
+                        ) : (
+                          <>
+                            <TextField
+                              style={{ marginLeft: "0.5em" }}
+                              type={
+                                items[
+                                  items.findIndex(
+                                    (item) =>
+                                      item?.question ===
+                                      conditions[id]?.conditions[key]?.question
+                                  )
+                                ]?.type || "text"
+                              }
+                              onChange={(e) => {
+                                const { conditions } = this.state;
+                                let cp = conditions;
+                                let value = e.target.value;
+                                cp[id].conditions[key].value[0] = value;
+                                this.setState({
+                                  conditions: cp,
+                                  saveConditions: true,
+                                });
+                              }}
+                              id="outlined-basic"
+                              variant="outlined"
+                              value={
+                                conditions[id]?.conditions[key]?.value[0] || ""
+                              }
+                            />
+                            <b style={{ textAlign: "center", margin: "0.5em" }}>
+                              et
+                            </b>
+                            <TextField
+                              style={{ marginLeft: "0.5em" }}
+                              type={
+                                items[
+                                  items.findIndex(
+                                    (item) =>
+                                      item?.question ===
+                                      conditions[id]?.conditions[key]?.question
+                                  )
+                                ]?.type || "text"
+                              }
+                              onChange={(e) => {
+                                const { conditions } = this.state;
+                                let cp = conditions;
+                                let value = e.target.value;
+                                cp[id].conditions[key].value[1] = value;
+                                this.setState({
+                                  conditions: cp,
+                                  saveConditions: true,
+                                });
+                              }}
+                              id="outlined-basic"
+                              variant="outlined"
+                              value={
+                                conditions[id]?.conditions[key]?.value[1] || ""
+                              }
+                            />
+                          </>
+                        )}
+                      </FormControl>
+                      <IconButton
+                        style={{ marginLeft: "0.5em" }}
+                        aria-label="delete"
+                        onClick={() => {
+                          this.deleteCondition(id, key);
+                        }}
+                        className={classes.deleteBtn}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outlined"
+                    className={classes.button}
+                    size="small"
+                    color="primary"
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      const { conditions } = this.state;
+                      let cp = conditions;
+                      let length = 0;
+                      if (cp[id]?.conditions) {
+                        length = Object.keys(cp[id].conditions).length;
+                        cp[id].conditions[length] = {
+                          question: "",
+                          operator: "",
+                          value: "",
+                          next: "",
+                        };
+                      } else {
+                        cp[id] = {
+                          conditions: NEW_CONDITION,
+                        };
                       }
+                      this.setState({
+                        conditions: cp,
+                      });
+                    }}
+                  >
+                    Ajouter une condition
+                  </Button>
+                  <p>Alors, afficher/envoyer :</p>
+                  <FormControl
+                    className={classes.formControl}
+                    variant="outlined"
+                  >
+                    <Select
+                      id="demo-simple-select"
+                      inputProps={{ "aria-label": "Without label" }}
+                      value={conditions[id]?.sendEmail?.id || ""}
                       onChange={(e) => {
-                        const { conditions } = this.state;
+                        const { conditions, email } = this.state;
                         let cp = conditions;
-                        let value = e.target.value;
-                        cp[id].conditions[key].value = value;
+                        let index = e.target.value;
+                        cp[id].sendEmail = email[index];
                         this.setState({
                           conditions: cp,
                           saveConditions: true,
                         });
                       }}
-                      id="outlined-basic"
-                      variant="outlined"
-                      value={conditions[id]?.conditions[key]?.value || ""}
-                    />
-                  ) : (
-                    <>
-                      <TextField
-                        style={{ marginLeft: "0.5em" }}
-                        type={
-                          items[
-                            items.findIndex(
-                              (item) =>
-                                item?.question ===
-                                conditions[id]?.conditions[key]?.question
-                            )
-                          ]?.type || "text"
-                        }
-                        onChange={(e) => {
-                          const { conditions } = this.state;
-                          let cp = conditions;
-                          let value = e.target.value;
-                          cp[id].conditions[key].value[0] = value;
-                          this.setState({
-                            conditions: cp,
-                            saveConditions: true,
-                          });
-                        }}
-                        id="outlined-basic"
-                        variant="outlined"
-                        value={conditions[id]?.conditions[key]?.value[0] || ""}
-                      />
-                      <b style={{ textAlign: "center", margin: "0.5em" }}>et</b>
-                      <TextField
-                        style={{ marginLeft: "0.5em" }}
-                        type={
-                          items[
-                            items.findIndex(
-                              (item) =>
-                                item?.question ===
-                                conditions[id]?.conditions[key]?.question
-                            )
-                          ]?.type || "text"
-                        }
-                        onChange={(e) => {
-                          const { conditions } = this.state;
-                          let cp = conditions;
-                          let value = e.target.value;
-                          cp[id].conditions[key].value[1] = value;
-                          this.setState({
-                            conditions: cp,
-                            saveConditions: true,
-                          });
-                        }}
-                        id="outlined-basic"
-                        variant="outlined"
-                        value={conditions[id]?.conditions[key]?.value[1] || ""}
-                      />
-                    </>
-                  )}
-                </FormControl>
-                <IconButton
-                  style={{ marginLeft: "0.5em" }}
-                  aria-label="delete"
-                  onClick={() => {
-                    this.deleteCondition(id, key);
-                  }}
-                  className={classes.deleteBtn}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </div>
-            ))}
-            <Button
-              variant="outlined"
-              className={classes.button}
-              size="small"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={() => {
-                const { conditions } = this.state;
-                let cp = conditions;
-                let length = 0;
-                if (cp[id]?.conditions) {
-                  length = Object.keys(cp[id].conditions).length;
-                  cp[id].conditions[length] = {
-                    question: "",
-                    operator: "",
-                    value: "",
-                    next: "",
-                  };
-                } else {
-                  cp[id] = {
-                    conditions: NEW_CONDITION,
-                  };
-                }
-                this.setState({
-                  conditions: cp,
-                });
-              }}
-            >
-              Ajouter une condition
-            </Button>
-            <p>Alors, afficher/envoyer :</p>
-            <FormControl className={classes.formControl} variant="outlined">
-              <Select
-                id="demo-simple-select"
-                value={conditions[id]?.sendEmail?.id || ""}
-                onChange={(e) => {
-                  const { conditions, email } = this.state;
-                  let cp = conditions;
-                  let index = e.target.value;
-                  cp[id].sendEmail = email[index];
-                  this.setState({
-                    conditions: cp,
-                    saveConditions: true,
-                  });
-                }}
+                    >
+                      <MenuItem value="" disabled>
+                        Email
+                      </MenuItem>
+                      {idListEmail &&
+                        idListEmail.map((el, id) => (
+                          <MenuItem key={id} value={el.value}>{`Email nº${
+                            id + 1
+                          }`}</MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                  <hr />
+                </>
+              ))}
+              <br />
+              <Button
+                className={classes.button}
+                variant="contained"
+                size="small"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={() => this.addNewCondition()}
               >
-                {idListEmail &&
-                  idListEmail.map((el, id) => (
-                    <MenuItem key={id} value={el.value}>{`Email nº${
-                      id + 1
-                    }`}</MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-            <hr />
-          </>
-        ))}
-        <br />
-        <Button
-          className={classes.button}
-          variant="contained"
-          size="small"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => this.addNewCondition()}
-        >
-          Nouvelle condition
-        </Button>
+                Nouvelle condition
+              </Button>
+            </div>
+          </Paper>
+        </TabPanel>
+        <TabPanel value={tab} index={3}>
+          Récapitulatif
+        </TabPanel>
         <Dialog
           open={openDeleteDialog}
           onClose={() => {
@@ -2087,6 +2226,7 @@ class QuestionsBase extends Component {
             >
               <Select
                 placeholder="Type"
+                inputProps={{ "aria-label": "Without label" }}
                 id="simple-select"
                 variant="outlined"
                 value={newQuestion?.type || ""}
@@ -2136,6 +2276,9 @@ class QuestionsBase extends Component {
                   }
                 }}
               >
+                <MenuItem value="" disabled>
+                  Type
+                </MenuItem>
                 <MenuItem value={"text"}>Entrée</MenuItem>
                 <MenuItem value={"number"}>Nombre</MenuItem>
                 <MenuItem value={"email"}>Email</MenuItem>
@@ -2498,6 +2641,7 @@ class QuestionsBase extends Component {
                 placeholder="Type"
                 variant="outlined"
                 value={questions[editIndex]?.type || ""}
+                inputProps={{ "aria-label": "Without label" }}
                 onChange={(e) => {
                   let value = e.target.value;
                   if (value === "body") {
@@ -2550,6 +2694,9 @@ class QuestionsBase extends Component {
                   }
                 }}
               >
+                <MenuItem value="" disabled>
+                  Type
+                </MenuItem>
                 <MenuItem value={"text"}>Entrée</MenuItem>
                 <MenuItem value={"number"}>Nombre</MenuItem>
                 <MenuItem value={"email"}>Email</MenuItem>
@@ -2925,6 +3072,7 @@ class QuestionsBase extends Component {
                   value={newVariable.constants[id].question || ""}
                   required
                   variant="outlined"
+                  inputProps={{ "aria-label": "Without label" }}
                   onChange={(e) => {
                     let value = e.target.value;
                     let newVariable = update(this.state.newVariable, {
@@ -2935,6 +3083,9 @@ class QuestionsBase extends Component {
                     });
                   }}
                 >
+                  <MenuItem value="" disabled>
+                    Question
+                  </MenuItem>
                   {items.map(
                     (item) =>
                       item?.type === "number" && (
@@ -3081,6 +3232,7 @@ class QuestionsBase extends Component {
                       height: 40,
                     }}
                     fullWidth
+                    inputProps={{ "aria-label": "Without label" }}
                     value={
                       variables[editVariableIndex]?.constants[id].question || ""
                     }
@@ -3098,6 +3250,9 @@ class QuestionsBase extends Component {
                       });
                     }}
                   >
+                    <MenuItem value="" disabled>
+                      Question
+                    </MenuItem>
                     {items.map(
                       (item) =>
                         item?.type === "number" && (
