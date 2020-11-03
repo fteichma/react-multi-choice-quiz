@@ -1114,6 +1114,7 @@ class QuestionsBase extends Component {
           >
             <Select
               inputProps={{ "aria-label": "Without label" }}
+              displayEmpty
               style={{
                 background: "white",
               }}
@@ -1701,6 +1702,7 @@ class QuestionsBase extends Component {
                       >
                         <Select
                           inputProps={{ "aria-label": "Without label" }}
+                          displayEmpty
                           id="simple-select-1"
                           value={
                             conditions[id]?.conditions[key]?.question || ""
@@ -1749,6 +1751,7 @@ class QuestionsBase extends Component {
                           <Select
                             style={{ marginLeft: "0.5em" }}
                             inputProps={{ "aria-label": "Without label" }}
+                            displayEmpty
                             id="simple-select-2"
                             value={
                               conditions[id]?.conditions[key]?.operator || ""
@@ -1796,6 +1799,7 @@ class QuestionsBase extends Component {
                           <Select
                             style={{ marginLeft: "0.5em" }}
                             inputProps={{ "aria-label": "Without label" }}
+                            displayEmpty
                             id="simple-select-2"
                             value={
                               conditions[id]?.conditions[key]?.operator || ""
@@ -1836,6 +1840,7 @@ class QuestionsBase extends Component {
                             labelId="demo-mutiple-chip-label"
                             id="demo-mutiple-chip"
                             inputProps={{ "aria-label": "Without label" }}
+                            displayEmpty
                             multiple
                             variant="outlined"
                             value={conditions[id]?.conditions[key]?.value || ""}
@@ -1886,6 +1891,7 @@ class QuestionsBase extends Component {
                             style={{ marginLeft: "0.5em" }}
                             variant="outlined"
                             inputProps={{ "aria-label": "Without label" }}
+                            displayEmpty
                             id="simple-select"
                             value={conditions[id]?.conditions[key]?.value || ""}
                             onChange={(e) => {
@@ -2057,6 +2063,7 @@ class QuestionsBase extends Component {
                     <Select
                       id="demo-simple-select"
                       inputProps={{ "aria-label": "Without label" }}
+                      displayEmpty
                       value={conditions[id]?.sendEmail?.id || ""}
                       onChange={(e) => {
                         const { conditions, email } = this.state;
@@ -2227,6 +2234,7 @@ class QuestionsBase extends Component {
               <Select
                 placeholder="Type"
                 inputProps={{ "aria-label": "Without label" }}
+                displayEmpty
                 id="simple-select"
                 variant="outlined"
                 value={newQuestion?.type || ""}
@@ -2642,6 +2650,7 @@ class QuestionsBase extends Component {
                 variant="outlined"
                 value={questions[editIndex]?.type || ""}
                 inputProps={{ "aria-label": "Without label" }}
+                displayEmpty
                 onChange={(e) => {
                   let value = e.target.value;
                   if (value === "body") {
@@ -3073,6 +3082,7 @@ class QuestionsBase extends Component {
                   required
                   variant="outlined"
                   inputProps={{ "aria-label": "Without label" }}
+                  displayEmpty
                   onChange={(e) => {
                     let value = e.target.value;
                     let newVariable = update(this.state.newVariable, {
@@ -3233,6 +3243,7 @@ class QuestionsBase extends Component {
                     }}
                     fullWidth
                     inputProps={{ "aria-label": "Without label" }}
+                    displayEmpty
                     value={
                       variables[editVariableIndex]?.constants[id].question || ""
                     }
