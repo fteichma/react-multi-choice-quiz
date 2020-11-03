@@ -41,11 +41,11 @@ import TextField from "@material-ui/core/TextField";
 
 import Resizer from "react-image-file-resizer";
 
-import { withFirebase } from "../Firebase";
+import { withFirebase } from "../../Firebase";
 import firebase from "firebase/app";
 import { compose } from "recompose";
 
-import Loading from "../Loading";
+import Loading from "../../Loading";
 import { Visibility } from "@material-ui/icons";
 
 import update from "immutability-helper";
@@ -60,6 +60,17 @@ const NEW_QUESTION = {
   mainImage: "",
   question: "",
   description: "",
+};
+
+const NEW_VARIABLE = {
+  name: "",
+  variables: {
+    0: {
+      question: "",
+      name: "",
+    },
+  },
+  calc: "",
 };
 
 const NEW_CONDITION = {
@@ -191,8 +202,10 @@ class QuestionsBase extends Component {
       id: localStorage.getItem("id") ? localStorage.getItem("id") : undefined,
       idListEmail: [],
       openNewQuestionDialog: false,
+      openNewVariableDialog: false,
       openEditDialog: false,
       newQuestion: NEW_QUESTION,
+      newVariable: NEW_VARIABLE,
       items: [],
       questions: {},
       conditions: [],
@@ -269,6 +282,12 @@ class QuestionsBase extends Component {
     });
   };
 
+  resetNewVariable = () => {
+    this.setState({
+      newVariable: NEW_VARIABLE,
+    });
+  };
+
   resetQuestion = () => {
     this.setState((state) => ({
       questions: JSON.parse(JSON.stringify(state.items)),
@@ -319,6 +338,53 @@ class QuestionsBase extends Component {
         answers: cp,
       },
     }));
+  };
+
+  addNewPart = (key, editIndex) => {
+    if (editIndex) {
+      let length = this.state.questions[editIndex].answers[key].answers.length;
+      let questions = update(this.state.questions, {
+        [editIndex]: {
+          answers: {
+            [key]: {
+              answers: {
+                [length]: {
+                  $set: {
+                    x: 0,
+                    y: 0,
+                    content: "",
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      this.setState({
+        questions,
+      });
+    } else {
+      let length = Object.keys(this.state.newQuestion.answers[key].answers)
+        .length;
+      let newQuestion = update(this.state.newQuestion, {
+        answers: {
+          [key]: {
+            answers: {
+              [length]: {
+                $set: {
+                  x: 0,
+                  y: 0,
+                  content: "",
+                },
+              },
+            },
+          },
+        },
+      });
+      this.setState({
+        newQuestion,
+      });
+    }
   };
 
   deleteNewQuestionAnswers = (id) => {
@@ -416,6 +482,14 @@ class QuestionsBase extends Component {
       });
       this.getQuestionsByRef(id);
     }, 1000);
+  };
+
+  addNewVariable = () => {
+    // TO DO
+    let length = 0;
+    this.setState({
+      openNewVariableDialog: false,
+    });
   };
 
   addNewCondition = () => {
@@ -710,6 +784,12 @@ class QuestionsBase extends Component {
     });
   };
 
+  newVariable = () => {
+    this.setState({
+      openNewVariableDialog: true,
+    });
+  };
+
   getQuestions = () => {
     let db = this.props.firebase.db;
     let questionsRef = db.ref("questions");
@@ -780,11 +860,28 @@ class QuestionsBase extends Component {
     });
   }
 
-  handleChangeY = (e, index, key, id) => {
+  handleChangeY = (e, index, key, id, type) => {
     e.preventDefault();
     let value = e.target.value;
-    let questions = update(this.state.questions, {
-      [index]: {
+    if (type === "edit") {
+      let questions = update(this.state.questions, {
+        [index]: {
+          answers: {
+            [key]: {
+              answers: {
+                [id]: {
+                  y: {
+                    $set: value,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      this.setState({ questions });
+    } else {
+      let newQuestion = update(this.state.newQuestion, {
         answers: {
           [key]: {
             answers: {
@@ -796,16 +893,33 @@ class QuestionsBase extends Component {
             },
           },
         },
-      },
-    });
-    this.setState({ questions });
+      });
+      this.setState({ newQuestion });
+    }
   };
 
-  handleChangeX = (e, index, key, id) => {
+  handleChangeX = (e, index, key, id, type) => {
     e.preventDefault();
     let value = e.target.value;
-    let questions = update(this.state.questions, {
-      [index]: {
+    if (type === "edit") {
+      let questions = update(this.state.questions, {
+        [index]: {
+          answers: {
+            [key]: {
+              answers: {
+                [id]: {
+                  x: {
+                    $set: value,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      this.setState({ questions });
+    } else {
+      let newQuestion = update(this.state.newQuestion, {
         answers: {
           [key]: {
             answers: {
@@ -817,16 +931,33 @@ class QuestionsBase extends Component {
             },
           },
         },
-      },
-    });
-    this.setState({ questions });
+      });
+      this.setState({ newQuestion });
+    }
   };
 
-  handleChangePart = (e, index, key, id) => {
+  handleChangePart = (e, index, key, id, type) => {
     e.preventDefault();
     let value = e.target.value;
-    let questions = update(this.state.questions, {
-      [index]: {
+    if (type === "edit") {
+      let questions = update(this.state.questions, {
+        [index]: {
+          answers: {
+            [key]: {
+              answers: {
+                [id]: {
+                  content: {
+                    $set: value,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      this.setState({ questions });
+    } else {
+      let newQuestion = update(this.state.newQuestion, {
         answers: {
           [key]: {
             answers: {
@@ -838,13 +969,38 @@ class QuestionsBase extends Component {
             },
           },
         },
-      },
-    });
-    this.setState({
-      questions,
-    });
+      });
+      this.setState({ newQuestion });
+    }
   };
 
+  deletePart = (editIndex, key, id) => {
+    if (editIndex) {
+      let questions = update(this.state.questions, {
+        [editIndex]: {
+          answers: {
+            [key]: {
+              answers: {
+                $unset: [id],
+              },
+            },
+          },
+        },
+      });
+      this.setState({ questions });
+    } else {
+      let newQuestion = update(this.state.newQuestion, {
+        answers: {
+          [key]: {
+            answers: {
+              $unset: [id],
+            },
+          },
+        },
+      });
+      this.setState({ newQuestion });
+    }
+  };
   render() {
     const { classes } = this.props;
     const {
@@ -856,6 +1012,7 @@ class QuestionsBase extends Component {
       openDeleteDialog,
       openEditDialog,
       openNewQuestionDialog,
+      openNewVariableDialog,
       editIndex,
       anchorMore,
       idList,
@@ -945,6 +1102,7 @@ class QuestionsBase extends Component {
             variant="contained"
             target="_blank"
             href={`${window.location.origin}/?id=${id}`}
+            rel="noopener noreferrer"
             size="small"
             color="secondary"
             startIcon={<Visibility />}
@@ -1273,16 +1431,33 @@ class QuestionsBase extends Component {
             </Table>
           </TableContainer>
         </Paper>
-        <Button
-          className={classes.button}
-          variant="contained"
-          size="small"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => this.newQuestion()}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+          }}
         >
-          Nouvelle question
-        </Button>
+          <Button
+            className={classes.button}
+            variant="contained"
+            size="small"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => this.newQuestion()}
+          >
+            Nouvelle question
+          </Button>
+          <Button
+            className={classes.button}
+            variant="contained"
+            size="small"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => this.newVariable()}
+          >
+            Nouvelle variable
+          </Button>
+        </div>
         <div
           style={{
             display: "flex",
@@ -1915,33 +2090,53 @@ class QuestionsBase extends Component {
             )}
             {this.state.newQuestion?.type === "body" && (
               <>
-                {questions[editIndex]?.answers.map((el, key, array) => (
+                {Object.keys(this.state.newQuestion.answers).map((el, key) => (
                   <TableRow key={"answers_" + key}>
                     <TableCell
                       style={{
                         minWidth: 300,
                       }}
                     >
-                      {el.answers.map((ele, id) => (
+                      {Object.keys(
+                        this.state.newQuestion.answers[key].answers
+                      ).map((ele, id) => (
                         <div
-                          key={`set_XY_${editIndex}${key}${id}`}
+                          key={`set_XY_${key}${id}`}
                           style={{
                             marginRight: "1em",
                           }}
                         >
                           <TextField
-                            id={`setPart${editIndex}${key}${id}`}
-                            key={`setPart${editIndex}${key}${id}`}
+                            id={`setPart${key}${id}`}
+                            key={`setPart${key}${id}`}
                             variant="outlined"
                             size="small"
-                            label={"Nom de la partie"}
-                            value={ele?.content || ""}
+                            label={"Partie"}
+                            value={
+                              this.state.newQuestion.answers[key].answers[ele]
+                                .content || ""
+                            }
                             onChange={(e) => {
-                              this.handleChangePart(e, editIndex, key, id);
+                              this.handleChangePart(
+                                e,
+                                undefined,
+                                key,
+                                id,
+                                "new"
+                              );
+                              console.log(e.target.value);
                             }}
                           />
+                          <IconButton
+                            variant="contained"
+                            onClick={() => this.deletePart(undefined, key, id)}
+                            aria-label="delete"
+                            className={classes.deleteBtn}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
                           <form
-                            id={`setXY${editIndex}${key}${id}`}
+                            id={`setXY${key}${id}`}
                             noValidate
                             variant="outlined"
                             autoComplete="off"
@@ -1952,8 +2147,8 @@ class QuestionsBase extends Component {
                             }}
                           >
                             <TextField
-                              id={`setX${editIndex}${key}${id}`}
-                              key={`setX${editIndex}${key}${id}`}
+                              id={`setX${key}${id}`}
+                              key={`setX${key}${id}`}
                               size="small"
                               variant="outlined"
                               label={"X"}
@@ -1962,13 +2157,22 @@ class QuestionsBase extends Component {
                               }}
                               type={"number"}
                               onChange={(e) => {
-                                this.handleChangeX(e, editIndex, key, id);
+                                this.handleChangeX(
+                                  e,
+                                  undefined,
+                                  key,
+                                  id,
+                                  "new"
+                                );
                               }}
-                              value={ele?.x || ""}
+                              value={
+                                this.state.newQuestion.answers[key].answers[ele]
+                                  .x || ""
+                              }
                             />
                             <TextField
-                              id={`setY${editIndex}${key}${id}`}
-                              key={`setY${editIndex}${key}${id}`}
+                              id={`setY${key}${id}`}
+                              key={`setY${key}${id}`}
                               size="small"
                               variant="outlined"
                               label={"Y"}
@@ -1978,13 +2182,34 @@ class QuestionsBase extends Component {
                               }}
                               type={"number"}
                               onChange={(e) => {
-                                this.handleChangeY(e, editIndex, key, id);
+                                this.handleChangeY(
+                                  e,
+                                  undefined,
+                                  key,
+                                  id,
+                                  "new"
+                                );
                               }}
-                              value={ele?.y || ""}
+                              value={
+                                this.state.newQuestion.answers[key].answers[ele]
+                                  .y || ""
+                              }
                             />
                           </form>
                         </div>
                       ))}
+                      <Button
+                        className={classes.button}
+                        variant="contained"
+                        size="small"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        onClick={() => {
+                          this.addNewPart(key, undefined);
+                        }}
+                      >
+                        Ajouter une partie
+                      </Button>
                     </TableCell>
                     <TableCell>
                       {el.image && (
@@ -1992,29 +2217,39 @@ class QuestionsBase extends Component {
                           style={{ position: "relative" }}
                           className={"body"}
                         >
-                          {el.answers.map((ele, id) => (
+                          {Object.keys(
+                            this.state.newQuestion.answers[key].answers
+                          ).map((ele, id) => (
                             <div
                               key={`bodySelect${id}`}
                               className={`bodySelect`}
                               id={`bodySelect${id}`}
                               style={{
-                                left: `${ele.x}px`,
-                                top: `${ele.y}px`,
+                                left: `${this.state.newQuestion.answers[key].answers[ele].x}px`,
+                                top: `${this.state.newQuestion.answers[key].answers[ele].y}px`,
                               }}
                             >
                               <input
                                 type="checkbox"
                                 name="bodySelect"
-                                value={ele.content}
+                                value={
+                                  this.state.newQuestion.answers[key].answers[
+                                    ele
+                                  ].content
+                                }
                                 id={`part${key}${id}`}
                               />
                               <label htmlFor={`part${key}${id}`}>
-                                {ele.content}
+                                {
+                                  this.state.newQuestion.answers[key].answers[
+                                    ele
+                                  ].content
+                                }
                               </label>
                             </div>
                           ))}
                           <img
-                            src={el.image}
+                            src={this.state.newQuestion.answers[key].image}
                             width="100%"
                             height="100%"
                             alt=""
@@ -2285,12 +2520,26 @@ class QuestionsBase extends Component {
                             key={`setPart${editIndex}${key}${id}`}
                             variant="outlined"
                             size="small"
-                            label={"Nom de la partie"}
+                            label={"Partie"}
                             value={ele?.content || ""}
                             onChange={(e) => {
-                              this.handleChangePart(e, editIndex, key, id);
+                              this.handleChangePart(
+                                e,
+                                editIndex,
+                                key,
+                                id,
+                                "edit"
+                              );
                             }}
                           />
+                          <IconButton
+                            variant="contained"
+                            onClick={() => this.deletePart(editIndex, key, id)}
+                            aria-label="delete"
+                            className={classes.deleteBtn}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
                           <form
                             id={`setXY${editIndex}${key}${id}`}
                             noValidate
@@ -2313,7 +2562,13 @@ class QuestionsBase extends Component {
                               }}
                               type={"number"}
                               onChange={(e) => {
-                                this.handleChangeX(e, editIndex, key, id);
+                                this.handleChangeX(
+                                  e,
+                                  editIndex,
+                                  key,
+                                  id,
+                                  "edit"
+                                );
                               }}
                               value={ele?.x || ""}
                             />
@@ -2329,13 +2584,31 @@ class QuestionsBase extends Component {
                               }}
                               type={"number"}
                               onChange={(e) => {
-                                this.handleChangeY(e, editIndex, key, id);
+                                this.handleChangeY(
+                                  e,
+                                  editIndex,
+                                  key,
+                                  id,
+                                  "edit"
+                                );
                               }}
                               value={ele?.y || ""}
                             />
                           </form>
                         </div>
                       ))}
+                      <Button
+                        className={classes.button}
+                        variant="contained"
+                        size="small"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        onClick={() => {
+                          this.addNewPart(key, editIndex);
+                        }}
+                      >
+                        Ajouter une partie
+                      </Button>
                     </TableCell>
                     <TableCell>
                       {el.image && (
@@ -2401,6 +2674,43 @@ class QuestionsBase extends Component {
               variant="contained"
             >
               Modifier
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          maxWidth="md"
+          fullWidth
+          open={openNewVariableDialog}
+          onClose={() => {
+            this.setState({
+              openNewVariableDialog: false,
+            });
+          }}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">Nouvelle variable</DialogTitle>
+          <DialogContent></DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                this.setState({
+                  openNewVariableDialog: false,
+                });
+                this.resetNewVariable();
+              }}
+              color="primary"
+            >
+              Annuler
+            </Button>
+            <Button
+              disabled={
+                !this.state.newVariable?.name || !this.state.newVariable?.calc
+              }
+              onClick={() => this.addNewVariable()}
+              color="primary"
+              variant="contained"
+            >
+              Ajouter
             </Button>
           </DialogActions>
         </Dialog>

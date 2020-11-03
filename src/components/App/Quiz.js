@@ -124,7 +124,11 @@ class Quiz extends React.Component {
                 width: custom?.logo?.width,
               }}
             >
-              <a href={custom?.logo?.link} target="_blank">
+              <a
+                href={custom?.logo?.link || ""}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <img
                   style={{
                     width: custom?.logo?.width,
@@ -172,103 +176,105 @@ class Quiz extends React.Component {
                 {this.props.description}
               </p>
             )}
-            <ul className="answerOptions">
+            <ul
+              className={`answerOptions ${
+                this.props.type === "text" ||
+                this.props.type === "email" ||
+                this.props.type === "number"
+                  ? `answerInput`
+                  : ``
+              }`}
+            >
               {this.props?.type !== "body" &&
                 this.props?.answerOptions.map((el, key, array) => {
-                  if (
-                    this.props.type === "text" ||
+                  return this.props.type === "text" ||
                     this.props.type === "email" ||
-                    this.props.type === "number"
-                  ) {
-                    return (
-                      <li className="answerOption" key={`answerOption${key}`}>
-                        <input
-                          className={
-                            error ? `animate__animated animate__shakeX` : ``
-                          }
-                          type={this.props.type}
-                          placeholder={array[key].content}
-                          onKeyPress={(e) => {
-                            let keyCode = e.keyCode || e.charCode;
-                            if (keyCode === 13) {
-                              if (e.target.value) {
-                                this.props.onKeyPressed(e.target);
+                    this.props.type === "number" ? (
+                    <li className="answerOption" key={`answerOption${key}`}>
+                      <input
+                        className={
+                          error ? `animate__animated animate__shakeX` : ``
+                        }
+                        type={this.props.type}
+                        placeholder={array[key].content}
+                        onKeyPress={(e) => {
+                          let keyCode = e.keyCode || e.charCode;
+                          if (keyCode === 13) {
+                            if (e.target.value) {
+                              this.props.onKeyPressed(e.target);
+                              this.setState({
+                                error: false,
+                                back: false,
+                              });
+                              setTimeout(() => {
                                 this.setState({
-                                  error: false,
-                                  back: false,
+                                  target: undefined,
                                 });
-                                setTimeout(() => {
-                                  this.setState({
-                                    target: undefined,
-                                  });
-                                }, 300);
-                              } else {
-                                this.setState({ error: true });
-                                Notify("Veuillez compléter le champ", "error");
-                              }
+                              }, 300);
+                            } else {
+                              this.setState({ error: true });
+                              Notify("Veuillez compléter le champ", "error");
                             }
-                          }}
-                          name={array[key].content}
-                          onChange={(e) => {
-                            let target = e.target;
-                            this.setState({
-                              target,
-                              error: false,
-                            });
-                          }}
-                          value={this.state.target?.value || ""}
-                          autoFocus
+                          }
+                        }}
+                        name={array[key].content}
+                        onChange={(e) => {
+                          let target = e.target;
+                          this.setState({
+                            target,
+                            error: false,
+                          });
+                        }}
+                        value={this.state.target?.value || ""}
+                        autoFocus
+                      />
+                    </li>
+                  ) : this.props.type === "radio" ? (
+                    <li
+                      className={"answerOption radioOption"}
+                      css={css`
+                        &::before {
+                          background: ${custom?.select?.primary};
+                        }
+                        &::after {
+                          border: 3px solid ${custom?.select?.primary};
+                        }
+                      `}
+                      key={`radioOption${key}`}
+                    >
+                      <input
+                        type={this.props.type}
+                        className="radioCustomButton"
+                        name={array[key].content}
+                        checked={array[key].content === array[key].answer}
+                        id={array[key].content}
+                        value={array[key].content}
+                        disabled={array[key].answer}
+                        onChange={(e) => {
+                          this.props.onAnswerSelected(e.target);
+                          this.setState({
+                            target: undefined,
+                            back: false,
+                          });
+                        }}
+                      />
+                      {array[key].image && (
+                        <img
+                          src={array[key].image}
+                          className="answerImage"
+                          alt="Answer"
+                          width="50%"
                         />
-                      </li>
-                    );
-                  } else if (this.props.type === "radio") {
-                    return (
-                      <li
-                        className={"answerOption radioOption"}
-                        css={css`
-                          &::before {
-                            background: ${custom?.select?.primary};
-                          }
-                          &::after {
-                            border: 3px solid ${custom?.select?.primary};
-                          }
-                        `}
-                        key={`radioOption${key}`}
+                      )}
+                      <label
+                        className="radioCustomLabel"
+                        htmlFor={array[key].content}
                       >
-                        <input
-                          type={this.props.type}
-                          className="radioCustomButton"
-                          name={array[key].content}
-                          checked={array[key].content === array[key].answer}
-                          id={array[key].content}
-                          value={array[key].content}
-                          disabled={array[key].answer}
-                          onChange={(e) => {
-                            this.props.onAnswerSelected(e.target);
-                            this.setState({
-                              target: undefined,
-                              back: false,
-                            });
-                          }}
-                        />
-                        {array[key].image && (
-                          <img
-                            src={array[key].image}
-                            className="answerImage"
-                            alt="Answer"
-                            width="50%"
-                          />
-                        )}
-                        <label
-                          className="radioCustomLabel"
-                          htmlFor={array[key].content}
-                        >
-                          {array[key].content}
-                        </label>
-                      </li>
-                    );
-                  } else if (this.props.type === "checkbox") {
-                    return (
+                        {array[key].content}
+                      </label>
+                    </li>
+                  ) : (
+                    this.props.type === "checkbox" && (
                       <li
                         className="answerOption multiOption"
                         key={`multiOption${key}`}
@@ -303,7 +309,7 @@ class Quiz extends React.Component {
                               opacity: 1;
                               &::before {
                                 background: ${custom?.select?.secondary};
-                                opacity: 0.2;
+                                opacity: 0.3;
                               }
                               &::after {
                                 border: 3px solid ${custom?.select?.secondary};
@@ -320,8 +326,8 @@ class Quiz extends React.Component {
                           {array[key].content}
                         </label>
                       </li>
-                    );
-                  }
+                    )
+                  );
                 })}
               {(this.props.type === "text" ||
                 this.props.type === "email" ||

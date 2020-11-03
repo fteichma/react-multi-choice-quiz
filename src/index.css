@@ -75,10 +75,6 @@ h1 {
   width: 100%;
 }
 
-::placeholder {
-  color: #ccc;
-}
-
 .info-error {
   position: absolute;
   bottom: -25px;
@@ -604,6 +600,9 @@ line {
     flex-direction: column;
     margin: auto;
     width: fit-content;
+  }
+  .answerOptions.answerInput {
+    flex-direction: row;
   }
   .container {
     padding-top: 50px;

@@ -172,7 +172,7 @@ class App extends Component {
         );
       })
       .join("");
-    listAnswers += "</tbody>" + "</table>";
+    listAnswers += "</tbody></table>";
     this.sendEmail(
       answers[email.toString()]?.value,
       "DELEO - Quiz complété avec succès !",

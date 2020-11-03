@@ -1,15 +1,7 @@
 import React, { Component } from "react";
-import PropTypes from "prop-types";
 import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 import { withRouter } from "react-router-dom";
-import {
-  Box,
-  withStyles,
-  Button,
-  Tab,
-  Tabs,
-  Container,
-} from "@material-ui/core";
+import { Box, withStyles, Tab, Tabs, Container } from "@material-ui/core";
 
 import Questions from "./Questions";
 import Responses from "./Responses";

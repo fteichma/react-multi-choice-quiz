@@ -1,11 +1,5 @@
 import React, { Component } from "react";
-import {
-  Button,
-  IconButton,
-  Slider,
-  Typography,
-  TextField,
-} from "@material-ui/core";
+import { Button, IconButton, Slider, TextField } from "@material-ui/core";
 
 import {
   Delete as DeleteIcon,
@@ -20,12 +14,11 @@ import { withStyles } from "@material-ui/core/styles";
 import { ChromePicker } from "react-color";
 
 import { withFirebase } from "../Firebase";
-import firebase from "firebase/app";
 import { compose } from "recompose";
 
 import OutsideClickHandler from "react-outside-click-handler";
 
-import { red, green } from "@material-ui/core/colors";
+import { green } from "@material-ui/core/colors";
 
 const styles = (theme) => ({
   root: {
@@ -56,15 +49,6 @@ const styles = (theme) => ({
   },
 });
 
-const DeleteButton = withStyles((theme) => ({
-  root: {
-    backgroundColor: red[500],
-    "&:hover": {
-      backgroundColor: red[700],
-    },
-  },
-}))(Button);
-
 const SaveButton = withStyles((theme) => ({
   root: {
     backgroundColor: green[500],
@@ -87,7 +71,6 @@ class CustomBase extends Component {
       custom: undefined,
       showPickerBg: [],
       showSave: false,
-      hover: false,
     };
   }
   componentDidMount() {
@@ -148,7 +131,7 @@ class CustomBase extends Component {
 
   render() {
     const { classes } = this.props;
-    const { custom, showPickerBg, showSave, hover } = this.state;
+    const { custom, showPickerBg, showSave } = this.state;
     return (
       <>
         <div style={{ display: "flex", alignItems: "center", width: "100%" }}>

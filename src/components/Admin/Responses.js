@@ -15,7 +15,6 @@ import KeyboardArrowUpIcon from "@material-ui/icons/KeyboardArrowUp";
 import TablePagination from "@material-ui/core/TablePagination";
 
 import { withFirebase } from "../Firebase";
-import firebase from "firebase/app";
 import { compose } from "recompose";
 
 const styles = (theme) => ({
