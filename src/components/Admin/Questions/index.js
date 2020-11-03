@@ -21,10 +21,12 @@ import {
   Select,
   Menu,
   MenuItem,
-  InputLabel,
   Chip,
   Input,
+  Link,
+  Typography,
 } from "@material-ui/core";
+import { palette } from "@material-ui/system";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@material-ui/icons/KeyboardArrowUp";
@@ -38,8 +40,6 @@ import AddIcon from "@material-ui/icons/Add";
 import red from "@material-ui/core/colors/red";
 import green from "@material-ui/core/colors/green";
 import TextField from "@material-ui/core/TextField";
-
-import Resizer from "react-image-file-resizer";
 
 import { withFirebase } from "../../Firebase";
 import firebase from "firebase/app";
@@ -64,7 +64,7 @@ const NEW_QUESTION = {
 
 const NEW_VARIABLE = {
   name: "",
-  variables: {
+  constants: {
     0: {
       question: "",
       name: "",
@@ -197,16 +197,22 @@ class QuestionsBase extends Component {
       open: {},
       openDeleteDialog: false,
       deleteIndex: null,
+      deleteVariableIndex: null,
       editIndex: null,
+      editVariableIndex: null,
       idList: [],
       id: localStorage.getItem("id") ? localStorage.getItem("id") : undefined,
       idListEmail: [],
       openNewQuestionDialog: false,
       openNewVariableDialog: false,
       openEditDialog: false,
+      openEditVariableDialog: false,
+      openDeleteVariableDialog: false,
       newQuestion: NEW_QUESTION,
       newVariable: NEW_VARIABLE,
       items: [],
+      variables: [],
+      variablesItems: [],
       questions: {},
       conditions: [],
       anchorMore: undefined,
@@ -242,7 +248,7 @@ class QuestionsBase extends Component {
 
   handleChangeMultiple = (e, id, key) => {
     let value = e.target.value;
-    let questions = update(this.state.conditions, {
+    let questions = update(this.state.questions, {
       [id]: {
         conditions: {
           [key]: {
@@ -291,6 +297,12 @@ class QuestionsBase extends Component {
   resetQuestion = () => {
     this.setState((state) => ({
       questions: JSON.parse(JSON.stringify(state.items)),
+    }));
+  };
+
+  resetVariable = () => {
+    this.setState((state) => ({
+      variables: JSON.parse(JSON.stringify(state.variablesItems)),
     }));
   };
 
@@ -485,11 +497,16 @@ class QuestionsBase extends Component {
   };
 
   addNewVariable = () => {
-    // TO DO
+    const { id, variablesItems, newVariable } = this.state;
     let length = 0;
+    if (variablesItems) length = Object.keys(variablesItems).length;
+    let db = this.props.firebase.db;
+    let variable = db.ref(`questions/${id}/variables/${length}`);
+    variable.set({ ...newVariable });
     this.setState({
       openNewVariableDialog: false,
     });
+    this.resetNewVariable();
   };
 
   addNewCondition = () => {
@@ -536,26 +553,10 @@ class QuestionsBase extends Component {
   };
 
   setOpen = (key) => {
-    this.setState({
-      open: { ...this.state.open, [key]: this.state.open[key] ? false : true },
-    });
+    this.setState((state) => ({
+      open: { ...state.open, [key]: state.open[key] ? false : true },
+    }));
   };
-
-  resizeFile = (file) =>
-    new Promise((resolve) => {
-      Resizer.imageFileResizer(
-        file,
-        800,
-        800,
-        "PNG",
-        80,
-        0,
-        (uri) => {
-          resolve(uri);
-        },
-        "blob"
-      );
-    });
 
   getRandomString = (length) => {
     var randomChars =
@@ -572,7 +573,7 @@ class QuestionsBase extends Component {
   handleUploadMain = async (e, index) => {
     const { storage } = this.props.firebase;
     let file = e?.target?.files[0];
-    const image = await this.resizeFile(file);
+    const image = file;
     const name = this.getRandomString(24);
     if (image) {
       const uploadTask = storage.ref(`images/${name}`).put(image);
@@ -667,6 +668,20 @@ class QuestionsBase extends Component {
     });
   };
 
+  showDeleteVariableDialog = (index) => {
+    this.setState({
+      openDeleteVariableDialog: true,
+      deleteVariableIndex: index,
+    });
+  };
+
+  showEditVariableDialog = (index) => {
+    this.setState({
+      openEditVariableDialog: true,
+      editVariableIndex: index,
+    });
+  };
+
   deleteItem = () => {
     const { items, deleteIndex } = this.state;
     let copy = items;
@@ -683,6 +698,34 @@ class QuestionsBase extends Component {
     );
   };
 
+  deleteVariable = () => {
+    const { variablesItems, deleteVariableIndex } = this.state;
+    let copy = variablesItems;
+    copy.splice(deleteVariableIndex, 1);
+    this.setState(
+      {
+        variablesItems: copy,
+        deleteVariableIndex: null,
+        openDeleteVariableDialog: false,
+      },
+      () => {
+        this.onSave();
+      }
+    );
+  };
+
+  editVariable = () => {
+    const { id, editVariableIndex, variables } = this.state;
+    let db = this.props.firebase.db;
+    let q = variables[editVariableIndex];
+    let ref = db.ref(`questions/${id}/variables/${editVariableIndex}`);
+    ref.set(q);
+    this.setState({
+      openEditVariableDialog: false,
+    });
+    this.resetVariable();
+  };
+
   editItem = () => {
     const { items } = this.state;
     this.setState(
@@ -696,11 +739,14 @@ class QuestionsBase extends Component {
       }
     );
   };
+
   onSave = () => {
-    const { items, id } = this.state;
+    const { items, variablesItems, id } = this.state;
     let db = this.props.firebase.db;
     let questionsRef = db.ref(`questions/${id}/questions`);
     questionsRef.set(items);
+    let variablesRef = db.ref(`questions/${id}/variables`);
+    variablesRef.set(variablesItems);
     this.setState({
       dragged: false,
     });
@@ -823,40 +869,19 @@ class QuestionsBase extends Component {
     let questionsRef = db.ref(`questions/${id}`);
     questionsRef.on("value", (snap) => {
       let data = snap.val();
-      let questions = data?.questions;
-      let conditions = data?.conditions;
-      let items = [];
-      if (questions && conditions) {
-        items = JSON.parse(JSON.stringify(questions));
-        this.setState({
-          loading: false,
-          questions,
-          conditions,
-          items,
-        });
-      } else if (questions) {
-        items = JSON.parse(JSON.stringify(questions));
-        this.setState({
-          loading: false,
-          questions,
-          conditions: [],
-          items,
-        });
-      } else if (conditions) {
-        this.setState({
-          loading: false,
-          conditions,
-          items: [],
-          questions: [],
-        });
-      } else {
-        this.setState({
-          loading: false,
-          items: [],
-          questions: [],
-          conditions: [],
-        });
-      }
+      let questions = data?.questions ?? [];
+      let conditions = data?.conditions ?? [];
+      let variables = data?.variables ?? [];
+      let items = JSON.parse(JSON.stringify(questions)) ?? [];
+      let variablesItems = JSON.parse(JSON.stringify(variables)) ?? [];
+      this.setState({
+        loading: false,
+        questions,
+        conditions,
+        variables,
+        variablesItems,
+        items,
+      });
     });
   }
 
@@ -1010,16 +1035,23 @@ class QuestionsBase extends Component {
       open,
       saveConditions,
       openDeleteDialog,
+      openDeleteVariableDialog,
       openEditDialog,
+      openEditVariableDialog,
       openNewQuestionDialog,
       openNewVariableDialog,
       editIndex,
+      editVariableIndex,
       anchorMore,
       idList,
       id,
       conditions,
       idListEmail,
       questions,
+      variables,
+      variablesItems,
+      newVariable,
+      newQuestion,
     } = this.state;
     return loading ? (
       <Loading />
@@ -1042,6 +1074,9 @@ class QuestionsBase extends Component {
             size="small"
           >
             <Select
+              style={{
+                background: "white",
+              }}
               id="demo-simple-select"
               value={id}
               onChange={(e) => {
@@ -1091,34 +1126,30 @@ class QuestionsBase extends Component {
             </MenuItem>
             <MenuItem
               onClick={() => {
+                this.newQuestions();
+              }}
+            >
+              Nouveau
+            </MenuItem>
+            <MenuItem
+              component={Link}
+              style={{
+                color: "rgba(0, 0, 0, 0.87)",
+              }}
+              target="_blank"
+              href={`${window.location.origin}/?id=${id}`}
+              rel="noopener noreferrer"
+            >
+              Visualiser
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
                 this.onDelete();
               }}
             >
               Supprimer
             </MenuItem>
           </Menu>
-          <Button
-            className={classes.button}
-            variant="contained"
-            target="_blank"
-            href={`${window.location.origin}/?id=${id}`}
-            rel="noopener noreferrer"
-            size="small"
-            color="secondary"
-            startIcon={<Visibility />}
-          >
-            Visualiser
-          </Button>
-          <Button
-            className={classes.button}
-            variant="contained"
-            size="small"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => this.newQuestions()}
-          >
-            Nouveau
-          </Button>
           {dragged && (
             <SaveButton
               variant="contained"
@@ -1140,36 +1171,390 @@ class QuestionsBase extends Component {
                 <TableRow>
                   <TableCell />
                   <TableCell>#</TableCell>
-                  <TableCell>Questions</TableCell>
-                  <TableCell alignRight />
+                  <TableCell
+                    style={{
+                      width: "100%",
+                    }}
+                  >
+                    Questions
+                  </TableCell>
+                  <TableCell
+                    alignRight
+                    style={{
+                      minWidth: 125,
+                    }}
+                  />
                 </TableRow>
               </TableHead>
               <TableBody component={DroppableComponent(this.onDragEnd)}>
-                {items?.map((item, index) => (
-                  <React.Fragment key={index}>
-                    <TableRow
-                      className={classes.tableRow}
-                      component={DraggableComponent(index.toString(), index)}
+                {items.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan="2" />
+                    <TableCell
+                      colSpan="3"
+                      style={{
+                        color: "rgba(0, 0, 0, 0.54)",
+                      }}
                     >
-                      <TableCell>
-                        <IconButton
-                          aria-label="expand row"
-                          size="small"
-                          onClick={() => this.setOpen(index)}
+                      Aucune question.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  items?.map((item, index) => (
+                    <React.Fragment key={index}>
+                      <TableRow
+                        className={classes.tableRow}
+                        component={DraggableComponent(index.toString(), index)}
+                      >
+                        <TableCell>
+                          <IconButton
+                            aria-label="expand row"
+                            size="small"
+                            onClick={() => this.setOpen(index)}
+                          >
+                            {open[index] ? (
+                              <KeyboardArrowUpIcon />
+                            ) : (
+                              <KeyboardArrowDownIcon />
+                            )}
+                          </IconButton>
+                        </TableCell>
+                        <TableCell scope="row">{index + 1}</TableCell>
+                        <TableCell>{item?.question}</TableCell>
+                        <TableCell alignRight>
+                          <IconButton
+                            aria-label="edit"
+                            onClick={() => this.showEditDialog(index)}
+                            disabled={dragged}
+                            className={classes.deleteBtn}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            aria-label="delete"
+                            onClick={() => this.showDeleteDialog(index)}
+                            disabled={dragged}
+                            className={classes.deleteBtn}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell
+                          style={{ paddingBottom: 0, paddingTop: 0 }}
+                          colSpan={6}
                         >
-                          {open[index] ? (
-                            <KeyboardArrowUpIcon />
-                          ) : (
-                            <KeyboardArrowDownIcon />
-                          )}
-                        </IconButton>
-                      </TableCell>
-                      <TableCell scope="row">{index + 1}</TableCell>
-                      <TableCell>{item?.question}</TableCell>
+                          <Collapse
+                            in={open[index]}
+                            timeout="auto"
+                            unmountOnExit
+                          >
+                            <Box margin={1}>
+                              <div>
+                                <span>
+                                  <b>Image principale</b>
+                                </span>
+                                <Button
+                                  variant="contained"
+                                  color="default"
+                                  size="small"
+                                  className={classes.button}
+                                  startIcon={<CloudUploadIcon />}
+                                  disabled={dragged}
+                                  component="label"
+                                  onChange={(e) =>
+                                    this.handleUploadMain(e, index)
+                                  }
+                                >
+                                  {item?.mainImage ? "Remplacer" : "Téléverser"}
+                                  <input
+                                    disabled={dragged}
+                                    accept="image/*"
+                                    className={classes.input}
+                                    type="file"
+                                  />
+                                </Button>
+                                {item?.mainImage && (
+                                  <IconButton
+                                    disabled={dragged}
+                                    variant="contained"
+                                    onClick={() =>
+                                      this.setUploadMain("", index)
+                                    }
+                                    aria-label="delete"
+                                    className={classes.deleteBtn}
+                                  >
+                                    <DeleteIcon
+                                      fontSize="small"
+                                      disabled={dragged}
+                                    />
+                                  </IconButton>
+                                )}
+                                {item?.mainImage && (
+                                  <div>
+                                    <img
+                                      width="50"
+                                      src={item?.mainImage}
+                                      alt="Main"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                              <div style={{ marginBottom: "1.5em" }}>
+                                <p>
+                                  <b>Description</b>
+                                </p>
+                                {item?.description ? (
+                                  <p>{item?.description}</p>
+                                ) : (
+                                  <p>Aucune description</p>
+                                )}
+                              </div>
+
+                              <Table size="small" aria-label="purchases">
+                                <TableHead>
+                                  <TableRow>
+                                    <TableCell>Numéro</TableCell>
+                                    <TableCell>Nom/Contenu</TableCell>
+                                    {(item?.type === "radio" ||
+                                      item?.type === "checkbox" ||
+                                      item?.type === "body") && (
+                                      <TableCell>Image</TableCell>
+                                    )}
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {item?.type !== "body" &&
+                                    item?.answers.map((el, key, array) => (
+                                      <TableRow key={key + "_answers"}>
+                                        <TableCell scope="row">
+                                          {key + 1}
+                                        </TableCell>
+                                        <TableCell>{el.content}</TableCell>
+                                        <TableCell>
+                                          {(item?.type === "radio" ||
+                                            item?.type === "checkbox") &&
+                                          !el.image ? (
+                                            <IconButton
+                                              color="primary"
+                                              disabled={dragged}
+                                              aria-label="upload picture"
+                                              component="label"
+                                              onChange={(e) =>
+                                                this.handleUploadAnswer(
+                                                  e,
+                                                  index,
+                                                  key
+                                                )
+                                              }
+                                            >
+                                              <PhotoCamera />
+                                              <input
+                                                accept="image/*"
+                                                className={classes.input}
+                                                id="icon-button-file"
+                                                type="file"
+                                              />
+                                            </IconButton>
+                                          ) : (
+                                            el.image && (
+                                              <>
+                                                <img
+                                                  src={el.image}
+                                                  style={{ maxWidth: 80 }}
+                                                  alt="Answer img"
+                                                />
+                                                <IconButton
+                                                  disabled={dragged}
+                                                  variant="contained"
+                                                  onClick={() =>
+                                                    this.setUploadAnswer(
+                                                      "",
+                                                      index,
+                                                      key
+                                                    )
+                                                  }
+                                                  aria-label="delete"
+                                                  className={classes.deleteBtn}
+                                                >
+                                                  <DeleteIcon
+                                                    fontSize="small"
+                                                    disabled={dragged}
+                                                  />
+                                                </IconButton>
+                                              </>
+                                            )
+                                          )}
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  {item?.type === "body" &&
+                                    item?.answers.map((el, key, array) => (
+                                      <TableRow key={"answers_" + key}>
+                                        <TableCell scope="row">
+                                          {`${key + 1}`}
+                                        </TableCell>
+                                        <TableCell>
+                                          {el.answers.map((ele, id) => (
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                              }}
+                                              key={`XY_${index}${key}${id}`}
+                                            >
+                                              <p>{ele.content}</p>
+                                              <p
+                                                style={{
+                                                  marginLeft: "0.5em",
+                                                }}
+                                              >
+                                                x: {ele?.x}
+                                              </p>
+                                              <p
+                                                style={{
+                                                  marginLeft: "0.5em",
+                                                }}
+                                              >
+                                                y: {ele?.y}
+                                              </p>
+                                            </div>
+                                          ))}
+                                        </TableCell>
+                                        <TableCell>
+                                          {(item?.type === "radio" ||
+                                            item?.type === "checkbox" ||
+                                            item?.type === "body") &&
+                                          !el.image ? (
+                                            <IconButton
+                                              color="primary"
+                                              disabled={dragged}
+                                              aria-label="upload picture"
+                                              component="label"
+                                              onChange={(e) =>
+                                                this.handleUploadAnswer(
+                                                  e,
+                                                  index,
+                                                  key
+                                                )
+                                              }
+                                            >
+                                              <PhotoCamera />
+                                              <input
+                                                accept="image/*"
+                                                className={classes.input}
+                                                id="icon-button-file"
+                                                type="file"
+                                              />
+                                            </IconButton>
+                                          ) : (
+                                            el.image && (
+                                              <>
+                                                <img
+                                                  src={el.image}
+                                                  style={{ width: 210 }}
+                                                  alt=""
+                                                />
+                                                <IconButton
+                                                  disabled={dragged}
+                                                  variant="contained"
+                                                  onClick={() =>
+                                                    this.setUploadAnswer(
+                                                      "",
+                                                      index,
+                                                      key
+                                                    )
+                                                  }
+                                                  aria-label="delete"
+                                                  className={classes.deleteBtn}
+                                                >
+                                                  <DeleteIcon
+                                                    fontSize="small"
+                                                    disabled={dragged}
+                                                  />
+                                                </IconButton>
+                                              </>
+                                            )
+                                          )}
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                </TableBody>
+                              </Table>
+                            </Box>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+        <Button
+          className={classes.button}
+          style={{
+            marginBottom: "1em",
+          }}
+          variant="contained"
+          size="small"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => this.newQuestion()}
+        >
+          Nouvelle question
+        </Button>
+        <Paper className={classes.root} elevation={3}>
+          <TableContainer className={classes.container}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell />
+                  <TableCell>#</TableCell>
+                  <TableCell
+                    fullWidth
+                    style={{
+                      width: "100%",
+                    }}
+                  >
+                    Variable
+                  </TableCell>
+                  <TableCell
+                    alignRight
+                    style={{
+                      minWidth: 125,
+                    }}
+                  />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {variablesItems.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan="2" />{" "}
+                    <TableCell
+                      colSpan="3"
+                      style={{
+                        color: "rgba(0, 0, 0, 0.54)",
+                      }}
+                    >
+                      Aucune variable.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  variablesItems?.map((el, index) => (
+                    <TableRow
+                      key={`variable${index}`}
+                      className={classes.tableRow}
+                    >
+                      <TableCell />
+                      <TableCell>{`${index + 1}`}</TableCell>
+                      <TableCell fullWidth>{el?.name}</TableCell>
                       <TableCell alignRight>
                         <IconButton
                           aria-label="edit"
-                          onClick={() => this.showEditDialog(index)}
+                          onClick={() => this.showEditVariableDialog(index)}
                           disabled={dragged}
                           className={classes.deleteBtn}
                         >
@@ -1177,7 +1562,7 @@ class QuestionsBase extends Component {
                         </IconButton>
                         <IconButton
                           aria-label="delete"
-                          onClick={() => this.showDeleteDialog(index)}
+                          onClick={() => this.showDeleteVariableDialog(index)}
                           disabled={dragged}
                           className={classes.deleteBtn}
                         >
@@ -1185,279 +1570,22 @@ class QuestionsBase extends Component {
                         </IconButton>
                       </TableCell>
                     </TableRow>
-                    <TableRow>
-                      <TableCell
-                        style={{ paddingBottom: 0, paddingTop: 0 }}
-                        colSpan={6}
-                      >
-                        <Collapse in={open[index]} timeout="auto" unmountOnExit>
-                          <Box margin={1}>
-                            <div>
-                              <span>
-                                <b>Image principale</b>
-                              </span>
-                              <Button
-                                variant="contained"
-                                color="default"
-                                size="small"
-                                className={classes.button}
-                                startIcon={<CloudUploadIcon />}
-                                disabled={dragged}
-                                component="label"
-                                onChange={(e) =>
-                                  this.handleUploadMain(e, index)
-                                }
-                              >
-                                {item?.mainImage ? "Remplacer" : "Téléverser"}
-                                <input
-                                  disabled={dragged}
-                                  accept="image/*"
-                                  className={classes.input}
-                                  type="file"
-                                />
-                              </Button>
-                              {item?.mainImage && (
-                                <IconButton
-                                  disabled={dragged}
-                                  variant="contained"
-                                  onClick={() => this.setUploadMain("", index)}
-                                  aria-label="delete"
-                                  className={classes.deleteBtn}
-                                >
-                                  <DeleteIcon
-                                    fontSize="small"
-                                    disabled={dragged}
-                                  />
-                                </IconButton>
-                              )}
-                              {item?.mainImage && (
-                                <div>
-                                  <img
-                                    width="50"
-                                    src={item?.mainImage}
-                                    alt="Main"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                            <div style={{ marginBottom: "1.5em" }}>
-                              <p>
-                                <b>Description</b>
-                              </p>
-                              {item?.description ? (
-                                <p>{item?.description}</p>
-                              ) : (
-                                <p>Aucune description</p>
-                              )}
-                            </div>
-
-                            <Table size="small" aria-label="purchases">
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell>Numéro</TableCell>
-                                  <TableCell>Nom/Contenu</TableCell>
-                                  {(item?.type === "radio" ||
-                                    item?.type === "checkbox" ||
-                                    item?.type === "body") && (
-                                    <TableCell>Image</TableCell>
-                                  )}
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {item?.type !== "body" &&
-                                  item?.answers.map((el, key, array) => (
-                                    <TableRow key={key + "_answers"}>
-                                      <TableCell scope="row">
-                                        {key + 1}
-                                      </TableCell>
-                                      <TableCell>{el.content}</TableCell>
-                                      <TableCell>
-                                        {(item?.type === "radio" ||
-                                          item?.type === "checkbox") &&
-                                        !el.image ? (
-                                          <IconButton
-                                            color="primary"
-                                            disabled={dragged}
-                                            aria-label="upload picture"
-                                            component="label"
-                                            onChange={(e) =>
-                                              this.handleUploadAnswer(
-                                                e,
-                                                index,
-                                                key
-                                              )
-                                            }
-                                          >
-                                            <PhotoCamera />
-                                            <input
-                                              accept="image/*"
-                                              className={classes.input}
-                                              id="icon-button-file"
-                                              type="file"
-                                            />
-                                          </IconButton>
-                                        ) : (
-                                          el.image && (
-                                            <>
-                                              <img
-                                                src={el.image}
-                                                style={{ maxWidth: 80 }}
-                                                alt="Answer img"
-                                              />
-                                              <IconButton
-                                                disabled={dragged}
-                                                variant="contained"
-                                                onClick={() =>
-                                                  this.setUploadAnswer(
-                                                    "",
-                                                    index,
-                                                    key
-                                                  )
-                                                }
-                                                aria-label="delete"
-                                                className={classes.deleteBtn}
-                                              >
-                                                <DeleteIcon
-                                                  fontSize="small"
-                                                  disabled={dragged}
-                                                />
-                                              </IconButton>
-                                            </>
-                                          )
-                                        )}
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                                {item?.type === "body" &&
-                                  item?.answers.map((el, key, array) => (
-                                    <TableRow key={"answers_" + key}>
-                                      <TableCell scope="row">
-                                        {`${key + 1}`}
-                                      </TableCell>
-                                      <TableCell>
-                                        {el.answers.map((ele, id) => (
-                                          <div
-                                            style={{
-                                              display: "flex",
-                                              alignItems: "center",
-                                            }}
-                                            key={`XY_${index}${key}${id}`}
-                                          >
-                                            <p>{ele.content}</p>
-                                            <p
-                                              style={{
-                                                marginLeft: "0.5em",
-                                              }}
-                                            >
-                                              x: {ele?.x}
-                                            </p>
-                                            <p
-                                              style={{
-                                                marginLeft: "0.5em",
-                                              }}
-                                            >
-                                              y: {ele?.y}
-                                            </p>
-                                          </div>
-                                        ))}
-                                      </TableCell>
-                                      <TableCell>
-                                        {(item?.type === "radio" ||
-                                          item?.type === "checkbox" ||
-                                          item?.type === "body") &&
-                                        !el.image ? (
-                                          <IconButton
-                                            color="primary"
-                                            disabled={dragged}
-                                            aria-label="upload picture"
-                                            component="label"
-                                            onChange={(e) =>
-                                              this.handleUploadAnswer(
-                                                e,
-                                                index,
-                                                key
-                                              )
-                                            }
-                                          >
-                                            <PhotoCamera />
-                                            <input
-                                              accept="image/*"
-                                              className={classes.input}
-                                              id="icon-button-file"
-                                              type="file"
-                                            />
-                                          </IconButton>
-                                        ) : (
-                                          el.image && (
-                                            <>
-                                              <img
-                                                src={el.image}
-                                                style={{ width: 210 }}
-                                                alt=""
-                                              />
-                                              <IconButton
-                                                disabled={dragged}
-                                                variant="contained"
-                                                onClick={() =>
-                                                  this.setUploadAnswer(
-                                                    "",
-                                                    index,
-                                                    key
-                                                  )
-                                                }
-                                                aria-label="delete"
-                                                className={classes.deleteBtn}
-                                              >
-                                                <DeleteIcon
-                                                  fontSize="small"
-                                                  disabled={dragged}
-                                                />
-                                              </IconButton>
-                                            </>
-                                          )
-                                        )}
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                              </TableBody>
-                            </Table>
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  </React.Fragment>
-                ))}
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
         </Paper>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-          }}
+        <Button
+          className={classes.button}
+          variant="contained"
+          size="small"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => this.newVariable()}
         >
-          <Button
-            className={classes.button}
-            variant="contained"
-            size="small"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => this.newQuestion()}
-          >
-            Nouvelle question
-          </Button>
-          <Button
-            className={classes.button}
-            variant="contained"
-            size="small"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => this.newVariable()}
-          >
-            Nouvelle variable
-          </Button>
-        </div>
+          Nouvelle variable
+        </Button>
         <div
           style={{
             display: "flex",
@@ -1877,6 +2005,49 @@ class QuestionsBase extends Component {
           </DialogActions>
         </Dialog>
         <Dialog
+          open={openDeleteVariableDialog}
+          onClose={() => {
+            this.setState({
+              deleteVariableIndex: null,
+              openDeleteVariableDialog: false,
+            });
+          }}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">
+            {"Êtes-vous sûr de vouloir supprimer cette variable ?"}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Cette action est irréversible
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                this.setState({
+                  deleteVariableIndex: null,
+                  openDeleteVariableDialog: false,
+                });
+              }}
+              color="primary"
+            >
+              Annuler
+            </Button>
+            <DeleteButton
+              onClick={() => {
+                this.deleteVariable();
+              }}
+              autoFocus
+              color="primary"
+              variant="contained"
+            >
+              Supprimer
+            </DeleteButton>
+          </DialogActions>
+        </Dialog>
+        <Dialog
           maxWidth="md"
           fullWidth
           open={openNewQuestionDialog}
@@ -1893,17 +2064,19 @@ class QuestionsBase extends Component {
               autoFocus
               required
               margin="dense"
+              variant="outlined"
               onChange={(e) => this.handleChangeNameNewQuestion(e)}
-              value={this.state.newQuestion?.question || ""}
-              label="Question"
+              value={newQuestion?.question || ""}
+              placeholder="Question"
               type="text"
               fullWidth
             />
             <TextField
               margin="dense"
+              variant="outlined"
               onChange={(e) => this.handleChangeDescriptionNewQuestion(e)}
-              value={this.state.newQuestion?.description || ""}
-              label="Description"
+              value={newQuestion?.description || ""}
+              placeholder="Description"
               type="text"
               fullWidth
             />
@@ -1912,11 +2085,11 @@ class QuestionsBase extends Component {
               required
               className={classes.formControl}
             >
-              <InputLabel id="simple-select-label">Type</InputLabel>
               <Select
-                labelId="simple-select-label"
+                placeholder="Type"
                 id="simple-select"
-                value={this.state.newQuestion?.type || ""}
+                variant="outlined"
+                value={newQuestion?.type || ""}
                 onChange={(e) => {
                   let value = e.target.value;
                   if (value === "body") {
@@ -1971,42 +2144,45 @@ class QuestionsBase extends Component {
                 <MenuItem value={"body"}>Parties du corps</MenuItem>
               </Select>
             </FormControl>
-            {this.state.newQuestion?.type === "number" && (
+            {newQuestion?.type === "number" && (
               <TextField
                 required
+                variant="outlined"
                 margin="dense"
-                label="Ex. : âge"
+                placeholder="Ex. : âge"
                 type="text"
                 onChange={(e) => this.handleChangeNewQuestionAnswers(e, 0)}
-                value={this.state.newQuestion.answers[0]?.content || ""}
+                value={newQuestion.answers[0]?.content || ""}
                 fullWidth
               />
             )}
-            {this.state.newQuestion?.type === "text" && (
+            {newQuestion?.type === "text" && (
               <TextField
                 required
                 margin="dense"
-                label="Ex. : Prénom"
+                variant="outlined"
+                placeholder="Ex. : Prénom"
                 type="text"
                 onChange={(e) => this.handleChangeNewQuestionAnswers(e, 0)}
-                value={this.state.newQuestion.answers[0]?.content || ""}
+                value={newQuestion.answers[0]?.content || ""}
                 fullWidth
               />
             )}
-            {this.state.newQuestion?.type === "email" && (
+            {newQuestion?.type === "email" && (
               <TextField
                 required
                 margin="dense"
-                label="Ex. : Email"
+                variant="outlined"
+                placeholder="Ex. : Email"
                 type="text"
                 onChange={(e) => this.handleChangeNewQuestionAnswers(e, 0)}
-                value={this.state.newQuestion.answers[0]?.content || ""}
+                value={newQuestion.answers[0]?.content || ""}
                 fullWidth
               />
             )}
-            {this.state.newQuestion?.type === "checkbox" && (
+            {newQuestion?.type === "checkbox" && (
               <>
-                {Object.keys(this.state.newQuestion.answers).map((el, id) => (
+                {Object.keys(newQuestion.answers).map((el, id) => (
                   <div
                     style={{
                       display: "flex",
@@ -2017,10 +2193,9 @@ class QuestionsBase extends Component {
                     <TextField
                       required
                       margin="dense"
-                      label={`Option n°${id + 1}`}
-                      value={
-                        this.state.newQuestion.answers[`${id}`]?.content || ""
-                      }
+                      variant="outlined"
+                      placeholder={`Option n°${id + 1}`}
+                      value={newQuestion.answers[`${id}`]?.content || ""}
                       onChange={(e) =>
                         this.handleChangeNewQuestionAnswers(e, id)
                       }
@@ -2046,9 +2221,9 @@ class QuestionsBase extends Component {
                 </Button>
               </>
             )}
-            {this.state.newQuestion?.type === "radio" && (
+            {newQuestion?.type === "radio" && (
               <>
-                {Object.keys(this.state.newQuestion.answers).map((el, id) => (
+                {Object.keys(newQuestion.answers).map((el, id) => (
                   <div
                     style={{
                       display: "flex",
@@ -2059,10 +2234,9 @@ class QuestionsBase extends Component {
                     <TextField
                       required
                       margin="dense"
-                      label={`Option n°${id + 1}`}
-                      value={
-                        this.state.newQuestion.answers[`${id}`]?.content || ""
-                      }
+                      variant="outlined"
+                      placeholder={`Option n°${id + 1}`}
+                      value={newQuestion.answers[`${id}`]?.content || ""}
                       onChange={(e) =>
                         this.handleChangeNewQuestionAnswers(e, id)
                       }
@@ -2088,76 +2262,35 @@ class QuestionsBase extends Component {
                 </Button>
               </>
             )}
-            {this.state.newQuestion?.type === "body" && (
+            {newQuestion?.type === "body" && (
               <>
-                {Object.keys(this.state.newQuestion.answers).map((el, key) => (
+                {Object.keys(newQuestion.answers).map((el, key) => (
                   <TableRow key={"answers_" + key}>
                     <TableCell
                       style={{
                         minWidth: 300,
                       }}
                     >
-                      {Object.keys(
-                        this.state.newQuestion.answers[key].answers
-                      ).map((ele, id) => (
-                        <div
-                          key={`set_XY_${key}${id}`}
-                          style={{
-                            marginRight: "1em",
-                          }}
-                        >
-                          <TextField
-                            id={`setPart${key}${id}`}
-                            key={`setPart${key}${id}`}
-                            variant="outlined"
-                            size="small"
-                            label={"Partie"}
-                            value={
-                              this.state.newQuestion.answers[key].answers[ele]
-                                .content || ""
-                            }
-                            onChange={(e) => {
-                              this.handleChangePart(
-                                e,
-                                undefined,
-                                key,
-                                id,
-                                "new"
-                              );
-                              console.log(e.target.value);
-                            }}
-                          />
-                          <IconButton
-                            variant="contained"
-                            onClick={() => this.deletePart(undefined, key, id)}
-                            aria-label="delete"
-                            className={classes.deleteBtn}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                          <form
-                            id={`setXY${key}${id}`}
-                            noValidate
-                            variant="outlined"
-                            autoComplete="off"
+                      {Object.keys(newQuestion.answers[key].answers).map(
+                        (ele, id) => (
+                          <div
+                            key={`set_XY_${key}${id}`}
                             style={{
-                              display: "flex",
-                              alignItems: "center",
-                              margin: "0.5em 0 1.5em",
+                              marginRight: "1em",
                             }}
                           >
                             <TextField
-                              id={`setX${key}${id}`}
-                              key={`setX${key}${id}`}
-                              size="small"
+                              id={`setPart${key}${id}`}
+                              key={`setPart${key}${id}`}
                               variant="outlined"
-                              label={"X"}
-                              style={{
-                                width: 75,
-                              }}
-                              type={"number"}
+                              size="small"
+                              placeholder={"Partie"}
+                              value={
+                                newQuestion.answers[key].answers[ele].content ||
+                                ""
+                              }
                               onChange={(e) => {
-                                this.handleChangeX(
+                                this.handleChangePart(
                                   e,
                                   undefined,
                                   key,
@@ -2165,39 +2298,79 @@ class QuestionsBase extends Component {
                                   "new"
                                 );
                               }}
-                              value={
-                                this.state.newQuestion.answers[key].answers[ele]
-                                  .x || ""
-                              }
                             />
-                            <TextField
-                              id={`setY${key}${id}`}
-                              key={`setY${key}${id}`}
-                              size="small"
+                            <IconButton
+                              variant="contained"
+                              onClick={() =>
+                                this.deletePart(undefined, key, id)
+                              }
+                              aria-label="delete"
+                              className={classes.deleteBtn}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                            <form
+                              id={`setXY${key}${id}`}
+                              noValidate
                               variant="outlined"
-                              label={"Y"}
+                              autoComplete="off"
                               style={{
-                                marginLeft: "0.5em",
-                                width: 75,
+                                display: "flex",
+                                alignItems: "center",
+                                margin: "0.5em 0 1.5em",
                               }}
-                              type={"number"}
-                              onChange={(e) => {
-                                this.handleChangeY(
-                                  e,
-                                  undefined,
-                                  key,
-                                  id,
-                                  "new"
-                                );
-                              }}
-                              value={
-                                this.state.newQuestion.answers[key].answers[ele]
-                                  .y || ""
-                              }
-                            />
-                          </form>
-                        </div>
-                      ))}
+                            >
+                              <TextField
+                                id={`setX${key}${id}`}
+                                key={`setX${key}${id}`}
+                                size="small"
+                                variant="outlined"
+                                placeholder={"X"}
+                                style={{
+                                  width: 75,
+                                }}
+                                type={"number"}
+                                onChange={(e) => {
+                                  this.handleChangeX(
+                                    e,
+                                    undefined,
+                                    key,
+                                    id,
+                                    "new"
+                                  );
+                                }}
+                                value={
+                                  newQuestion.answers[key].answers[ele].x || ""
+                                }
+                              />
+                              <TextField
+                                id={`setY${key}${id}`}
+                                key={`setY${key}${id}`}
+                                size="small"
+                                variant="outlined"
+                                placeholder={"Y"}
+                                style={{
+                                  marginLeft: "0.5em",
+                                  width: 75,
+                                }}
+                                type={"number"}
+                                onChange={(e) => {
+                                  this.handleChangeY(
+                                    e,
+                                    undefined,
+                                    key,
+                                    id,
+                                    "new"
+                                  );
+                                }}
+                                value={
+                                  newQuestion.answers[key].answers[ele].y || ""
+                                }
+                              />
+                            </form>
+                          </div>
+                        )
+                      )}
                       <Button
                         className={classes.button}
                         variant="contained"
@@ -2217,39 +2390,37 @@ class QuestionsBase extends Component {
                           style={{ position: "relative" }}
                           className={"body"}
                         >
-                          {Object.keys(
-                            this.state.newQuestion.answers[key].answers
-                          ).map((ele, id) => (
-                            <div
-                              key={`bodySelect${id}`}
-                              className={`bodySelect`}
-                              id={`bodySelect${id}`}
-                              style={{
-                                left: `${this.state.newQuestion.answers[key].answers[ele].x}px`,
-                                top: `${this.state.newQuestion.answers[key].answers[ele].y}px`,
-                              }}
-                            >
-                              <input
-                                type="checkbox"
-                                name="bodySelect"
-                                value={
-                                  this.state.newQuestion.answers[key].answers[
-                                    ele
-                                  ].content
-                                }
-                                id={`part${key}${id}`}
-                              />
-                              <label htmlFor={`part${key}${id}`}>
-                                {
-                                  this.state.newQuestion.answers[key].answers[
-                                    ele
-                                  ].content
-                                }
-                              </label>
-                            </div>
-                          ))}
+                          {Object.keys(newQuestion.answers[key].answers).map(
+                            (ele, id) => (
+                              <div
+                                key={`bodySelect${id}`}
+                                className={`bodySelect`}
+                                id={`bodySelect${id}`}
+                                style={{
+                                  left: `${newQuestion.answers[key].answers[ele].x}px`,
+                                  top: `${newQuestion.answers[key].answers[ele].y}px`,
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  name="bodySelect"
+                                  value={
+                                    newQuestion.answers[key].answers[ele]
+                                      .content
+                                  }
+                                  id={`part${key}${id}`}
+                                />
+                                <label htmlFor={`part${key}${id}`}>
+                                  {
+                                    newQuestion.answers[key].answers[ele]
+                                      .content
+                                  }
+                                </label>
+                              </div>
+                            )
+                          )}
                           <img
-                            src={this.state.newQuestion.answers[key].image}
+                            src={newQuestion.answers[key].image}
                             width="100%"
                             height="100%"
                             alt=""
@@ -2276,8 +2447,7 @@ class QuestionsBase extends Component {
             </Button>
             <Button
               disabled={
-                !this.state.newQuestion.answers[0]?.content ||
-                !this.state.newQuestion.question
+                !newQuestion.answers[0]?.content || !newQuestion.question
               }
               onClick={() => this.addNewQuestion()}
               color="primary"
@@ -2306,25 +2476,27 @@ class QuestionsBase extends Component {
               autoFocus
               required
               margin="dense"
+              variant="outlined"
               onChange={(e) => this.handleChangeNameQuestion(e)}
               value={questions[editIndex]?.question || ""}
-              label="Question"
+              placeholder="Question"
               type="text"
               fullWidth
             />
             <TextField
               margin="dense"
+              variant="outlined"
               onChange={(e) => this.handleChangeDescriptionQuestion(e)}
               value={questions[editIndex]?.description || ""}
-              label="Description"
+              placeholder="Description"
               type="text"
               fullWidth
             />
             <FormControl required className={classes.formControl}>
-              <InputLabel id="simple-select-label">Type</InputLabel>
               <Select
-                labelId="simple-select-label"
                 id="simple-select"
+                placeholder="Type"
+                variant="outlined"
                 value={questions[editIndex]?.type || ""}
                 onChange={(e) => {
                   let value = e.target.value;
@@ -2390,7 +2562,8 @@ class QuestionsBase extends Component {
               <TextField
                 required
                 margin="dense"
-                label="Ex. : âge"
+                variant="outlined"
+                placeholder="Ex. : âge"
                 type="text"
                 onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
                 value={questions[editIndex]?.answers[0]?.content || ""}
@@ -2401,7 +2574,8 @@ class QuestionsBase extends Component {
               <TextField
                 required
                 margin="dense"
-                label="Ex. : Prénom"
+                variant="outlined"
+                placeholder="Ex. : Prénom"
                 type="text"
                 onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
                 value={questions[editIndex]?.answers[0]?.content || ""}
@@ -2412,7 +2586,8 @@ class QuestionsBase extends Component {
               <TextField
                 required
                 margin="dense"
-                label="Ex. : Email"
+                variant="outlined"
+                placeholder="Ex. : Email"
                 type="text"
                 onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
                 value={questions[editIndex]?.answers[0]?.content || ""}
@@ -2432,7 +2607,8 @@ class QuestionsBase extends Component {
                     <TextField
                       required
                       margin="dense"
-                      label={`Option n°${id + 1}`}
+                      variant="outlined"
+                      placeholder={`Option n°${id + 1}`}
                       value={
                         questions[editIndex]?.answers[`${id}`]?.content || ""
                       }
@@ -2471,8 +2647,9 @@ class QuestionsBase extends Component {
                   >
                     <TextField
                       required
+                      variant="outlined"
                       margin="dense"
-                      label={`Option n°${id + 1}`}
+                      placeholder={`Option n°${id + 1}`}
                       value={
                         questions[editIndex]?.answers[`${id}`]?.content || ""
                       }
@@ -2520,7 +2697,7 @@ class QuestionsBase extends Component {
                             key={`setPart${editIndex}${key}${id}`}
                             variant="outlined"
                             size="small"
-                            label={"Partie"}
+                            placeholder={"Partie"}
                             value={ele?.content || ""}
                             onChange={(e) => {
                               this.handleChangePart(
@@ -2556,7 +2733,7 @@ class QuestionsBase extends Component {
                               key={`setX${editIndex}${key}${id}`}
                               size="small"
                               variant="outlined"
-                              label={"X"}
+                              placeholder={"X"}
                               style={{
                                 width: 75,
                               }}
@@ -2577,7 +2754,7 @@ class QuestionsBase extends Component {
                               key={`setY${editIndex}${key}${id}`}
                               size="small"
                               variant="outlined"
-                              label={"Y"}
+                              placeholder={"Y"}
                               style={{
                                 marginLeft: "0.5em",
                                 width: 75,
@@ -2678,7 +2855,6 @@ class QuestionsBase extends Component {
           </DialogActions>
         </Dialog>
         <Dialog
-          maxWidth="md"
           fullWidth
           open={openNewVariableDialog}
           onClose={() => {
@@ -2689,7 +2865,125 @@ class QuestionsBase extends Component {
           aria-labelledby="form-dialog-title"
         >
           <DialogTitle id="form-dialog-title">Nouvelle variable</DialogTitle>
-          <DialogContent></DialogContent>
+          <DialogContent>
+            <TextField
+              required
+              autoFocus
+              placeholder="Nom de la variable"
+              variant="outlined"
+              value={newVariable.name || ""}
+              onChange={(e) => {
+                let value = e.target.value;
+                let newVariable = update(this.state.newVariable, {
+                  name: { $set: value },
+                });
+                this.setState({
+                  newVariable,
+                });
+              }}
+            />
+            <p>Constantes (ex.: x,y,z)</p>
+            {Object.keys(newVariable?.constants).map((el, id) => (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginBottom: "0.5em",
+                }}
+              >
+                <TextField
+                  required
+                  style={{
+                    width: 100,
+                  }}
+                  placeholder="Nom"
+                  size="small"
+                  variant="outlined"
+                  value={newVariable.constants[id].name || ""}
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    let newVariable = update(this.state.newVariable, {
+                      constants: { [id]: { name: { $set: value } } },
+                    });
+                    this.setState({
+                      newVariable,
+                    });
+                  }}
+                />
+                <span
+                  style={{
+                    margin: "0 0.5em",
+                  }}
+                >
+                  =
+                </span>
+                <Select
+                  style={{
+                    height: 40,
+                  }}
+                  fullWidth
+                  value={newVariable.constants[id].question || ""}
+                  required
+                  variant="outlined"
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    let newVariable = update(this.state.newVariable, {
+                      constants: { [id]: { question: { $set: value } } },
+                    });
+                    this.setState({
+                      newVariable,
+                    });
+                  }}
+                >
+                  {items.map(
+                    (item) =>
+                      item?.type === "number" && (
+                        <MenuItem value={item?.question}>
+                          {item?.question}
+                        </MenuItem>
+                      )
+                  )}
+                </Select>
+              </div>
+            ))}
+            <Button
+              size="small"
+              variant="contained"
+              color="primary"
+              style={{
+                marginTop: "0.5em",
+                textTransform: "none",
+              }}
+              onClick={() => {
+                let length = Object.keys(this.state.newVariable.constants)
+                  .length;
+                let newVariable = update(this.state.newVariable, {
+                  constants: { [length]: { $set: { question: "", name: "" } } },
+                });
+                this.setState({
+                  newVariable,
+                });
+              }}
+            >
+              Ajouter
+            </Button>
+            <p>Calcul en JavaScript (ex.: x+y)</p>
+            <TextField
+              required
+              placeholder="Calcul (ex: x+y)"
+              variant="outlined"
+              value={newVariable.calc || ""}
+              onChange={(e) => {
+                let value = e.target.value;
+                let newVariable = update(this.state.newVariable, {
+                  calc: { $set: value },
+                });
+                this.setState({
+                  newVariable,
+                });
+              }}
+            />
+          </DialogContent>
           <DialogActions>
             <Button
               onClick={() => {
@@ -2703,14 +2997,183 @@ class QuestionsBase extends Component {
               Annuler
             </Button>
             <Button
-              disabled={
-                !this.state.newVariable?.name || !this.state.newVariable?.calc
-              }
+              disabled={!newVariable?.name || !newVariable?.calc}
               onClick={() => this.addNewVariable()}
               color="primary"
               variant="contained"
             >
               Ajouter
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          fullWidth
+          open={openEditVariableDialog}
+          onClose={() => {
+            this.setState({
+              openEditVariableDialog: false,
+            });
+          }}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">
+            Modifier une variable
+          </DialogTitle>
+          <DialogContent>
+            <TextField
+              required
+              autoFocus
+              placeholder="Nom de la variable"
+              variant="outlined"
+              value={variables[editVariableIndex]?.name || ""}
+              onChange={(e) => {
+                let value = e.target.value;
+                let variables = update(this.state.variables, {
+                  [editVariableIndex]: { name: { $set: value } },
+                });
+                this.setState({
+                  variables,
+                });
+              }}
+            />
+            <p>Constantes (ex.: x,y,z)</p>
+            {Object.keys(variables[editVariableIndex]?.constants ?? []).map(
+              (el, id) => (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "0.5em",
+                  }}
+                >
+                  <TextField
+                    required
+                    style={{
+                      width: 100,
+                    }}
+                    placeholder="Nom"
+                    size="small"
+                    variant="outlined"
+                    value={
+                      variables[editVariableIndex]?.constants[id].name || ""
+                    }
+                    onChange={(e) => {
+                      let value = e.target.value;
+                      let variables = update(this.state.variables, {
+                        [editVariableIndex]: {
+                          constants: { [id]: { name: { $set: value } } },
+                        },
+                      });
+                      this.setState({
+                        variables,
+                      });
+                    }}
+                  />
+                  <span
+                    style={{
+                      margin: "0 0.5em",
+                    }}
+                  >
+                    =
+                  </span>
+                  <Select
+                    style={{
+                      height: 40,
+                    }}
+                    fullWidth
+                    value={
+                      variables[editVariableIndex]?.constants[id].question || ""
+                    }
+                    required
+                    variant="outlined"
+                    onChange={(e) => {
+                      let value = e.target.value;
+                      let variables = update(this.state.variables, {
+                        [editVariableIndex]: {
+                          constants: { [id]: { question: { $set: value } } },
+                        },
+                      });
+                      this.setState({
+                        variables,
+                      });
+                    }}
+                  >
+                    {items.map(
+                      (item) =>
+                        item?.type === "number" && (
+                          <MenuItem value={item?.question}>
+                            {item?.question}
+                          </MenuItem>
+                        )
+                    )}
+                  </Select>
+                </div>
+              )
+            )}
+            <Button
+              size="small"
+              variant="contained"
+              color="primary"
+              style={{
+                marginTop: "0.5em",
+                textTransform: "none",
+              }}
+              onClick={() => {
+                let length = Object.keys(
+                  this.state.variables[editVariableIndex]?.constants
+                ).length;
+                let variables = update(this.state.variables, {
+                  [editVariableIndex]: {
+                    constants: {
+                      [length]: { $set: { question: "", name: "" } },
+                    },
+                  },
+                });
+                this.setState({
+                  variables,
+                });
+              }}
+            >
+              Ajouter
+            </Button>
+            <p>Calcul en JavaScript (ex.: x+y)</p>
+            <TextField
+              required
+              placeholder="Calcul (ex: x+y)"
+              variant="outlined"
+              value={variables[editVariableIndex]?.calc || ""}
+              onChange={(e) => {
+                let value = e.target.value;
+                let variables = update(this.state.variables, {
+                  [editVariableIndex]: { calc: { $set: value } },
+                });
+                this.setState({
+                  variables,
+                });
+              }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                this.setState({
+                  openEditVariableDialog: false,
+                });
+              }}
+              color="primary"
+            >
+              Annuler
+            </Button>
+            <Button
+              disabled={
+                !variables[editVariableIndex]?.name ||
+                !variables[editVariableIndex]?.calc
+              }
+              onClick={() => this.editVariable()}
+              color="primary"
+              variant="contained"
+            >
+              Modifier
             </Button>
           </DialogActions>
         </Dialog>
