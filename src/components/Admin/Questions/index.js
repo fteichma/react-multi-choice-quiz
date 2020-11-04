@@ -1690,79 +1690,59 @@ class QuestionsBase extends Component {
                   </SaveButton>
                 )}
               </div>
-              {conditions?.map((el, id) => (
-                <>
-                  {el?.conditions?.map((condition, key) => (
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      {key === 0 && <b style={{ marginRight: "0.5em" }}>Si</b>}
-                      {key >= 1 && <b style={{ marginRight: "0.5em" }}>et</b>}
-                      <FormControl
-                        variant="outlined"
-                        className={classes.formControl}
+              {conditions.length === 0 ? (
+                <p
+                  style={{
+                    color: "rgba(0, 0, 0, 0.54)",
+                    fontSize: "0.875rem",
+                    marginLeft: "1em",
+                  }}
+                >
+                  Aucune condition d'envoi.
+                </p>
+              ) : (
+                conditions?.map((el, id) => (
+                  <>
+                    {el?.conditions?.map((condition, key) => (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          fontSize: "0.875rem",
+                        }}
                       >
-                        <Select
-                          inputProps={{ "aria-label": "Without label" }}
-                          displayEmpty
-                          id="simple-select-1"
-                          value={
-                            conditions[id]?.conditions[key]?.question || ""
-                          }
-                          onChange={(e) => {
-                            const { conditions } = this.state;
-                            let cp = conditions;
-                            let value = e.target.value;
-                            cp[id].conditions[key].question = value;
-                            if (
-                              items[
-                                items.findIndex(
-                                  (item) => item?.question === value
-                                )
-                              ]?.type === "checkbox"
-                            ) {
-                              cp[id].conditions[key].value = [];
-                            }
-                            this.setState({
-                              conditions: cp,
-                              saveConditions: true,
-                            });
-                          }}
+                        {key === 0 && (
+                          <b style={{ marginRight: "0.5em" }}>Si</b>
+                        )}
+                        {key >= 1 && <b style={{ marginRight: "0.5em" }}>et</b>}
+                        <FormControl
+                          variant="outlined"
+                          className={classes.formControl}
                         >
-                          <MenuItem value="" disabled>
-                            Question
-                          </MenuItem>
-                          {items.map((item) => (
-                            <MenuItem value={item?.question}>
-                              {item?.question}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      <FormControl
-                        variant="outlined"
-                        className={classes.formControl}
-                      >
-                        {items[
-                          items.findIndex(
-                            (item) =>
-                              item?.question ===
-                              conditions[id]?.conditions[key]?.question
-                          )
-                        ]?.type === "number" ? (
                           <Select
-                            style={{ marginLeft: "0.5em" }}
                             inputProps={{ "aria-label": "Without label" }}
                             displayEmpty
-                            id="simple-select-2"
+                            size="small"
+                            style={{
+                              height: 40,
+                            }}
+                            id="simple-select-1"
                             value={
-                              conditions[id]?.conditions[key]?.operator || ""
+                              conditions[id]?.conditions[key]?.question || ""
                             }
                             onChange={(e) => {
                               const { conditions } = this.state;
                               let cp = conditions;
                               let value = e.target.value;
-                              cp[id].conditions[key].operator = value;
-                              if (value === "><" || value === ">><<") {
-                                conditions[id].conditions[key].value = [];
+                              cp[id].conditions[key].question = value;
+                              if (
+                                items[
+                                  items.findIndex(
+                                    (item) => item?.question === value
+                                  )
+                                ]?.type === "checkbox"
+                              ) {
+                                cp[id].conditions[key].value = [];
                               }
                               this.setState({
                                 conditions: cp,
@@ -1771,189 +1751,223 @@ class QuestionsBase extends Component {
                             }}
                           >
                             <MenuItem value="" disabled>
-                              Condition
+                              Question
                             </MenuItem>
-                            <MenuItem value={"==="}>
-                              <b>est égal à</b>
-                            </MenuItem>
-                            <MenuItem value={">"}>
-                              <b>est strictement supérieur à</b>
-                            </MenuItem>
-                            <MenuItem value={"<"}>
-                              <b>est strictement inférieur à</b>
-                            </MenuItem>
-                            <MenuItem value={">="}>
-                              <b>est supérieur ou égal à</b>
-                            </MenuItem>
-                            <MenuItem value={"<="}>
-                              <b>est inférieur ou égal à</b>
-                            </MenuItem>
-                            <MenuItem value={">><<"}>
-                              <b>est compris entre</b>
-                            </MenuItem>
-                            <MenuItem value={"><"}>
-                              <b>est strictement compris entre</b>
-                            </MenuItem>
-                          </Select>
-                        ) : (
-                          <Select
-                            style={{ marginLeft: "0.5em" }}
-                            inputProps={{ "aria-label": "Without label" }}
-                            displayEmpty
-                            id="simple-select-2"
-                            value={
-                              conditions[id]?.conditions[key]?.operator || ""
-                            }
-                            onChange={(e) => {
-                              const { conditions } = this.state;
-                              let cp = conditions;
-                              let value = e.target.value;
-                              cp[id].conditions[key].operator = value;
-                              this.setState({
-                                conditions: cp,
-                                saveConditions: true,
-                              });
-                            }}
-                          >
-                            <MenuItem value="" disabled>
-                              Condition
-                            </MenuItem>
-                            <MenuItem value={"==="}>
-                              <b>est égal à</b>
-                            </MenuItem>
-                          </Select>
-                        )}
-                      </FormControl>
-                      <FormControl
-                        variant="outlined"
-                        className={classes.formControl}
-                      >
-                        {items[
-                          items.findIndex(
-                            (item) =>
-                              item?.question ===
-                              conditions[id]?.conditions[key]?.question
-                          )
-                        ]?.type === "checkbox" ? (
-                          <Select
-                            style={{ marginLeft: "0.5em" }}
-                            labelId="demo-mutiple-chip-label"
-                            id="demo-mutiple-chip"
-                            inputProps={{ "aria-label": "Without label" }}
-                            displayEmpty
-                            multiple
-                            variant="outlined"
-                            value={conditions[id]?.conditions[key]?.value || ""}
-                            onChange={(e) =>
-                              this.handleChangeMultiple(e, id, key)
-                            }
-                            input={<Input id="select-multiple-chip" />}
-                            renderValue={(selected) => (
-                              <div className={classes.chips}>
-                                {selected.map((value) => (
-                                  <Chip
-                                    key={value}
-                                    label={value}
-                                    className={classes.chip}
-                                  />
-                                ))}
-                              </div>
-                            )}
-                            MenuProps={MenuProps}
-                          >
-                            <MenuItem value="" disabled>
-                              Réponses
-                            </MenuItem>
-                            {items[
-                              items.findIndex(
-                                (item) =>
-                                  item?.question ===
-                                  conditions[id]?.conditions[key]?.question
-                              )
-                            ]?.answers.map((item) => (
-                              <MenuItem
-                                key={item?.content}
-                                value={item?.content}
-                                style={getStyles(item?.content, items)}
-                              >
-                                {item?.content}
+                            {items.map((item) => (
+                              <MenuItem value={item?.question}>
+                                {item?.question}
                               </MenuItem>
                             ))}
                           </Select>
-                        ) : items[
+                        </FormControl>
+                        <FormControl
+                          variant="outlined"
+                          className={classes.formControl}
+                        >
+                          {items[
                             items.findIndex(
                               (item) =>
                                 item?.question ===
                                 conditions[id]?.conditions[key]?.question
                             )
-                          ]?.type === "radio" ? (
-                          <Select
-                            style={{ marginLeft: "0.5em" }}
-                            variant="outlined"
-                            inputProps={{ "aria-label": "Without label" }}
-                            displayEmpty
-                            id="simple-select"
-                            value={conditions[id]?.conditions[key]?.value || ""}
-                            onChange={(e) => {
-                              const { conditions } = this.state;
-                              let cp = conditions;
-                              let value = e.target.value;
-                              cp[id].conditions[key].value = value;
-                              this.setState({
-                                conditions: cp,
-                                saveConditions: true,
-                              });
-                            }}
-                          >
-                            <MenuItem value="" disabled>
-                              Réponse
-                            </MenuItem>
-                            {items[
-                              items.findIndex(
-                                (item) =>
-                                  item?.question ===
-                                  conditions[id]?.conditions[key]?.question
-                              )
-                            ]?.answers.map((item) => {
-                              return (
-                                <MenuItem value={item?.content}>
-                                  {item?.content}
-                                </MenuItem>
-                              );
-                            })}
-                          </Select>
-                        ) : conditions[id]?.conditions[key]?.operator !==
-                            "><" &&
-                          conditions[id]?.conditions[key]?.operator !==
-                            ">><<" ? (
-                          <TextField
-                            style={{ marginLeft: "0.5em" }}
-                            type={
-                              items[
+                          ]?.type === "number" ? (
+                            <Select
+                              size="small"
+                              style={{ marginLeft: "0.5em", height: 40 }}
+                              inputProps={{ "aria-label": "Without label" }}
+                              displayEmpty
+                              id="simple-select-2"
+                              value={
+                                conditions[id]?.conditions[key]?.operator || ""
+                              }
+                              onChange={(e) => {
+                                const { conditions } = this.state;
+                                let cp = conditions;
+                                let value = e.target.value;
+                                cp[id].conditions[key].operator = value;
+                                if (value === "><" || value === ">><<") {
+                                  conditions[id].conditions[key].value = [];
+                                }
+                                this.setState({
+                                  conditions: cp,
+                                  saveConditions: true,
+                                });
+                              }}
+                            >
+                              <MenuItem value="" disabled>
+                                Condition
+                              </MenuItem>
+                              <MenuItem value={"==="}>
+                                <b>est égal à</b>
+                              </MenuItem>
+                              <MenuItem value={">"}>
+                                <b>est strictement supérieur à</b>
+                              </MenuItem>
+                              <MenuItem value={"<"}>
+                                <b>est strictement inférieur à</b>
+                              </MenuItem>
+                              <MenuItem value={">="}>
+                                <b>est supérieur ou égal à</b>
+                              </MenuItem>
+                              <MenuItem value={"<="}>
+                                <b>est inférieur ou égal à</b>
+                              </MenuItem>
+                              <MenuItem value={">><<"}>
+                                <b>est compris entre</b>
+                              </MenuItem>
+                              <MenuItem value={"><"}>
+                                <b>est strictement compris entre</b>
+                              </MenuItem>
+                            </Select>
+                          ) : (
+                            <Select
+                              size="small"
+                              style={{ marginLeft: "0.5em", height: 40 }}
+                              inputProps={{ "aria-label": "Without label" }}
+                              displayEmpty
+                              id="simple-select-2"
+                              value={
+                                conditions[id]?.conditions[key]?.operator || ""
+                              }
+                              onChange={(e) => {
+                                const { conditions } = this.state;
+                                let cp = conditions;
+                                let value = e.target.value;
+                                cp[id].conditions[key].operator = value;
+                                this.setState({
+                                  conditions: cp,
+                                  saveConditions: true,
+                                });
+                              }}
+                            >
+                              <MenuItem value="" disabled>
+                                Condition
+                              </MenuItem>
+                              <MenuItem value={"==="}>
+                                <b>est égal à</b>
+                              </MenuItem>
+                            </Select>
+                          )}
+                        </FormControl>
+                        <FormControl
+                          variant="outlined"
+                          className={classes.formControl}
+                        >
+                          {items[
+                            items.findIndex(
+                              (item) =>
+                                item?.question ===
+                                conditions[id]?.conditions[key]?.question
+                            )
+                          ]?.type === "checkbox" ? (
+                            <Select
+                              size="small"
+                              style={{
+                                height: 40,
+                              }}
+                              style={{ marginLeft: "0.5em" }}
+                              labelId="demo-mutiple-chip-label"
+                              id="demo-mutiple-chip"
+                              inputProps={{ "aria-label": "Without label" }}
+                              displayEmpty
+                              multiple
+                              variant="outlined"
+                              value={
+                                conditions[id]?.conditions[key]?.value || ""
+                              }
+                              onChange={(e) =>
+                                this.handleChangeMultiple(e, id, key)
+                              }
+                              input={<Input id="select-multiple-chip" />}
+                              renderValue={(selected) => (
+                                <div className={classes.chips}>
+                                  {selected.map((value) => (
+                                    <Chip
+                                      key={value}
+                                      label={value}
+                                      className={classes.chip}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                              MenuProps={MenuProps}
+                            >
+                              <MenuItem value="" disabled>
+                                Réponses
+                              </MenuItem>
+                              {items[
                                 items.findIndex(
                                   (item) =>
                                     item?.question ===
                                     conditions[id]?.conditions[key]?.question
                                 )
-                              ]?.type || "text"
-                            }
-                            onChange={(e) => {
-                              const { conditions } = this.state;
-                              let cp = conditions;
-                              let value = e.target.value;
-                              cp[id].conditions[key].value = value;
-                              this.setState({
-                                conditions: cp,
-                                saveConditions: true,
-                              });
-                            }}
-                            id="outlined-basic"
-                            variant="outlined"
-                            value={conditions[id]?.conditions[key]?.value || ""}
-                          />
-                        ) : (
-                          <>
+                              ]?.answers.map((item) => (
+                                <MenuItem
+                                  key={item?.content}
+                                  value={item?.content}
+                                  style={getStyles(item?.content, items)}
+                                >
+                                  {item?.content}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          ) : items[
+                              items.findIndex(
+                                (item) =>
+                                  item?.question ===
+                                  conditions[id]?.conditions[key]?.question
+                              )
+                            ]?.type === "radio" ? (
+                            <Select
+                              size="small"
+                              style={{
+                                height: 40,
+                              }}
+                              style={{ marginLeft: "0.5em" }}
+                              variant="outlined"
+                              inputProps={{ "aria-label": "Without label" }}
+                              displayEmpty
+                              id="simple-select"
+                              value={
+                                conditions[id]?.conditions[key]?.value || ""
+                              }
+                              onChange={(e) => {
+                                const { conditions } = this.state;
+                                let cp = conditions;
+                                let value = e.target.value;
+                                cp[id].conditions[key].value = value;
+                                this.setState({
+                                  conditions: cp,
+                                  saveConditions: true,
+                                });
+                              }}
+                            >
+                              <MenuItem value="" disabled>
+                                Réponse
+                              </MenuItem>
+                              {items[
+                                items.findIndex(
+                                  (item) =>
+                                    item?.question ===
+                                    conditions[id]?.conditions[key]?.question
+                                )
+                              ]?.answers.map((item) => {
+                                return (
+                                  <MenuItem value={item?.content}>
+                                    {item?.content}
+                                  </MenuItem>
+                                );
+                              })}
+                            </Select>
+                          ) : conditions[id]?.conditions[key]?.operator !==
+                              "><" &&
+                            conditions[id]?.conditions[key]?.operator !==
+                              ">><<" ? (
                             <TextField
+                              size="small"
+                              style={{
+                                height: 40,
+                              }}
                               style={{ marginLeft: "0.5em" }}
                               type={
                                 items[
@@ -1968,7 +1982,7 @@ class QuestionsBase extends Component {
                                 const { conditions } = this.state;
                                 let cp = conditions;
                                 let value = e.target.value;
-                                cp[id].conditions[key].value[0] = value;
+                                cp[id].conditions[key].value = value;
                                 this.setState({
                                   conditions: cp,
                                   saveConditions: true,
@@ -1977,132 +1991,179 @@ class QuestionsBase extends Component {
                               id="outlined-basic"
                               variant="outlined"
                               value={
-                                conditions[id]?.conditions[key]?.value[0] || ""
+                                conditions[id]?.conditions[key]?.value || ""
                               }
                             />
-                            <b style={{ textAlign: "center", margin: "0.5em" }}>
-                              et
-                            </b>
-                            <TextField
-                              style={{ marginLeft: "0.5em" }}
-                              type={
-                                items[
-                                  items.findIndex(
-                                    (item) =>
-                                      item?.question ===
-                                      conditions[id]?.conditions[key]?.question
-                                  )
-                                ]?.type || "text"
-                              }
-                              onChange={(e) => {
-                                const { conditions } = this.state;
-                                let cp = conditions;
-                                let value = e.target.value;
-                                cp[id].conditions[key].value[1] = value;
-                                this.setState({
-                                  conditions: cp,
-                                  saveConditions: true,
-                                });
-                              }}
-                              id="outlined-basic"
-                              variant="outlined"
-                              value={
-                                conditions[id]?.conditions[key]?.value[1] || ""
-                              }
-                            />
-                          </>
-                        )}
-                      </FormControl>
-                      <IconButton
-                        style={{ marginLeft: "0.5em" }}
-                        aria-label="delete"
-                        onClick={() => {
-                          this.deleteCondition(id, key);
-                        }}
-                        className={classes.deleteBtn}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </div>
-                  ))}
-                  <Button
-                    variant="outlined"
-                    className={classes.button}
-                    size="small"
-                    color="primary"
-                    startIcon={<AddIcon />}
-                    onClick={() => {
-                      const { conditions } = this.state;
-                      let cp = conditions;
-                      let length = 0;
-                      if (cp[id]?.conditions) {
-                        length = Object.keys(cp[id].conditions).length;
-                        cp[id].conditions[length] = {
-                          question: "",
-                          operator: "",
-                          value: "",
-                          next: "",
-                        };
-                      } else {
-                        cp[id] = {
-                          conditions: NEW_CONDITION,
-                        };
-                      }
-                      this.setState({
-                        conditions: cp,
-                      });
-                    }}
-                  >
-                    Ajouter une condition
-                  </Button>
-                  <p>Alors, afficher/envoyer :</p>
-                  <FormControl
-                    className={classes.formControl}
-                    variant="outlined"
-                  >
-                    <Select
-                      id="demo-simple-select"
-                      inputProps={{ "aria-label": "Without label" }}
-                      displayEmpty
-                      value={conditions[id]?.sendEmail?.id || ""}
-                      onChange={(e) => {
-                        const { conditions, email } = this.state;
+                          ) : (
+                            <>
+                              <TextField
+                                size="small"
+                                style={{
+                                  height: 40,
+                                }}
+                                style={{ marginLeft: "0.5em" }}
+                                type={
+                                  items[
+                                    items.findIndex(
+                                      (item) =>
+                                        item?.question ===
+                                        conditions[id]?.conditions[key]
+                                          ?.question
+                                    )
+                                  ]?.type || "text"
+                                }
+                                onChange={(e) => {
+                                  const { conditions } = this.state;
+                                  let cp = conditions;
+                                  let value = e.target.value;
+                                  cp[id].conditions[key].value[0] = value;
+                                  this.setState({
+                                    conditions: cp,
+                                    saveConditions: true,
+                                  });
+                                }}
+                                id="outlined-basic"
+                                variant="outlined"
+                                value={
+                                  conditions[id]?.conditions[key]?.value[0] ||
+                                  ""
+                                }
+                              />
+                              <b
+                                style={{ textAlign: "center", margin: "0.5em" }}
+                              >
+                                et
+                              </b>
+                              <TextField
+                                size="small"
+                                style={{
+                                  height: 40,
+                                }}
+                                style={{ marginLeft: "0.5em" }}
+                                type={
+                                  items[
+                                    items.findIndex(
+                                      (item) =>
+                                        item?.question ===
+                                        conditions[id]?.conditions[key]
+                                          ?.question
+                                    )
+                                  ]?.type || "text"
+                                }
+                                onChange={(e) => {
+                                  const { conditions } = this.state;
+                                  let cp = conditions;
+                                  let value = e.target.value;
+                                  cp[id].conditions[key].value[1] = value;
+                                  this.setState({
+                                    conditions: cp,
+                                    saveConditions: true,
+                                  });
+                                }}
+                                id="outlined-basic"
+                                variant="outlined"
+                                value={
+                                  conditions[id]?.conditions[key]?.value[1] ||
+                                  ""
+                                }
+                              />
+                            </>
+                          )}
+                        </FormControl>
+                        <IconButton
+                          style={{ marginLeft: "0.5em" }}
+                          aria-label="delete"
+                          onClick={() => {
+                            this.deleteCondition(id, key);
+                          }}
+                          className={classes.deleteBtn}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outlined"
+                      className={classes.button}
+                      size="small"
+                      color="primary"
+                      startIcon={<AddIcon />}
+                      onClick={() => {
+                        const { conditions } = this.state;
                         let cp = conditions;
-                        let index = e.target.value;
-                        cp[id].sendEmail = email[index];
+                        let length = 0;
+                        if (cp[id]?.conditions) {
+                          length = Object.keys(cp[id].conditions).length;
+                          cp[id].conditions[length] = {
+                            question: "",
+                            operator: "",
+                            value: "",
+                            next: "",
+                          };
+                        } else {
+                          cp[id] = {
+                            conditions: NEW_CONDITION,
+                          };
+                        }
                         this.setState({
                           conditions: cp,
-                          saveConditions: true,
                         });
                       }}
                     >
-                      <MenuItem value="" disabled>
-                        Email
-                      </MenuItem>
-                      {idListEmail &&
-                        idListEmail.map((el, id) => (
-                          <MenuItem key={id} value={el.value}>{`Email nº${
-                            id + 1
-                          }`}</MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                  <hr />
-                </>
-              ))}
-              <br />
-              <Button
-                className={classes.button}
-                variant="contained"
-                size="small"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={() => this.addNewCondition()}
-              >
-                Nouvelle condition
-              </Button>
+                      Ajouter une condition
+                    </Button>
+                    <p>Alors, envoyer :</p>
+                    <FormControl
+                      className={classes.formControl}
+                      variant="outlined"
+                    >
+                      <Select
+                        size="small"
+                        style={{
+                          height: 40,
+                        }}
+                        id="demo-simple-select"
+                        inputProps={{ "aria-label": "Without label" }}
+                        displayEmpty
+                        value={conditions[id]?.sendEmail?.id || ""}
+                        onChange={(e) => {
+                          const { conditions, email } = this.state;
+                          let cp = conditions;
+                          let index = e.target.value;
+                          cp[id].sendEmail = email[index];
+                          this.setState({
+                            conditions: cp,
+                            saveConditions: true,
+                          });
+                        }}
+                      >
+                        <MenuItem value="" disabled>
+                          Email
+                        </MenuItem>
+                        {idListEmail &&
+                          idListEmail.map((el, id) => (
+                            <MenuItem key={id} value={el.value}>{`Email nº${
+                              id + 1
+                            }`}</MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
+                    <hr />
+                  </>
+                ))
+              )}
             </div>
           </Paper>
+          <Button
+            className={classes.button}
+            variant="contained"
+            size="small"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => this.addNewCondition()}
+          >
+            Nouvelle condition
+          </Button>
         </TabPanel>
         <TabPanel value={tab} index={3}>
           Récapitulatif
