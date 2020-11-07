@@ -28,7 +28,7 @@ class Dashboard extends React.Component {
     const { classes, totUsers, totQuest, totEmail } = this.props;
     return (
       <>
-        <h1>Dashboard</h1>
+        <h2>Dashboard</h2>
         <Box display="flex" justifyContent="flex-start" alignItems="flex-start">
           <Paper elevation={1} className={classes.paper}>
             <h2

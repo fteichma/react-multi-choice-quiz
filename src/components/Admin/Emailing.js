@@ -219,7 +219,7 @@ class EmailingBase extends Component {
           <Loading />
         ) : (
           <>
-            <h1>Emailing</h1>
+            <h2>Emailing</h2>
             <div
               style={{
                 width: "100%",

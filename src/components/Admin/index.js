@@ -9,6 +9,7 @@ import Dashboard from "./Dashboard";
 import Loading from "../Loading";
 import Custom from "./Custom";
 import EmailingPage from "./Emailing";
+import Summary from "./Summary";
 
 import { withFirebase } from "../Firebase";
 import { AuthUserContext, withAuthorization } from "../Session";
@@ -20,6 +21,7 @@ import QuestionAnswerRoundedIcon from "@material-ui/icons/QuestionAnswerRounded"
 import HelpRoundedIcon from "@material-ui/icons/HelpRounded";
 import FormatPaintRoundedIcon from "@material-ui/icons/FormatPaintRounded";
 import EmailRoundedIcon from "@material-ui/icons/EmailRounded";
+import ReceiptIcon from "@material-ui/icons/Receipt";
 
 const AdminPage = () => (
   <AuthUserContext.Consumer>{(authUser) => <Admin />}</AuthUserContext.Consumer>
@@ -248,6 +250,20 @@ class AdminBase extends Component {
               {...a11yProps(4)}
               className={classes.tab}
             />
+            <Tab
+              icon={
+                <ReceiptIcon
+                  style={{
+                    marginRight: "0.5em",
+                    width: 20,
+                    height: 20,
+                  }}
+                />
+              }
+              label="Récapitulatifs"
+              {...a11yProps(5)}
+              className={classes.tab}
+            />
             {/* <Tab label="Mon compte" {...a11yProps(4)} className={classes.tab}/> */}
           </Tabs>
           <TabPanel value={Number(this.state.tab)} index={0}>
@@ -262,7 +278,7 @@ class AdminBase extends Component {
             )}
           </TabPanel>
           <TabPanel value={Number(this.state.tab)} index={1}>
-            <h1>Réponses</h1>
+            <h2>Réponses</h2>
             {loading ? <Loading /> : <Responses answers={this.state.answers} />}
           </TabPanel>
           <TabPanel value={Number(this.state.tab)} index={2}>
@@ -276,7 +292,10 @@ class AdminBase extends Component {
             {loading ? <Loading /> : <Custom />}
           </TabPanel>
           <TabPanel value={Number(this.state.tab)} index={4}>
-            {loading ? <Loading /> : <EmailingPage tab={this.state.tab} />}
+            {loading ? <Loading /> : <EmailingPage />}
+          </TabPanel>
+          <TabPanel value={Number(this.state.tab)} index={5}>
+            {loading ? <Loading /> : <Summary />}
           </TabPanel>
           {/* <TabPanel value={tab} index={4}>
         <h1>Mon compte</h1>

@@ -135,7 +135,7 @@ class CustomBase extends Component {
     return (
       <>
         <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
-          <h1>Personnalisation</h1>
+          <h2>Personnalisation</h2>
           {showSave && (
             <SaveButton
               variant="contained"

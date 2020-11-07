@@ -22,18 +22,19 @@ body {
   height: 100vh;
 }
 
+hr {
+  border: 0;
+  height: 1px;
+  color: rgba(224, 224, 224, 1);
+  background-color: rgba(224, 224, 224, 1);
+}
+
 .brand-logo {
   width: 110px;
   position: absolute;
   top: 30px;
   left: 30px;
   z-index: 9;
-}
-
-h1 {
-  font-size: 28px;
-  font-weight: 600;
-  color: #1b3a57;
 }
 
 * {
