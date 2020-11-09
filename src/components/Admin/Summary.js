@@ -44,6 +44,8 @@ import Delimiter from "@editorjs/delimiter";
 import InlineCode from "@editorjs/inline-code";
 import SimpleImage from "@editorjs/simple-image";
 
+import Notify from "../../notify";
+
 const default_html = `
 `;
 
@@ -155,14 +157,25 @@ class SummaryBase extends Component {
 
   saveDb = (summary) => {
     const { id } = this.state;
-    console.log(summary);
     let db = this.props.firebase.db;
     let summaryRef = db.ref(`summary/${id}`);
-    summaryRef.set({
-      summary,
-      createdAt: firebase.database.ServerValue.TIMESTAMP,
-      id,
-    });
+    summaryRef.set(
+      {
+        summary,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        id,
+      },
+      (error) => {
+        if (error) {
+          Notify("Problème lors de la sauvegarde : " + error, "error");
+        } else {
+          this.setState({
+            showSave: false,
+          });
+          Notify("Sauvegardé !", "success");
+        }
+      }
+    );
   };
 
   onDuplicate = () => {
@@ -269,6 +282,10 @@ class SummaryBase extends Component {
               <FormControl required className={classes.formControl}>
                 <SelectMUI
                   id="demo-simple-select"
+                  variant="outlined"
+                  style={{
+                    background: "white",
+                  }}
                   value={id}
                   onChange={(e) => {
                     let id = e.target.value;

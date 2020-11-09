@@ -11,6 +11,8 @@ import queryString from "query-string";
 
 import Loading from "../Loading";
 
+import Notify from "../../notify";
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -31,6 +33,7 @@ class App extends Component {
       questionId: 1,
       notFound: true,
       mainImage: undefined,
+      sex: "male",
     };
     this.handleAnswerSelected = this.handleAnswerSelected.bind(this);
     this.handleKeyPressed = this.handleKeyPressed.bind(this);
@@ -107,15 +110,9 @@ class App extends Component {
         html: html,
         name_sender: name_sender,
       }),
-    })
-      .then((result) => {
-        if (result.data.sent) {
-          console.log("send");
-        } else {
-          console.log(result.data);
-        }
-      })
-      .catch((error) => console.log(error));
+    }).catch((error) => {
+      Notify("Problème lors de l'envoi de l'email : " + error, "error");
+    });
   };
 
   handleAnswerSelected = (target, checkedList) => {
@@ -190,6 +187,15 @@ class App extends Component {
   }
 
   setUserAnswer(target, checkedList) {
+    if (target.value === "Homme") {
+      this.setState({
+        sex: "male",
+      });
+    } else if (target.value === "Femme") {
+      this.setState({
+        sex: "female",
+      });
+    }
     this.setState((state, props) => ({
       answersCount: {
         ...state.answersCount,
@@ -249,8 +255,23 @@ class App extends Component {
   }
 
   render() {
-    const { custom } = this.state;
-    return this.state.loading ? (
+    const {
+      custom,
+      loading,
+      end,
+      answer,
+      type,
+      question,
+      description,
+      questionId,
+      answerOptions,
+      mainImage,
+      error,
+      notFound,
+      questions,
+      sex,
+    } = this.state;
+    return loading ? (
       <Loading />
     ) : (
       <div
@@ -260,22 +281,23 @@ class App extends Component {
         }}
       >
         <div className="Quiz">
-          {!this.state.end ? (
+          {!end ? (
             <Quiz
-              answer={this.state.answer}
-              custom={this.state.custom}
-              answerOptions={this.state.answerOptions}
-              questionId={this.state.questionId}
-              question={this.state.question}
-              description={this.state.description}
-              type={this.state.type}
-              questionTotal={this.state.questions.length}
-              mainImage={this.state.mainImage}
+              answer={answer}
+              sex={sex}
+              custom={custom}
+              answerOptions={answerOptions}
+              questionId={questionId}
+              question={question}
+              description={description}
+              type={type}
+              questionTotal={questions.length}
+              mainImage={mainImage}
               onAnswerSelected={this.handleAnswerSelected}
               onKeyPressed={this.handleKeyPressed}
               onBack={this.setBackQuestion}
-              error={this.state.error}
-              notFound={this.state.notFound}
+              error={error}
+              notFound={notFound}
             />
           ) : (
             <Summary answer={this.state.answer} custom={this.state.custom} />

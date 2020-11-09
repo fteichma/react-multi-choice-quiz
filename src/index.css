@@ -30,8 +30,7 @@ hr {
 }
 
 .brand-logo {
-  width: 110px;
-  position: absolute;
+  position: fixed;
   top: 30px;
   left: 30px;
   z-index: 9;
@@ -48,6 +47,24 @@ hr {
 .App {
   width: 100%;
   position: relative;
+}
+
+#editor-js {
+  background-color: white;
+  padding: 1em;
+  width: 90%;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.ce-block__content,
+.ce-toolbar__content {
+  max-width: unset;
+}
+
+.MuiOutlinedInput-input {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
 }
 
 .Quiz {
@@ -430,8 +447,8 @@ body {
 .bodySelect {
   position: absolute;
   list-style-type: none;
-  width: fit-content;
   width: auto;
+  width: fit-content;
   padding: 4px 10px;
   background: white;
   opacity: 0.9;
@@ -606,7 +623,7 @@ line {
     flex-direction: row;
   }
   .container {
-    padding-top: 50px;
+    padding-top: 140px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -618,12 +635,11 @@ line {
     margin: 0 auto;
   }
   .brand-logo {
-    margin: 0 auto;
-    position: relative;
-    top: 0;
+    position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
+    top: 30px;
+    margin: auto;
   }
   .btn-checkbox-body {
     position: relative;

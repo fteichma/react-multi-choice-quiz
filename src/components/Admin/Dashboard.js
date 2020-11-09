@@ -25,12 +25,12 @@ const theme = createMuiTheme({
 
 class Dashboard extends React.Component {
   render() {
-    const { classes, totUsers, totQuest, totEmail } = this.props;
+    const { classes, totUsers, totQuest, totEmail, totSummary } = this.props;
     return (
       <>
         <h2>Dashboard</h2>
         <Box display="flex" justifyContent="flex-start" alignItems="flex-start">
-          <Paper elevation={1} className={classes.paper}>
+          <Paper elevation={3} className={classes.paper}>
             <h2
               style={{
                 fontSize: 18,
@@ -49,10 +49,10 @@ class Dashboard extends React.Component {
                 color: theme.palette.primary.main,
               }}
             >
-              {totUsers}
+              {totUsers ?? 0}
             </p>
           </Paper>
-          <Paper elevation={1} className={classes.paper}>
+          <Paper elevation={3} className={classes.paper}>
             <h2
               style={{
                 fontSize: 18,
@@ -71,10 +71,10 @@ class Dashboard extends React.Component {
                 color: theme.palette.primary.main,
               }}
             >
-              {totQuest}
+              {totQuest ?? 0}
             </p>
           </Paper>
-          <Paper elevation={1} className={classes.paper}>
+          <Paper elevation={3} className={classes.paper}>
             <h2
               style={{
                 fontSize: 18,
@@ -93,7 +93,29 @@ class Dashboard extends React.Component {
                 color: theme.palette.primary.main,
               }}
             >
-              {totEmail}
+              {totEmail ?? 0}
+            </p>
+          </Paper>
+          <Paper elevation={3} className={classes.paper}>
+            <h2
+              style={{
+                fontSize: 18,
+                padding: 0,
+                margin: 0,
+              }}
+            >
+              Tot. récapitulatifs
+            </h2>
+            <p
+              style={{
+                fontSize: 40,
+                padding: 0,
+                margin: "0.2em 0 0",
+                fontWeight: 400,
+                color: theme.palette.primary.main,
+              }}
+            >
+              {totSummary ?? 0}
             </p>
           </Paper>
         </Box>

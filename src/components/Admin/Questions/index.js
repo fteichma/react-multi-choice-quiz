@@ -39,6 +39,8 @@ import red from "@material-ui/core/colors/red";
 import green from "@material-ui/core/colors/green";
 import TextField from "@material-ui/core/TextField";
 
+import Notify from "../../../notify";
+
 import { withFirebase } from "../../Firebase";
 import firebase from "firebase/app";
 import { compose } from "recompose";
@@ -101,6 +103,7 @@ function TabPanel(props) {
       role="tabpanel"
       hidden={value !== index}
       id={`simple-tabpanel-${index}`}
+      key={`simple-tabpanel-${index}`}
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
@@ -229,8 +232,9 @@ class QuestionsBase extends Component {
       editIndex: null,
       editVariableIndex: null,
       idList: [],
-      id: localStorage.getItem("id") ? localStorage.getItem("id") : undefined,
       idListEmail: [],
+      idListSummary: [],
+      id: localStorage.getItem("id") ? localStorage.getItem("id") : undefined,
       openNewQuestionDialog: false,
       openNewVariableDialog: false,
       openEditDialog: false,
@@ -245,6 +249,7 @@ class QuestionsBase extends Component {
       conditions: [],
       anchorMore: undefined,
       saveConditions: false,
+      sex: "male",
     };
     this.onDragEnd = this.onDragEnd.bind(this);
     this.handleChangeNewQuestionAnswers = this.handleChangeNewQuestionAnswers.bind(
@@ -296,7 +301,6 @@ class QuestionsBase extends Component {
     const { value } = e.target;
     let cp = conditions;
     cp[id].conditions[key].value = value;
-    console.log(value);
     this.setState({
       conditions: cp,
     });
@@ -412,49 +416,49 @@ class QuestionsBase extends Component {
     }));
   };
 
-  addNewPart = (key, editIndex) => {
+  addNewPart = (key, editIndex, sex) => {
+    const { questions, newQuestion } = this.state;
     if (editIndex) {
-      let length = this.state.questions[editIndex].answers[key].answers.length;
-      let questions = update(this.state.questions, {
-        [editIndex]: {
-          answers: {
-            [key]: {
-              answers: {
-                [length]: {
-                  $set: {
-                    x: 0,
-                    y: 0,
-                    content: "",
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
+      let length = 0;
+      if (
+        sex === "male" &&
+        this.state.questions[editIndex]?.answers?.male[key]?.answers
+      ) {
+        length = this.state.questions[editIndex]?.answers?.male[key]?.answers
+          .length;
+      } else if (
+        this.state.questions[editIndex]?.answers?.female[key]?.answers
+      ) {
+        length = this.state.questions[editIndex]?.answers?.female[key]?.answers
+          .length;
+      }
+      let cp = questions;
+      cp[editIndex].answers[`${sex}`][key].answers[length] = {
+        x: 0,
+        y: 0,
+        content: "",
+      };
       this.setState({
-        questions,
+        questions: cp,
       });
     } else {
-      let length = Object.keys(this.state.newQuestion.answers[key].answers)
-        .length;
-      let newQuestion = update(this.state.newQuestion, {
-        answers: {
-          [key]: {
-            answers: {
-              [length]: {
-                $set: {
-                  x: 0,
-                  y: 0,
-                  content: "",
-                },
-              },
-            },
-          },
-        },
-      });
+      let length = 0;
+      if (
+        sex === "male" &&
+        this.state.newQuestion?.answers?.male[key]?.answers
+      ) {
+        length = Object.keys(
+          this.state.newQuestion?.answers?.male[key]?.answers
+        ).length;
+      } else if (this.state.newQuestion?.answers?.male[key]?.answers) {
+        length = Object.keys(
+          this.state.newQuestion?.answers?.female[key]?.answers
+        ).length;
+      }
+      let cp = newQuestion;
+      cp.answers[`${sex}`][key].answers[length] = { x: 0, y: 0, content: "" };
       this.setState({
-        newQuestion,
+        newQuestion: cp,
       });
     }
   };
@@ -587,16 +591,22 @@ class QuestionsBase extends Component {
     let db = this.props.firebase.db;
     let questionsRef = db.ref(`questions/${id}/conditions/`);
     let j = 0;
-    const filtered = Object.keys(conditions).reduce((obj, key) => {
+    let filtered = Object.keys(conditions).reduce((obj, key) => {
       if (conditions[key]) {
         obj[j] = conditions[key];
         j++;
       }
       return obj;
     }, []);
-    questionsRef.set(filtered);
-    this.setState({
-      saveConditions: false,
+    questionsRef.set(filtered, (error) => {
+      if (error) {
+        Notify("Problème lors de la sauvegarde : " + error, "error");
+      } else {
+        this.setState({
+          saveConditions: false,
+        });
+        Notify("Sauvegardé !", "success");
+      }
     });
   };
 
@@ -642,7 +652,10 @@ class QuestionsBase extends Component {
         "state_changed",
         (snapshot) => {},
         (error) => {
-          console.log(error);
+          Notify(
+            "Problème lors du téléversement de l'image : " + error,
+            "error"
+          );
         },
         () => {
           storage
@@ -657,18 +670,22 @@ class QuestionsBase extends Component {
     }
   };
 
-  handleUploadAnswer = async (e, index, key) => {
+  handleUploadAnswer = async (e, index, key, sex = undefined) => {
     const { storage } = this.props.firebase;
     let file = e?.target?.files[0];
-    const image = await this.resizeFile(file);
+    const image = file;
     const name = this.getRandomString(24);
+    console.log(sex);
     if (image) {
       const uploadTask = storage.ref(`images/${name}`).put(image);
       uploadTask.on(
         "state_changed",
         (snapshot) => {},
         (error) => {
-          console.log(error);
+          Notify(
+            "Problème lors du téléversement de l'image : " + error,
+            "error"
+          );
         },
         () => {
           storage
@@ -676,7 +693,7 @@ class QuestionsBase extends Component {
             .child(name)
             .getDownloadURL()
             .then((url) => {
-              this.setUploadAnswer(url, index, key);
+              this.setUploadAnswer(url, index, key, sex);
             });
         }
       );
@@ -690,12 +707,17 @@ class QuestionsBase extends Component {
     mainImage.set(url);
   };
 
-  setUploadAnswer = (url, index, key) => {
+  setUploadAnswer = (url, index, key, sex = undefined) => {
     const { id } = this.state;
     let db = this.props.firebase.db;
     let image = db.ref(
       `questions/${id}/questions/${index}/answers/${key}/image`
     );
+    if (sex) {
+      image = db.ref(
+        `questions/${id}/questions/${index}/answers/${sex}/${key}/image`
+      );
+    }
     image.set(url);
   };
 
@@ -804,13 +826,19 @@ class QuestionsBase extends Component {
   onSave = () => {
     const { items, variablesItems, id } = this.state;
     let db = this.props.firebase.db;
-    let questionsRef = db.ref(`questions/${id}/questions`);
-    questionsRef.set(items);
-    let variablesRef = db.ref(`questions/${id}/variables`);
-    variablesRef.set(variablesItems);
-    this.setState({
-      dragged: false,
-    });
+    db.ref(`questions/${id}`).set(
+      { questions: items, variables: variablesItems, id },
+      (error) => {
+        if (error) {
+          Notify("Problème lors de la sauvegarde : " + error, "error");
+        } else {
+          this.setState({
+            dragged: false,
+          });
+          Notify("Sauvegardé !", "success");
+        }
+      }
+    );
   };
 
   onDelete = () => {
@@ -829,7 +857,7 @@ class QuestionsBase extends Component {
     const length = Object.keys(cp[_id].conditions).length;
     if (length > 1) {
       let j = 0;
-      const filtered = Object.keys(cp[_id].conditions)
+      let filtered = Object.keys(cp[_id].conditions)
         .filter((id) => Number(id) !== Number(key))
         .reduce((obj, key) => {
           obj[j] = cp[_id].conditions[key];
@@ -855,7 +883,7 @@ class QuestionsBase extends Component {
     const length = Object.keys(cp[_id].constants).length;
     if (length > 1) {
       let j = 0;
-      const filtered = Object.keys(cp[_id].constants)
+      let filtered = Object.keys(cp[_id].constants)
         .filter((id) => Number(id) !== Number(key))
         .reduce((obj, key) => {
           obj[j] = cp[_id].constants[key];
@@ -925,8 +953,7 @@ class QuestionsBase extends Component {
 
   getQuestions = () => {
     let db = this.props.firebase.db;
-    let questionsRef = db.ref("questions");
-    questionsRef.on("value", (snap) => {
+    db.ref("questions").on("value", (snap) => {
       let data = snap.val();
       if (data) {
         let questions = Object.keys(data).map((i) => data[i]);
@@ -972,13 +999,32 @@ class QuestionsBase extends Component {
     });
   }
 
-  handleChangeY = (e, index, key, id, type) => {
+  handleChangeY = (e, index, key, id, type, sex) => {
     e.preventDefault();
     let value = e.target.value;
     if (type === "edit") {
       let questions = update(this.state.questions, {
         [index]: {
           answers: {
+            [`${sex}`]: {
+              [key]: {
+                answers: {
+                  [id]: {
+                    y: {
+                      $set: value,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      this.setState({ questions });
+    } else {
+      let newQuestion = update(this.state.newQuestion, {
+        answers: {
+          [`${sex}`]: {
             [key]: {
               answers: {
                 [id]: {
@@ -991,32 +1037,36 @@ class QuestionsBase extends Component {
           },
         },
       });
-      this.setState({ questions });
-    } else {
-      let newQuestion = update(this.state.newQuestion, {
-        answers: {
-          [key]: {
-            answers: {
-              [id]: {
-                y: {
-                  $set: value,
-                },
-              },
-            },
-          },
-        },
-      });
       this.setState({ newQuestion });
     }
   };
 
-  handleChangeX = (e, index, key, id, type) => {
+  handleChangeX = (e, index, key, id, type, sex) => {
     e.preventDefault();
     let value = e.target.value;
     if (type === "edit") {
       let questions = update(this.state.questions, {
         [index]: {
           answers: {
+            [`${sex}`]: {
+              [key]: {
+                answers: {
+                  [id]: {
+                    x: {
+                      $set: value,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      this.setState({ questions });
+    } else {
+      let newQuestion = update(this.state.newQuestion, {
+        answers: {
+          [`${sex}`]: {
             [key]: {
               answers: {
                 [id]: {
@@ -1029,32 +1079,36 @@ class QuestionsBase extends Component {
           },
         },
       });
-      this.setState({ questions });
-    } else {
-      let newQuestion = update(this.state.newQuestion, {
-        answers: {
-          [key]: {
-            answers: {
-              [id]: {
-                x: {
-                  $set: value,
-                },
-              },
-            },
-          },
-        },
-      });
       this.setState({ newQuestion });
     }
   };
 
-  handleChangePart = (e, index, key, id, type) => {
+  handleChangePart = (e, index, key, id, type, sex) => {
     e.preventDefault();
     let value = e.target.value;
     if (type === "edit") {
       let questions = update(this.state.questions, {
         [index]: {
           answers: {
+            [`${sex}`]: {
+              [key]: {
+                answers: {
+                  [id]: {
+                    content: {
+                      $set: value,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      this.setState({ questions });
+    } else {
+      let newQuestion = update(this.state.newQuestion, {
+        answers: {
+          [`${sex}`]: {
             [key]: {
               answers: {
                 [id]: {
@@ -1067,50 +1121,36 @@ class QuestionsBase extends Component {
           },
         },
       });
-      this.setState({ questions });
-    } else {
-      let newQuestion = update(this.state.newQuestion, {
-        answers: {
-          [key]: {
-            answers: {
-              [id]: {
-                content: {
-                  $set: value,
-                },
-              },
-            },
-          },
-        },
-      });
       this.setState({ newQuestion });
     }
   };
 
-  deletePart = (editIndex, key, id) => {
+  deletePart = (editIndex, key, id, sex) => {
+    const { questions, newQuestion } = this.state;
     if (editIndex) {
-      let questions = update(this.state.questions, {
-        [editIndex]: {
-          answers: {
-            [key]: {
-              answers: {
-                $unset: [id],
-              },
-            },
-          },
-        },
-      });
-      this.setState({ questions });
+      let j = 0;
+      let cp = JSON.parse(JSON.stringify(questions));
+      let filtered = Object.keys(cp[editIndex].answers[`${sex}`][key].answers)
+        .filter((_key) => Number(id) !== Number(_key))
+        .reduce((obj, _key) => {
+          obj[j] = cp[editIndex].answers[`${sex}`][key].answers[_key];
+          j++;
+          return obj;
+        }, []);
+      cp[editIndex].answers[`${sex}`][key].answers = filtered;
+      this.setState({ questions: cp });
     } else {
-      let newQuestion = update(this.state.newQuestion, {
-        answers: {
-          [key]: {
-            answers: {
-              $unset: [id],
-            },
-          },
-        },
-      });
-      this.setState({ newQuestion });
+      let j = 0;
+      let cp = JSON.parse(JSON.stringify(newQuestion));
+      let filtered = Object.keys(cp.answers[`${sex}`][key].answers)
+        .filter((_key) => Number(id) !== Number(_key))
+        .reduce((obj, _key) => {
+          obj[j] = cp.answers[`${sex}`][key].answers[_key];
+          j++;
+          return obj;
+        }, []);
+      cp.answers[`${sex}`][key].answers = filtered;
+      this.setState({ newQuestion: cp });
     }
   };
 
@@ -1139,15 +1179,16 @@ class QuestionsBase extends Component {
       editVariableIndex,
       anchorMore,
       idList,
-      id,
-      conditions,
       idListEmail,
       idListSummary,
+      id,
+      conditions,
       questions,
       variables,
       variablesItems,
       newVariable,
       newQuestion,
+      sex,
     } = this.state;
     return loading ? (
       <Loading />
@@ -1175,7 +1216,6 @@ class QuestionsBase extends Component {
               style={{
                 background: "white",
               }}
-              id="demo-simple-select"
               value={id}
               onChange={(e) => {
                 this.getQuestionsByRef(e.target.value);
@@ -1188,11 +1228,13 @@ class QuestionsBase extends Component {
               <MenuItem value="" disabled>
                 Questionnaires
               </MenuItem>
-              {idList.map((el, id) => (
-                <MenuItem key={id} value={el.value}>{`Questionnaire nº${
-                  id + 1
-                }`}</MenuItem>
-              ))}
+              {idList &&
+                idList.map((el, id) => (
+                  <MenuItem
+                    key={"questionnaire_" + id}
+                    value={`${el?.value}`}
+                  >{`Questionnaire nº${id + 1}`}</MenuItem>
+                ))}
             </Select>
           </FormControl>
           <IconButton
@@ -1208,9 +1250,8 @@ class QuestionsBase extends Component {
             <MoreVertIcon fontSize="small" />
           </IconButton>
           <Menu
-            id="simple-menu"
             anchorEl={anchorMore}
-            open={anchorMore}
+            open={anchorMore || false}
             keepMounted
             onClose={() => {
               this.setState({
@@ -1292,7 +1333,7 @@ class QuestionsBase extends Component {
             <Tab className={classes.tab} label="Variables" {...a11yProps(1)} />
             <Tab
               className={classes.tab}
-              label="Emailing & Récapitulatif"
+              label="Emailing & Récapitulatifs"
               {...a11yProps(2)}
             />
           </Tabs>
@@ -1313,7 +1354,7 @@ class QuestionsBase extends Component {
                       Questions
                     </TableCell>
                     <TableCell
-                      alignRight
+                      align={"right"}
                       style={{
                         minWidth: 125,
                       }}
@@ -1335,7 +1376,7 @@ class QuestionsBase extends Component {
                     </TableRow>
                   ) : (
                     items?.map((item, index) => (
-                      <React.Fragment key={index}>
+                      <React.Fragment key={"item_" + index}>
                         <TableRow
                           className={classes.tableRow}
                           component={DraggableComponent(
@@ -1358,7 +1399,7 @@ class QuestionsBase extends Component {
                           </TableCell>
                           <TableCell scope="row">{index + 1}</TableCell>
                           <TableCell>{item?.question}</TableCell>
-                          <TableCell alignRight>
+                          <TableCell align={"right"}>
                             <IconButton
                               aria-label="edit"
                               onClick={() => this.showEditDialog(index)}
@@ -1451,6 +1492,22 @@ class QuestionsBase extends Component {
                                   )}
                                 </div>
 
+                                {item?.type === "body" && (
+                                  <Select
+                                    variant="outlined"
+                                    value={sex || ""}
+                                    onChange={(e) => {
+                                      let value = e.target.value;
+                                      this.setState({
+                                        sex: value,
+                                      });
+                                    }}
+                                  >
+                                    <MenuItem value={"male"}>Homme</MenuItem>
+                                    <MenuItem value={"female"}>Femme</MenuItem>
+                                  </Select>
+                                )}
+
                                 <Table size="small" aria-label="purchases">
                                   <TableHead>
                                     <TableRow>
@@ -1465,16 +1522,16 @@ class QuestionsBase extends Component {
                                   </TableHead>
                                   <TableBody>
                                     {item?.type !== "body" &&
-                                      item?.answers.map((el, key, array) => (
+                                      item?.answers?.map((el, key, array) => (
                                         <TableRow key={key + "_answers"}>
                                           <TableCell scope="row">
                                             {key + 1}
                                           </TableCell>
-                                          <TableCell>{el.content}</TableCell>
+                                          <TableCell>{el?.content}</TableCell>
                                           <TableCell>
                                             {(item?.type === "radio" ||
                                               item?.type === "checkbox") &&
-                                            !el.image ? (
+                                            !el?.image ? (
                                               <IconButton
                                                 color="primary"
                                                 disabled={dragged}
@@ -1492,15 +1549,14 @@ class QuestionsBase extends Component {
                                                 <input
                                                   accept="image/*"
                                                   className={classes.input}
-                                                  id="icon-button-file"
                                                   type="file"
                                                 />
                                               </IconButton>
                                             ) : (
-                                              el.image && (
+                                              el?.image && (
                                                 <>
                                                   <img
-                                                    src={el.image}
+                                                    src={el?.image}
                                                     style={{ maxWidth: 80 }}
                                                     alt="Answer img"
                                                   />
@@ -1530,99 +1586,221 @@ class QuestionsBase extends Component {
                                           </TableCell>
                                         </TableRow>
                                       ))}
-                                    {item?.type === "body" &&
-                                      item?.answers.map((el, key, array) => (
-                                        <TableRow key={"answers_" + key}>
-                                          <TableCell scope="row">
-                                            {`${key + 1}`}
-                                          </TableCell>
-                                          <TableCell>
-                                            {el.answers.map((ele, id) => (
-                                              <div
-                                                style={{
-                                                  display: "flex",
-                                                  alignItems: "center",
-                                                }}
-                                                key={`XY_${index}${key}${id}`}
-                                              >
-                                                <p>{ele.content}</p>
-                                                <p
-                                                  style={{
-                                                    marginLeft: "0.5em",
-                                                  }}
-                                                >
-                                                  x: {ele?.x}
-                                                </p>
-                                                <p
-                                                  style={{
-                                                    marginLeft: "0.5em",
-                                                  }}
-                                                >
-                                                  y: {ele?.y}
-                                                </p>
-                                              </div>
-                                            ))}
-                                          </TableCell>
-                                          <TableCell>
-                                            {(item?.type === "radio" ||
-                                              item?.type === "checkbox" ||
-                                              item?.type === "body") &&
-                                            !el.image ? (
-                                              <IconButton
-                                                color="primary"
-                                                disabled={dragged}
-                                                aria-label="upload picture"
-                                                component="label"
-                                                onChange={(e) =>
-                                                  this.handleUploadAnswer(
-                                                    e,
-                                                    index,
-                                                    key
-                                                  )
-                                                }
-                                              >
-                                                <PhotoCamera />
-                                                <input
-                                                  accept="image/*"
-                                                  className={classes.input}
-                                                  id="icon-button-file"
-                                                  type="file"
-                                                />
-                                              </IconButton>
-                                            ) : (
-                                              el.image && (
-                                                <>
-                                                  <img
-                                                    src={el.image}
-                                                    style={{ width: 210 }}
-                                                    alt=""
-                                                  />
-                                                  <IconButton
-                                                    disabled={dragged}
-                                                    variant="contained"
-                                                    onClick={() =>
-                                                      this.setUploadAnswer(
-                                                        "",
-                                                        index,
-                                                        key
-                                                      )
-                                                    }
-                                                    aria-label="delete"
-                                                    className={
-                                                      classes.deleteBtn
-                                                    }
-                                                  >
-                                                    <DeleteIcon
-                                                      fontSize="small"
+
+                                    {item?.type === "body" && (
+                                      <>
+                                        {sex === "male" &&
+                                          item?.answers?.male.map(
+                                            (el, key, array) => (
+                                              <TableRow key={"answers_" + key}>
+                                                <TableCell scope="row">
+                                                  {`${key + 1}`}
+                                                </TableCell>
+                                                <TableCell>
+                                                  {el?.answers?.map(
+                                                    (ele, id) => (
+                                                      <div
+                                                        style={{
+                                                          display: "flex",
+                                                          alignItems: "center",
+                                                        }}
+                                                        key={`XY_${index}${key}${id}`}
+                                                      >
+                                                        <p>{ele?.content}</p>
+                                                        <p
+                                                          style={{
+                                                            marginLeft: "0.5em",
+                                                          }}
+                                                        >
+                                                          x: {ele?.x}
+                                                        </p>
+                                                        <p
+                                                          style={{
+                                                            marginLeft: "0.5em",
+                                                          }}
+                                                        >
+                                                          y: {ele?.y}
+                                                        </p>
+                                                      </div>
+                                                    )
+                                                  )}
+                                                </TableCell>
+                                                <TableCell>
+                                                  {(item?.type === "radio" ||
+                                                    item?.type === "checkbox" ||
+                                                    item?.type === "body") &&
+                                                  !el?.image ? (
+                                                    <IconButton
+                                                      color="primary"
                                                       disabled={dragged}
-                                                    />
-                                                  </IconButton>
-                                                </>
-                                              )
-                                            )}
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
+                                                      aria-label="upload picture"
+                                                      component="label"
+                                                      onChange={(e) =>
+                                                        this.handleUploadAnswer(
+                                                          e,
+                                                          index,
+                                                          key,
+                                                          item?.type === "body"
+                                                            ? sex
+                                                            : undefined
+                                                        )
+                                                      }
+                                                    >
+                                                      <PhotoCamera />
+                                                      <input
+                                                        accept="image/*"
+                                                        className={
+                                                          classes.input
+                                                        }
+                                                        type="file"
+                                                      />
+                                                    </IconButton>
+                                                  ) : (
+                                                    el?.image && (
+                                                      <>
+                                                        <img
+                                                          src={el?.image}
+                                                          style={{ width: 210 }}
+                                                          alt=""
+                                                        />
+                                                        <IconButton
+                                                          disabled={dragged}
+                                                          variant="contained"
+                                                          onClick={() =>
+                                                            this.setUploadAnswer(
+                                                              "",
+                                                              index,
+                                                              key,
+                                                              item?.type ===
+                                                                "body"
+                                                                ? sex
+                                                                : undefined
+                                                            )
+                                                          }
+                                                          aria-label="delete"
+                                                          className={
+                                                            classes.deleteBtn
+                                                          }
+                                                        >
+                                                          <DeleteIcon
+                                                            fontSize="small"
+                                                            disabled={dragged}
+                                                          />
+                                                        </IconButton>
+                                                      </>
+                                                    )
+                                                  )}
+                                                </TableCell>
+                                              </TableRow>
+                                            )
+                                          )}
+                                        {sex === "female" &&
+                                          item?.answers?.female.map(
+                                            (el, key, array) => (
+                                              <TableRow key={"answers_" + key}>
+                                                <TableCell scope="row">
+                                                  {`${key + 1}`}
+                                                </TableCell>
+                                                <TableCell>
+                                                  {el?.answers?.map(
+                                                    (ele, id) => (
+                                                      <div
+                                                        style={{
+                                                          display: "flex",
+                                                          alignItems: "center",
+                                                        }}
+                                                        key={`XY_${index}${key}${id}`}
+                                                      >
+                                                        <p>{ele?.content}</p>
+                                                        <p
+                                                          style={{
+                                                            marginLeft: "0.5em",
+                                                          }}
+                                                        >
+                                                          x: {ele?.x}
+                                                        </p>
+                                                        <p
+                                                          style={{
+                                                            marginLeft: "0.5em",
+                                                          }}
+                                                        >
+                                                          y: {ele?.y}
+                                                        </p>
+                                                      </div>
+                                                    )
+                                                  )}
+                                                </TableCell>
+                                                <TableCell>
+                                                  {(item?.type === "radio" ||
+                                                    item?.type === "checkbox" ||
+                                                    item?.type === "body") &&
+                                                  !el?.image ? (
+                                                    <IconButton
+                                                      color="primary"
+                                                      disabled={dragged}
+                                                      aria-label="upload picture"
+                                                      component="label"
+                                                      onChange={(e) =>
+                                                        this.handleUploadAnswer(
+                                                          e,
+                                                          index,
+                                                          key,
+                                                          item?.type === "body"
+                                                            ? sex
+                                                            : undefined
+                                                        )
+                                                      }
+                                                    >
+                                                      <PhotoCamera />
+                                                      <input
+                                                        accept="image/*"
+                                                        className={
+                                                          classes.input
+                                                        }
+                                                        type="file"
+                                                      />
+                                                    </IconButton>
+                                                  ) : (
+                                                    el?.image && (
+                                                      <>
+                                                        <img
+                                                          src={el?.image}
+                                                          style={{ width: 210 }}
+                                                          alt=""
+                                                        />
+                                                        <IconButton
+                                                          disabled={dragged}
+                                                          variant="contained"
+                                                          onClick={() =>
+                                                            this.setUploadAnswer(
+                                                              "",
+                                                              index,
+                                                              key,
+                                                              item?.type ===
+                                                                "body"
+                                                                ? sex
+                                                                : undefined
+                                                            )
+                                                          }
+                                                          aria-label="delete"
+                                                          className={
+                                                            classes.deleteBtn
+                                                          }
+                                                        >
+                                                          <DeleteIcon
+                                                            fontSize="small"
+                                                            disabled={dragged}
+                                                          />
+                                                        </IconButton>
+                                                      </>
+                                                    )
+                                                  )}
+                                                </TableCell>
+                                              </TableRow>
+                                            )
+                                          )}
+                                      </>
+                                    )}
                                   </TableBody>
                                 </Table>
                               </Box>
@@ -1659,7 +1837,6 @@ class QuestionsBase extends Component {
                     <TableCell />
                     <TableCell>#</TableCell>
                     <TableCell
-                      fullWidth
                       style={{
                         width: "100%",
                       }}
@@ -1667,7 +1844,7 @@ class QuestionsBase extends Component {
                       Variable
                     </TableCell>
                     <TableCell
-                      alignRight
+                      align={"right"}
                       style={{
                         minWidth: 125,
                       }}
@@ -1677,7 +1854,7 @@ class QuestionsBase extends Component {
                 <TableBody>
                   {variablesItems.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan="2" />{" "}
+                      <TableCell colSpan="2" />
                       <TableCell
                         colSpan="3"
                         style={{
@@ -1695,8 +1872,8 @@ class QuestionsBase extends Component {
                       >
                         <TableCell />
                         <TableCell>{`${index + 1}`}</TableCell>
-                        <TableCell fullWidth>{el?.name}</TableCell>
-                        <TableCell alignRight>
+                        <TableCell>{el?.name}</TableCell>
+                        <TableCell align={"right"}>
                           <IconButton
                             aria-label="edit"
                             onClick={() => this.showEditVariableDialog(index)}
@@ -1754,6 +1931,7 @@ class QuestionsBase extends Component {
                   <>
                     {el?.conditions?.map((condition, key) => (
                       <div
+                        key={"condition_" + key}
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -1772,7 +1950,6 @@ class QuestionsBase extends Component {
                           style={{
                             height: 40,
                           }}
-                          id="simple-select-1"
                           value={
                             conditions[id]?.conditions[key]?.question || ""
                           }
@@ -1791,13 +1968,19 @@ class QuestionsBase extends Component {
                           <MenuItem value="" disabled>
                             Question ou variable
                           </MenuItem>
-                          {items.map((item) => (
-                            <MenuItem value={item?.question}>
+                          {items.map((item, id) => (
+                            <MenuItem
+                              value={item?.question}
+                              key={"item_question_" + id}
+                            >
                               {item?.question}
                             </MenuItem>
                           ))}
-                          {variables.map((variable) => (
-                            <MenuItem value={variable?.name}>
+                          {variables.map((variable, id) => (
+                            <MenuItem
+                              value={variable?.name}
+                              key={"variable_name_" + id}
+                            >
                               {variable?.name}
                             </MenuItem>
                           ))}
@@ -1820,7 +2003,6 @@ class QuestionsBase extends Component {
                             inputProps={{ "aria-label": "Without label" }}
                             displayEmpty
                             variant="outlined"
-                            id="simple-select-2"
                             value={
                               conditions[id]?.conditions[key]?.operator || ""
                             }
@@ -1862,7 +2044,6 @@ class QuestionsBase extends Component {
                             style={{ marginLeft: "0.5em", height: 40 }}
                             inputProps={{ "aria-label": "Without label" }}
                             displayEmpty
-                            id="simple-select-2"
                             value={
                               conditions[id]?.conditions[key]?.operator || ""
                             }
@@ -1928,7 +2109,7 @@ class QuestionsBase extends Component {
                                   item?.question ===
                                   conditions[id]?.conditions[key]?.question
                               )
-                            ]?.answers.map((item) => (
+                            ]?.answers?.map((item) => (
                               <MenuItem
                                 key={item?.content}
                                 value={item?.content}
@@ -1988,7 +2169,7 @@ class QuestionsBase extends Component {
                                     item?.question ===
                                     conditions[id]?.conditions[key]?.question
                                 )
-                              ]?.answers[_key]?.answers.map((item) => (
+                              ]?.answers[_key]?.answers?.map((item) => (
                                 <MenuItem
                                   key={item?.content}
                                   value={item?.content}
@@ -2012,7 +2193,6 @@ class QuestionsBase extends Component {
                             style={{ marginLeft: "0.5em", height: 40 }}
                             inputProps={{ "aria-label": "Without label" }}
                             displayEmpty
-                            id="simple-select"
                             value={conditions[id]?.conditions[key]?.value || ""}
                             onChange={(e) => {
                               const { conditions } = this.state;
@@ -2034,9 +2214,12 @@ class QuestionsBase extends Component {
                                   item?.question ===
                                   conditions[id]?.conditions[key]?.question
                               )
-                            ]?.answers.map((item) => {
+                            ]?.answers?.map((item) => {
                               return (
-                                <MenuItem value={item?.content}>
+                                <MenuItem
+                                  value={item?.content}
+                                  key={item?.content}
+                                >
                                   {item?.content}
                                 </MenuItem>
                               );
@@ -2069,7 +2252,6 @@ class QuestionsBase extends Component {
                                 saveConditions: true,
                               });
                             }}
-                            id="outlined-basic"
                             variant="outlined"
                             value={conditions[id]?.conditions[key]?.value || ""}
                           />
@@ -2097,7 +2279,6 @@ class QuestionsBase extends Component {
                                   saveConditions: true,
                                 });
                               }}
-                              id="outlined-basic"
                               variant="outlined"
                               placeholder="Réponse"
                               value={
@@ -2130,7 +2311,6 @@ class QuestionsBase extends Component {
                                   saveConditions: true,
                                 });
                               }}
-                              id="outlined-basic"
                               variant="outlined"
                               value={
                                 conditions[id]?.conditions[key]?.value[1] || ""
@@ -2191,10 +2371,8 @@ class QuestionsBase extends Component {
                         size="small"
                         variant="outlined"
                         style={{
-                          height: 40,
                           marginLeft: "0.5em",
                         }}
-                        id="demo-simple-select"
                         inputProps={{ "aria-label": "Without label" }}
                         displayEmpty
                         value={conditions[id]?.sendEmail?.id || ""}
@@ -2214,7 +2392,7 @@ class QuestionsBase extends Component {
                         </MenuItem>
                         {idListEmail &&
                           idListEmail.map((el, id) => (
-                            <MenuItem key={id} value={el.value}>{`Email nº${
+                            <MenuItem key={id} value={el?.value}>{`Email nº${
                               id + 1
                             }`}</MenuItem>
                           ))}
@@ -2230,10 +2408,8 @@ class QuestionsBase extends Component {
                         size="small"
                         variant="outlined"
                         style={{
-                          height: 40,
                           marginLeft: "0.5em",
                         }}
-                        id="demo-simple-select"
                         inputProps={{ "aria-label": "Without label" }}
                         displayEmpty
                         value={conditions[id]?.showSummary?.id || ""}
@@ -2254,8 +2430,8 @@ class QuestionsBase extends Component {
                         {idListSummary &&
                           idListSummary.map((el, id) => (
                             <MenuItem
-                              key={id}
-                              value={el.value}
+                              key={"recap_" + id}
+                              value={el?.value}
                             >{`Récapitulatif nº${id + 1}`}</MenuItem>
                           ))}
                       </Select>
@@ -2278,7 +2454,7 @@ class QuestionsBase extends Component {
           </Button>
         </TabPanel>
         <Dialog
-          open={openDeleteDialog}
+          open={openDeleteDialog || false}
           onClose={() => {
             this.setState({
               deleteIndex: null,
@@ -2288,13 +2464,11 @@ class QuestionsBase extends Component {
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description"
         >
-          <DialogTitle id="alert-dialog-title">
+          <DialogTitle>
             {"Êtes-vous sûr de vouloir supprimer cette question ?"}
           </DialogTitle>
           <DialogContent>
-            <DialogContentText id="alert-dialog-description">
-              Cette action est irréversible
-            </DialogContentText>
+            <DialogContentText>Cette action est irréversible</DialogContentText>
           </DialogContent>
           <DialogActions>
             <Button
@@ -2321,7 +2495,7 @@ class QuestionsBase extends Component {
           </DialogActions>
         </Dialog>
         <Dialog
-          open={openDeleteVariableDialog}
+          open={openDeleteVariableDialog || false}
           onClose={() => {
             this.setState({
               deleteVariableIndex: null,
@@ -2331,13 +2505,11 @@ class QuestionsBase extends Component {
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description"
         >
-          <DialogTitle id="alert-dialog-title">
+          <DialogTitle>
             {"Êtes-vous sûr de vouloir supprimer cette variable ?"}
           </DialogTitle>
           <DialogContent>
-            <DialogContentText id="alert-dialog-description">
-              Cette action est irréversible
-            </DialogContentText>
+            <DialogContentText>Cette action est irréversible</DialogContentText>
           </DialogContent>
           <DialogActions>
             <Button
@@ -2364,9 +2536,9 @@ class QuestionsBase extends Component {
           </DialogActions>
         </Dialog>
         <Dialog
-          maxWidth="md"
           fullWidth
-          open={openNewQuestionDialog}
+          maxWidth="md"
+          open={openNewQuestionDialog || false}
           onClose={() => {
             this.setState({
               openNewQuestionDialog: false,
@@ -2374,7 +2546,7 @@ class QuestionsBase extends Component {
           }}
           aria-labelledby="form-dialog-title"
         >
-          <DialogTitle id="form-dialog-title">Nouvelle question</DialogTitle>
+          <DialogTitle>Nouvelle question</DialogTitle>
           <DialogContent>
             <TextField
               autoFocus
@@ -2385,8 +2557,12 @@ class QuestionsBase extends Component {
               value={newQuestion?.question || ""}
               placeholder="Question"
               type="text"
-              fullWidth
+              style={{
+                width: "100%",
+              }}
             />
+            <br />
+
             <TextField
               margin="dense"
               variant="outlined"
@@ -2394,8 +2570,14 @@ class QuestionsBase extends Component {
               value={newQuestion?.description || ""}
               placeholder="Description"
               type="text"
-              fullWidth
+              style={{
+                width: "100%",
+              }}
+              multiline
+              rows={3}
+              rowsMax={Infinity}
             />
+            <br />
             <FormControl
               variant="outlined"
               required
@@ -2405,7 +2587,6 @@ class QuestionsBase extends Component {
                 placeholder="Type"
                 inputProps={{ "aria-label": "Without label" }}
                 displayEmpty
-                id="simple-select"
                 variant="outlined"
                 value={newQuestion?.type || ""}
                 onChange={(e) => {
@@ -2416,25 +2597,49 @@ class QuestionsBase extends Component {
                         ...state.newQuestion,
                         type: value,
                         answers: {
-                          0: {
-                            answers: {
-                              0: {
-                                content: "",
-                                x: 0,
-                                y: 0,
+                          male: {
+                            0: {
+                              answers: {
+                                0: {
+                                  content: "",
+                                  x: 0,
+                                  y: 0,
+                                },
                               },
+                              image: "",
                             },
-                            image: "",
+                            1: {
+                              answers: {
+                                0: {
+                                  content: "",
+                                  x: 0,
+                                  y: 0,
+                                },
+                              },
+                              image: "",
+                            },
                           },
-                          1: {
-                            answers: {
-                              0: {
-                                content: "",
-                                x: 0,
-                                y: 0,
+                          female: {
+                            0: {
+                              answers: {
+                                0: {
+                                  content: "",
+                                  x: 0,
+                                  y: 0,
+                                },
                               },
+                              image: "",
                             },
-                            image: "",
+                            1: {
+                              answers: {
+                                0: {
+                                  content: "",
+                                  x: 0,
+                                  y: 0,
+                                },
+                              },
+                              image: "",
+                            },
                           },
                         },
                       },
@@ -2474,7 +2679,6 @@ class QuestionsBase extends Component {
                 type="text"
                 onChange={(e) => this.handleChangeNewQuestionAnswers(e, 0)}
                 value={newQuestion.answers[0]?.content || ""}
-                fullWidth
               />
             )}
             {newQuestion?.type === "text" && (
@@ -2486,7 +2690,6 @@ class QuestionsBase extends Component {
                 type="text"
                 onChange={(e) => this.handleChangeNewQuestionAnswers(e, 0)}
                 value={newQuestion.answers[0]?.content || ""}
-                fullWidth
               />
             )}
             {newQuestion?.type === "email" && (
@@ -2498,7 +2701,6 @@ class QuestionsBase extends Component {
                 type="text"
                 onChange={(e) => this.handleChangeNewQuestionAnswers(e, 0)}
                 value={newQuestion.answers[0]?.content || ""}
-                fullWidth
               />
             )}
             {newQuestion?.type === "checkbox" && (
@@ -2510,6 +2712,7 @@ class QuestionsBase extends Component {
                       alignItems: "center",
                       justifyContent: "center",
                     }}
+                    key={"newQuestion_answers_" + id}
                   >
                     <TextField
                       required
@@ -2521,7 +2724,6 @@ class QuestionsBase extends Component {
                         this.handleChangeNewQuestionAnswers(e, id)
                       }
                       type="text"
-                      fullWidth
                     />
                     <IconButton
                       aria-label="delete"
@@ -2551,6 +2753,7 @@ class QuestionsBase extends Component {
                       alignItems: "center",
                       justifyContent: "center",
                     }}
+                    key={"newQuestion_answers_" + id}
                   >
                     <TextField
                       required
@@ -2562,7 +2765,6 @@ class QuestionsBase extends Component {
                         this.handleChangeNewQuestionAnswers(e, id)
                       }
                       type="text"
-                      fullWidth
                     />
                     <IconButton
                       aria-label="delete"
@@ -2585,30 +2787,230 @@ class QuestionsBase extends Component {
             )}
             {newQuestion?.type === "body" && (
               <>
-                {Object.keys(newQuestion.answers).map((el, key) => (
-                  <TableRow key={"answers_" + key}>
-                    <TableCell
-                      style={{
-                        minWidth: 300,
-                      }}
-                    >
-                      {Object.keys(newQuestion.answers[key].answers).map(
-                        (ele, id) => (
+                <FormControl
+                  required
+                  variant="outlined"
+                  className={classes.formControl}
+                  margin="dense"
+                  size="small"
+                  style={{
+                    marginLeft: "0.5em",
+                  }}
+                >
+                  <Select
+                    variant="outlined"
+                    value={sex || ""}
+                    onChange={(e) => {
+                      let value = e.target.value;
+                      this.setState({
+                        sex: value,
+                      });
+                    }}
+                  >
+                    <MenuItem value={"male"}>Homme</MenuItem>
+                    <MenuItem value={"female"}>Femme</MenuItem>
+                  </Select>
+                </FormControl>
+                {sex === "male" &&
+                  Object.keys(newQuestion.answers.male).map((el, key) => (
+                    <TableRow key={"newQuestion_answers_male_" + key}>
+                      <TableCell
+                        style={{
+                          minWidth: 300,
+                        }}
+                      >
+                        {Object.keys(newQuestion.answers.male[key].answers).map(
+                          (ele, id) => (
+                            <div
+                              key={`set_XY_male_${key}${id}`}
+                              style={{
+                                marginRight: "1em",
+                              }}
+                            >
+                              <TextField
+                                id={`setPart_male_${key}${id}`}
+                                key={`setPart_male_${key}${id}`}
+                                variant="outlined"
+                                size="small"
+                                placeholder={"Partie"}
+                                value={
+                                  newQuestion.answers.male[key].answers[ele]
+                                    .content || ""
+                                }
+                                onChange={(e) => {
+                                  this.handleChangePart(
+                                    e,
+                                    undefined,
+                                    key,
+                                    id,
+                                    "new",
+                                    "male"
+                                  );
+                                }}
+                              />
+                              {id > 0 && (
+                                <IconButton
+                                  variant="contained"
+                                  onClick={() =>
+                                    this.deletePart(undefined, key, id, "male")
+                                  }
+                                  aria-label="delete"
+                                  className={classes.deleteBtn}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              )}
+                              <form
+                                id={`setXY${key}${id}`}
+                                noValidate
+                                variant="outlined"
+                                autoComplete="off"
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  margin: "0.5em 0 1.5em",
+                                }}
+                              >
+                                <TextField
+                                  id={`setX${key}${id}`}
+                                  key={`setX${key}${id}`}
+                                  size="small"
+                                  variant="outlined"
+                                  placeholder={"X"}
+                                  style={{
+                                    width: 75,
+                                  }}
+                                  type={"number"}
+                                  onChange={(e) => {
+                                    this.handleChangeX(
+                                      e,
+                                      undefined,
+                                      key,
+                                      id,
+                                      "new",
+                                      "male"
+                                    );
+                                  }}
+                                  value={
+                                    newQuestion.answers.male[key].answers[ele]
+                                      .x || ""
+                                  }
+                                />
+                                <TextField
+                                  id={`setY${key}${id}`}
+                                  key={`setY${key}${id}`}
+                                  size="small"
+                                  variant="outlined"
+                                  placeholder={"Y"}
+                                  style={{
+                                    marginLeft: "0.5em",
+                                    width: 75,
+                                  }}
+                                  type={"number"}
+                                  onChange={(e) => {
+                                    this.handleChangeY(
+                                      e,
+                                      undefined,
+                                      key,
+                                      id,
+                                      "new",
+                                      "male"
+                                    );
+                                  }}
+                                  value={
+                                    newQuestion.answers.male[key].answers[ele]
+                                      .y || ""
+                                  }
+                                />
+                              </form>
+                            </div>
+                          )
+                        )}
+                        <Button
+                          className={classes.button}
+                          variant="contained"
+                          size="small"
+                          color="primary"
+                          startIcon={<AddIcon />}
+                          onClick={() => {
+                            this.addNewPart(key, undefined, "male");
+                          }}
+                        >
+                          Ajouter une partie
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        {el?.image && (
                           <div
-                            key={`set_XY_${key}${id}`}
+                            style={{ position: "relative" }}
+                            className={"body"}
+                          >
+                            {Object.keys(
+                              newQuestion.answers.male[key].answers
+                            ).map((ele, id) => (
+                              <div
+                                key={`bodySelect_male${id}`}
+                                className={`bodySelect`}
+                                id={`bodySelect_male${id}`}
+                                style={{
+                                  left: `${newQuestion.answers.male[key].answers[ele].x}px`,
+                                  top: `${newQuestion.answers.male[key].answers[ele].y}px`,
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  name="bodySelect"
+                                  value={
+                                    newQuestion.answers.male[key].answers[ele]
+                                      .content
+                                  }
+                                  id={`part${key}${id}`}
+                                />
+                                <label htmlFor={`part${key}${id}`}>
+                                  {
+                                    newQuestion.answers.male[key].answers[ele]
+                                      .content
+                                  }
+                                </label>
+                              </div>
+                            ))}
+                            <img
+                              src={newQuestion.answers.male[key].image}
+                              width="100%"
+                              height="100%"
+                              alt=""
+                            />
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                {sex === "female" &&
+                  Object.keys(newQuestion.answers.female).map((el, key) => (
+                    <TableRow key={"answers_female" + key}>
+                      <TableCell
+                        style={{
+                          minWidth: 300,
+                        }}
+                      >
+                        {Object.keys(
+                          newQuestion.answers.female[key].answers
+                        ).map((ele, id) => (
+                          <div
+                            key={`set_XY_female${key}${id}`}
                             style={{
                               marginRight: "1em",
                             }}
                           >
                             <TextField
-                              id={`setPart${key}${id}`}
-                              key={`setPart${key}${id}`}
+                              id={`setPart_female${key}${id}`}
+                              key={`setPart_female${key}${id}`}
                               variant="outlined"
                               size="small"
                               placeholder={"Partie"}
                               value={
-                                newQuestion.answers[key].answers[ele].content ||
-                                ""
+                                newQuestion.answers.female[key].answers[ele]
+                                  .content || ""
                               }
                               onChange={(e) => {
                                 this.handleChangePart(
@@ -2616,20 +3018,23 @@ class QuestionsBase extends Component {
                                   undefined,
                                   key,
                                   id,
-                                  "new"
+                                  "new",
+                                  "female"
                                 );
                               }}
                             />
-                            <IconButton
-                              variant="contained"
-                              onClick={() =>
-                                this.deletePart(undefined, key, id)
-                              }
-                              aria-label="delete"
-                              className={classes.deleteBtn}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
+                            {id > 0 && (
+                              <IconButton
+                                variant="contained"
+                                onClick={() =>
+                                  this.deletePart(undefined, key, id, "female")
+                                }
+                                aria-label="delete"
+                                className={classes.deleteBtn}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            )}
                             <form
                               id={`setXY${key}${id}`}
                               noValidate
@@ -2657,11 +3062,13 @@ class QuestionsBase extends Component {
                                     undefined,
                                     key,
                                     id,
-                                    "new"
+                                    "new",
+                                    "female"
                                   );
                                 }}
                                 value={
-                                  newQuestion.answers[key].answers[ele].x || ""
+                                  newQuestion.answers.female[key].answers[ele]
+                                    .x || ""
                                 }
                               />
                               <TextField
@@ -2681,76 +3088,77 @@ class QuestionsBase extends Component {
                                     undefined,
                                     key,
                                     id,
-                                    "new"
+                                    "new",
+                                    "female"
                                   );
                                 }}
                                 value={
-                                  newQuestion.answers[key].answers[ele].y || ""
+                                  newQuestion.answers.female[key].answers[ele]
+                                    .y || ""
                                 }
                               />
                             </form>
                           </div>
-                        )
-                      )}
-                      <Button
-                        className={classes.button}
-                        variant="contained"
-                        size="small"
-                        color="primary"
-                        startIcon={<AddIcon />}
-                        onClick={() => {
-                          this.addNewPart(key, undefined);
-                        }}
-                      >
-                        Ajouter une partie
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      {el.image && (
-                        <div
-                          style={{ position: "relative" }}
-                          className={"body"}
+                        ))}
+                        <Button
+                          className={classes.button}
+                          variant="contained"
+                          size="small"
+                          color="primary"
+                          startIcon={<AddIcon />}
+                          onClick={() => {
+                            this.addNewPart(key, undefined, "female");
+                          }}
                         >
-                          {Object.keys(newQuestion.answers[key].answers).map(
-                            (ele, id) => (
+                          Ajouter une partie
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        {el?.image && (
+                          <div
+                            style={{ position: "relative" }}
+                            className={"body"}
+                          >
+                            {Object.keys(
+                              newQuestion.answers.female[key].answers
+                            ).map((ele, id) => (
                               <div
-                                key={`bodySelect${id}`}
+                                key={`bodySelect_female${id}`}
                                 className={`bodySelect`}
-                                id={`bodySelect${id}`}
+                                id={`bodySelect_female${id}`}
                                 style={{
-                                  left: `${newQuestion.answers[key].answers[ele].x}px`,
-                                  top: `${newQuestion.answers[key].answers[ele].y}px`,
+                                  left: `${newQuestion.answers.female[key].answers[ele].x}px`,
+                                  top: `${newQuestion.answers.female[key].answers[ele].y}px`,
                                 }}
                               >
                                 <input
                                   type="checkbox"
                                   name="bodySelect"
                                   value={
-                                    newQuestion.answers[key].answers[ele]
+                                    newQuestion.answers.female[key].answers[ele]
                                       .content
                                   }
                                   id={`part${key}${id}`}
                                 />
                                 <label htmlFor={`part${key}${id}`}>
                                   {
-                                    newQuestion.answers[key].answers[ele]
+                                    newQuestion.answers.female[key].answers[ele]
                                       .content
                                   }
                                 </label>
                               </div>
-                            )
-                          )}
-                          <img
-                            src={newQuestion.answers[key].image}
-                            width="100%"
-                            height="100%"
-                            alt=""
-                          />
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                            ))}
+                            <img
+                              src={newQuestion.answers.female[key].image}
+                              width="100%"
+                              height="100%"
+                              alt=""
+                            />
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </>
             )}
           </DialogContent>
@@ -2767,9 +3175,7 @@ class QuestionsBase extends Component {
               Annuler
             </Button>
             <Button
-              disabled={
-                !newQuestion.answers[0]?.content || !newQuestion.question
-              }
+              disabled={!newQuestion.answers || !newQuestion.question}
               onClick={() => this.addNewQuestion()}
               color="primary"
               variant="contained"
@@ -2779,9 +3185,9 @@ class QuestionsBase extends Component {
           </DialogActions>
         </Dialog>
         <Dialog
-          fullWidth
-          open={openEditDialog}
+          open={openEditDialog || false}
           maxWidth="md"
+          fullWidth
           onClose={() => {
             this.setState({
               openEditDialog: false,
@@ -2789,9 +3195,7 @@ class QuestionsBase extends Component {
           }}
           aria-labelledby="form-dialog-title"
         >
-          <DialogTitle id="form-dialog-title">
-            Modifier une question
-          </DialogTitle>
+          <DialogTitle>Modifier une question</DialogTitle>
           <DialogContent>
             <TextField
               autoFocus
@@ -2802,8 +3206,11 @@ class QuestionsBase extends Component {
               value={questions[editIndex]?.question || ""}
               placeholder="Question"
               type="text"
-              fullWidth
+              style={{
+                width: "100%",
+              }}
             />
+            <br />
             <TextField
               margin="dense"
               variant="outlined"
@@ -2811,11 +3218,16 @@ class QuestionsBase extends Component {
               value={questions[editIndex]?.description || ""}
               placeholder="Description"
               type="text"
-              fullWidth
+              style={{
+                width: "100%",
+              }}
+              rows={3}
+              multiline
+              rowsMax={Infinity}
             />
+            <br />
             <FormControl required className={classes.formControl}>
               <Select
-                id="simple-select"
                 placeholder="Type"
                 variant="outlined"
                 value={questions[editIndex]?.type || ""}
@@ -2893,7 +3305,6 @@ class QuestionsBase extends Component {
                 type="text"
                 onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
                 value={questions[editIndex]?.answers[0]?.content || ""}
-                fullWidth
               />
             )}
             {questions[editIndex]?.type === "text" && (
@@ -2905,7 +3316,6 @@ class QuestionsBase extends Component {
                 type="text"
                 onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
                 value={questions[editIndex]?.answers[0]?.content || ""}
-                fullWidth
               />
             )}
             {questions[editIndex]?.type === "email" && (
@@ -2917,7 +3327,6 @@ class QuestionsBase extends Component {
                 type="text"
                 onChange={(e) => this.handleChangeQuestionAnswers(e, 0)}
                 value={questions[editIndex]?.answers[0]?.content || ""}
-                fullWidth
               />
             )}
             {questions[editIndex]?.type === "checkbox" && (
@@ -2929,6 +3338,7 @@ class QuestionsBase extends Component {
                       alignItems: "center",
                       justifyContent: "center",
                     }}
+                    key={"options_" + id}
                   >
                     <TextField
                       required
@@ -2940,7 +3350,6 @@ class QuestionsBase extends Component {
                       }
                       onChange={(e) => this.handleChangeQuestionAnswers(e, id)}
                       type="text"
-                      fullWidth
                     />
                     <IconButton
                       aria-label="delete"
@@ -2970,6 +3379,7 @@ class QuestionsBase extends Component {
                       alignItems: "center",
                       justifyContent: "center",
                     }}
+                    key={"options_" + id}
                   >
                     <TextField
                       required
@@ -2981,7 +3391,6 @@ class QuestionsBase extends Component {
                       }
                       onChange={(e) => this.handleChangeQuestionAnswers(e, id)}
                       type="text"
-                      fullWidth
                     />
                     <IconButton
                       aria-label="delete"
@@ -3004,153 +3413,347 @@ class QuestionsBase extends Component {
             )}
             {questions[editIndex]?.type === "body" && (
               <>
-                {questions[editIndex]?.answers.map((el, key, array) => (
-                  <TableRow key={"answers_" + key}>
-                    <TableCell
-                      style={{
-                        minWidth: 300,
-                      }}
-                    >
-                      {el.answers.map((ele, id) => (
-                        <div
-                          key={`set_XY_${editIndex}${key}${id}`}
-                          style={{
-                            marginRight: "1em",
-                          }}
-                        >
-                          <TextField
-                            id={`setPart${editIndex}${key}${id}`}
-                            key={`setPart${editIndex}${key}${id}`}
-                            variant="outlined"
-                            size="small"
-                            placeholder={"Partie"}
-                            value={ele?.content || ""}
-                            onChange={(e) => {
-                              this.handleChangePart(
-                                e,
-                                editIndex,
-                                key,
-                                id,
-                                "edit"
-                              );
-                            }}
-                          />
-                          <IconButton
-                            variant="contained"
-                            onClick={() => this.deletePart(editIndex, key, id)}
-                            aria-label="delete"
-                            className={classes.deleteBtn}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                          <form
-                            id={`setXY${editIndex}${key}${id}`}
-                            noValidate
-                            variant="outlined"
-                            autoComplete="off"
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              margin: "0.5em 0 1.5em",
-                            }}
-                          >
-                            <TextField
-                              id={`setX${editIndex}${key}${id}`}
-                              key={`setX${editIndex}${key}${id}`}
-                              size="small"
-                              variant="outlined"
-                              placeholder={"X"}
-                              style={{
-                                width: 75,
-                              }}
-                              type={"number"}
-                              onChange={(e) => {
-                                this.handleChangeX(
-                                  e,
-                                  editIndex,
-                                  key,
-                                  id,
-                                  "edit"
-                                );
-                              }}
-                              value={ele?.x || ""}
-                            />
-                            <TextField
-                              id={`setY${editIndex}${key}${id}`}
-                              key={`setY${editIndex}${key}${id}`}
-                              size="small"
-                              variant="outlined"
-                              placeholder={"Y"}
-                              style={{
-                                marginLeft: "0.5em",
-                                width: 75,
-                              }}
-                              type={"number"}
-                              onChange={(e) => {
-                                this.handleChangeY(
-                                  e,
-                                  editIndex,
-                                  key,
-                                  id,
-                                  "edit"
-                                );
-                              }}
-                              value={ele?.y || ""}
-                            />
-                          </form>
-                        </div>
-                      ))}
-                      <Button
-                        className={classes.button}
-                        variant="contained"
-                        size="small"
-                        color="primary"
-                        startIcon={<AddIcon />}
-                        onClick={() => {
-                          this.addNewPart(key, editIndex);
+                <FormControl
+                  required
+                  variant="outlined"
+                  className={classes.formControl}
+                  margin="dense"
+                  size="small"
+                  style={{
+                    marginLeft: "0.5em",
+                  }}
+                >
+                  <Select
+                    variant="outlined"
+                    value={sex || ""}
+                    onChange={(e) => {
+                      let value = e.target.value;
+                      this.setState({
+                        sex: value,
+                      });
+                    }}
+                  >
+                    <MenuItem value={"male"}>Homme</MenuItem>
+                    <MenuItem value={"female"}>Femme</MenuItem>
+                  </Select>
+                </FormControl>
+                {sex === "male" &&
+                  questions[editIndex]?.answers?.male.map((el, key, array) => (
+                    <TableRow key={"answers_male" + key}>
+                      <TableCell
+                        style={{
+                          minWidth: 300,
                         }}
                       >
-                        Ajouter une partie
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      {el.image && (
-                        <div
-                          style={{ position: "relative" }}
-                          className={"body"}
-                        >
-                          {el.answers.map((ele, id) => (
-                            <div
-                              key={`bodySelect${id}`}
-                              className={`bodySelect`}
-                              id={`bodySelect${id}`}
+                        {el?.answers?.map((ele, id) => (
+                          <div
+                            key={`set_XY_male${editIndex}${key}${id}`}
+                            style={{
+                              marginRight: "1em",
+                            }}
+                          >
+                            <TextField
+                              id={`setPart_male${editIndex}${key}${id}`}
+                              key={`setPart_male${editIndex}${key}${id}`}
+                              variant="outlined"
+                              size="small"
+                              placeholder={"Partie"}
+                              value={ele?.content || ""}
+                              onChange={(e) => {
+                                this.handleChangePart(
+                                  e,
+                                  editIndex,
+                                  key,
+                                  id,
+                                  "edit",
+                                  "male"
+                                );
+                              }}
+                            />
+                            {id > 0 && (
+                              <IconButton
+                                variant="contained"
+                                onClick={() =>
+                                  this.deletePart(editIndex, key, id, "male")
+                                }
+                                aria-label="delete"
+                                className={classes.deleteBtn}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            )}
+                            <form
+                              id={`setXY${editIndex}${key}${id}`}
+                              noValidate
+                              variant="outlined"
+                              autoComplete="off"
                               style={{
-                                left: `${ele.x}px`,
-                                top: `${ele.y}px`,
+                                display: "flex",
+                                alignItems: "center",
+                                margin: "0.5em 0 1.5em",
                               }}
                             >
-                              <input
-                                type="checkbox"
-                                name="bodySelect"
-                                value={ele.content}
-                                id={`part${key}${id}`}
+                              <TextField
+                                id={`setX${editIndex}${key}${id}`}
+                                key={`setX${editIndex}${key}${id}`}
+                                size="small"
+                                variant="outlined"
+                                placeholder={"X"}
+                                style={{
+                                  width: 75,
+                                }}
+                                type={"number"}
+                                onChange={(e) => {
+                                  this.handleChangeX(
+                                    e,
+                                    editIndex,
+                                    key,
+                                    id,
+                                    "edit",
+                                    "male"
+                                  );
+                                }}
+                                value={ele?.x || ""}
                               />
-                              <label htmlFor={`part${key}${id}`}>
-                                {ele.content}
-                              </label>
+                              <TextField
+                                id={`setY${editIndex}${key}${id}`}
+                                key={`setY${editIndex}${key}${id}`}
+                                size="small"
+                                variant="outlined"
+                                placeholder={"Y"}
+                                style={{
+                                  marginLeft: "0.5em",
+                                  width: 75,
+                                }}
+                                type={"number"}
+                                onChange={(e) => {
+                                  this.handleChangeY(
+                                    e,
+                                    editIndex,
+                                    key,
+                                    id,
+                                    "edit",
+                                    "male"
+                                  );
+                                }}
+                                value={ele?.y || ""}
+                              />
+                            </form>
+                          </div>
+                        ))}
+                        <Button
+                          className={classes.button}
+                          variant="contained"
+                          size="small"
+                          color="primary"
+                          startIcon={<AddIcon />}
+                          onClick={() => {
+                            this.addNewPart(key, editIndex, "male");
+                          }}
+                        >
+                          Ajouter une partie
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        {el?.image && (
+                          <div
+                            style={{ position: "relative" }}
+                            className={"body"}
+                          >
+                            {el?.answers?.map((ele, id) => (
+                              <div
+                                key={`bodySelect_male${id}`}
+                                className={`bodySelect`}
+                                id={`bodySelect_male${id}`}
+                                style={{
+                                  left: `${ele?.x}px`,
+                                  top: `${ele?.y}px`,
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  name="bodySelect"
+                                  value={ele?.content}
+                                  id={`part_male${key}${id}`}
+                                />
+                                <label htmlFor={`part_male${key}${id}`}>
+                                  {ele?.content}
+                                </label>
+                              </div>
+                            ))}
+                            <img
+                              src={el?.image}
+                              width="100%"
+                              height="100%"
+                              alt=""
+                            />
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                {sex === "female" &&
+                  questions[editIndex]?.answers?.female.map(
+                    (el, key, array) => (
+                      <TableRow key={"answers_" + key}>
+                        <TableCell
+                          style={{
+                            minWidth: 300,
+                          }}
+                        >
+                          {el?.answers?.map((ele, id) => (
+                            <div
+                              key={`set_XY_female${editIndex}${key}${id}`}
+                              style={{
+                                marginRight: "1em",
+                              }}
+                            >
+                              <TextField
+                                id={`setPart_female${editIndex}${key}${id}`}
+                                key={`setPart_female${editIndex}${key}${id}`}
+                                variant="outlined"
+                                size="small"
+                                placeholder={"Partie"}
+                                value={ele?.content || ""}
+                                onChange={(e) => {
+                                  this.handleChangePart(
+                                    e,
+                                    editIndex,
+                                    key,
+                                    id,
+                                    "edit",
+                                    "female"
+                                  );
+                                }}
+                              />
+                              {id > 0 && (
+                                <IconButton
+                                  variant="contained"
+                                  onClick={() =>
+                                    this.deletePart(
+                                      editIndex,
+                                      key,
+                                      id,
+                                      "female"
+                                    )
+                                  }
+                                  aria-label="delete"
+                                  className={classes.deleteBtn}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              )}
+                              <form
+                                id={`setXY_female${editIndex}${key}${id}`}
+                                noValidate
+                                variant="outlined"
+                                autoComplete="off"
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  margin: "0.5em 0 1.5em",
+                                }}
+                              >
+                                <TextField
+                                  id={`setX${editIndex}${key}${id}`}
+                                  key={`setX${editIndex}${key}${id}`}
+                                  size="small"
+                                  variant="outlined"
+                                  placeholder={"X"}
+                                  style={{
+                                    width: 75,
+                                  }}
+                                  type={"number"}
+                                  onChange={(e) => {
+                                    this.handleChangeX(
+                                      e,
+                                      editIndex,
+                                      key,
+                                      id,
+                                      "edit",
+                                      "female"
+                                    );
+                                  }}
+                                  value={ele?.x || ""}
+                                />
+                                <TextField
+                                  id={`setY${editIndex}${key}${id}`}
+                                  key={`setY${editIndex}${key}${id}`}
+                                  size="small"
+                                  variant="outlined"
+                                  placeholder={"Y"}
+                                  style={{
+                                    marginLeft: "0.5em",
+                                    width: 75,
+                                  }}
+                                  type={"number"}
+                                  onChange={(e) => {
+                                    this.handleChangeY(
+                                      e,
+                                      editIndex,
+                                      key,
+                                      id,
+                                      "edit",
+                                      "female"
+                                    );
+                                  }}
+                                  value={ele?.y || ""}
+                                />
+                              </form>
                             </div>
                           ))}
-                          <img
-                            src={el.image}
-                            width="100%"
-                            height="100%"
-                            alt=""
-                          />
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          <Button
+                            className={classes.button}
+                            variant="contained"
+                            size="small"
+                            color="primary"
+                            startIcon={<AddIcon />}
+                            onClick={() => {
+                              this.addNewPart(key, editIndex, "female");
+                            }}
+                          >
+                            Ajouter une partie
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          {el?.image && (
+                            <div
+                              style={{ position: "relative" }}
+                              className={"body"}
+                            >
+                              {el?.answers?.map((ele, id) => (
+                                <div
+                                  key={`bodySelect_female${id}`}
+                                  className={`bodySelect`}
+                                  id={`bodySelect_female${id}`}
+                                  style={{
+                                    left: `${ele?.x}px`,
+                                    top: `${ele?.y}px`,
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    name="bodySelect"
+                                    value={ele?.content}
+                                    id={`part_female${key}${id}`}
+                                  />
+                                  <label htmlFor={`part_female${key}${id}`}>
+                                    {ele?.content}
+                                  </label>
+                                </div>
+                              ))}
+                              <img
+                                src={el?.image}
+                                width="100%"
+                                height="100%"
+                                alt=""
+                              />
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )}
               </>
             )}
           </DialogContent>
@@ -3168,9 +3771,8 @@ class QuestionsBase extends Component {
             </Button>
             <Button
               disabled={
-                questions[editIndex]?.type !== "body" &&
-                (!questions[editIndex]?.answers[0]?.content ||
-                  !questions[editIndex]?.question)
+                !questions[editIndex]?.answers ||
+                !questions[editIndex]?.question
               }
               onClick={() => this.editQuestion()}
               color="primary"
@@ -3181,8 +3783,7 @@ class QuestionsBase extends Component {
           </DialogActions>
         </Dialog>
         <Dialog
-          fullWidth
-          open={openNewVariableDialog}
+          open={openNewVariableDialog || false}
           onClose={() => {
             this.setState({
               openNewVariableDialog: false,
@@ -3190,7 +3791,7 @@ class QuestionsBase extends Component {
           }}
           aria-labelledby="form-dialog-title"
         >
-          <DialogTitle id="form-dialog-title">Nouvelle variable</DialogTitle>
+          <DialogTitle>Nouvelle variable</DialogTitle>
           <DialogContent>
             <TextField
               required
@@ -3211,6 +3812,7 @@ class QuestionsBase extends Component {
             <p>Constantes (ex.: x,y,z)</p>
             {Object.keys(newVariable?.constants).map((el, id) => (
               <div
+                key={`constante${id}`}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -3247,7 +3849,6 @@ class QuestionsBase extends Component {
                   style={{
                     height: 40,
                   }}
-                  fullWidth
                   value={newVariable.constants[id].question || ""}
                   required
                   variant="outlined"
@@ -3266,8 +3867,10 @@ class QuestionsBase extends Component {
                   <MenuItem value="" disabled>
                     Question
                   </MenuItem>
-                  {items.map((item) => (
-                    <MenuItem value={item?.question}>{item?.question}</MenuItem>
+                  {items.map((item, id) => (
+                    <MenuItem value={item?.question} key={"item" + id}>
+                      {item?.question}
+                    </MenuItem>
                   ))}
                 </Select>
                 {id > 0 && (
@@ -3276,7 +3879,7 @@ class QuestionsBase extends Component {
                     onClick={() => {
                       let j = 0;
                       let cp = JSON.parse(JSON.stringify(newVariable));
-                      const filtered = Object.keys(newVariable.constants)
+                      let filtered = Object.keys(newVariable.constants)
                         .filter((key) => Number(id) !== Number(key))
                         .reduce((obj, key) => {
                           obj[j] = newVariable.constants[key];
@@ -3316,10 +3919,10 @@ class QuestionsBase extends Component {
             >
               Ajouter
             </Button>
-            <p>Calcul en JavaScript (ex.: x+y)</p>
+            <p>Calcul</p>
             <TextField
               required
-              placeholder="Calcul (ex: x+y)"
+              placeholder="Calcul"
               variant="outlined"
               value={newVariable.calc || ""}
               onChange={(e) => {
@@ -3356,8 +3959,7 @@ class QuestionsBase extends Component {
           </DialogActions>
         </Dialog>
         <Dialog
-          fullWidth
-          open={openEditVariableDialog}
+          open={openEditVariableDialog || false}
           onClose={() => {
             this.setState({
               openEditVariableDialog: false,
@@ -3365,9 +3967,7 @@ class QuestionsBase extends Component {
           }}
           aria-labelledby="form-dialog-title"
         >
-          <DialogTitle id="form-dialog-title">
-            Modifier une variable
-          </DialogTitle>
+          <DialogTitle>Modifier une variable</DialogTitle>
           <DialogContent>
             <TextField
               required
@@ -3389,6 +3989,7 @@ class QuestionsBase extends Component {
             {Object.keys(variables[editVariableIndex]?.constants ?? []).map(
               (el, id) => (
                 <div
+                  key={"const_name_" + id}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -3429,7 +4030,6 @@ class QuestionsBase extends Component {
                     style={{
                       height: 40,
                     }}
-                    fullWidth
                     inputProps={{ "aria-label": "Without label" }}
                     displayEmpty
                     value={
@@ -3453,9 +4053,12 @@ class QuestionsBase extends Component {
                       Question
                     </MenuItem>
                     {items.map(
-                      (item) =>
+                      (item, id) =>
                         item?.type === "number" && (
-                          <MenuItem value={item?.question}>
+                          <MenuItem
+                            value={item?.question}
+                            key={"item_question_" + id}
+                          >
                             {item?.question}
                           </MenuItem>
                         )
@@ -3501,10 +4104,10 @@ class QuestionsBase extends Component {
             >
               Ajouter
             </Button>
-            <p>Calcul en JavaScript (ex.: x+y)</p>
+            <p>Calcul</p>
             <TextField
               required
-              placeholder="Calcul (ex: x+y)"
+              placeholder="Calcul"
               variant="outlined"
               value={variables[editVariableIndex]?.calc || ""}
               onChange={(e) => {

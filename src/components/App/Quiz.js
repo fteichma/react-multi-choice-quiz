@@ -16,7 +16,6 @@ class Quiz extends React.Component {
       target: undefined,
       checkedList: [],
       disabledList: [],
-      back: false,
       error: false,
     };
   }
@@ -112,8 +111,8 @@ class Quiz extends React.Component {
     }
   };
   render() {
-    const { custom } = this.props;
-    const { back, error, disabledList } = this.state;
+    const { custom, onAnswerSelected, sex } = this.props;
+    const { error, disabledList } = this.state;
     if (!this.props.notFound) {
       return (
         <div className="container">
@@ -142,9 +141,7 @@ class Quiz extends React.Component {
           )}
           <div
             key={this.props.questionId}
-            className={`questionContainer animate__animated ${
-              back ? `animate__fadeInLeft` : `animate__fadeInRight`
-            }`}
+            className={`questionContainer animate__animated animate__fadeInRight`}
           >
             {this.props.mainImage && (
               <div
@@ -204,7 +201,6 @@ class Quiz extends React.Component {
                               this.props.onKeyPressed(e.target);
                               this.setState({
                                 error: false,
-                                back: false,
                               });
                               setTimeout(() => {
                                 this.setState({
@@ -251,10 +247,9 @@ class Quiz extends React.Component {
                         value={array[key].content}
                         disabled={array[key].answer}
                         onChange={(e) => {
-                          this.props.onAnswerSelected(e.target);
+                          onAnswerSelected(e.target);
                           this.setState({
                             target: undefined,
-                            back: false,
                           });
                         }}
                       />
@@ -339,13 +334,12 @@ class Quiz extends React.Component {
                   `}
                   onClick={() => {
                     const { target } = this.state;
+                    onAnswerSelected(target);
                     if (target?.value) {
                       this.setState({
                         checkedList: [],
                         target: undefined,
-                        back: false,
                       });
-                      this.props.onAnswerSelected(this.state.target);
                     } else {
                       this.setState({
                         error: true,
@@ -368,10 +362,10 @@ class Quiz extends React.Component {
               {/* BODY */}
               {this.props?.type === "body" && (
                 <div className="answerOptions">
-                  {this.props.answerOptions.map((el, id) => (
+                  {this.props.answerOptions[`${sex}`].map((el, id) => (
                     <React.Fragment>
                       <div id={`body${id}`} className="body">
-                        {this.props.answerOptions[id]?.answers.map(
+                        {this.props.answerOptions[`${sex}`][id]?.answers.map(
                           (value, index, arr) => (
                             <div
                               key={`bodySelect${index}`}
@@ -428,7 +422,7 @@ class Quiz extends React.Component {
                         <img
                           width="100%"
                           height="100%"
-                          src={this.props.answerOptions[id]?.image}
+                          src={this.props.answerOptions[`${sex}`][id]?.image}
                           alt=""
                         />
                       </div>
@@ -443,10 +437,9 @@ class Quiz extends React.Component {
                     onClick={() => {
                       const { target, checkedList } = this.state;
                       if (target?.value && checkedList.length) {
-                        this.props.onAnswerSelected(target, checkedList);
+                        onAnswerSelected(target, checkedList);
                         this.setState({
                           checkedList: [],
-                          back: false,
                           target: undefined,
                         });
                       } else {
@@ -492,10 +485,9 @@ class Quiz extends React.Component {
                 onClick={() => {
                   const { target, checkedList } = this.state;
                   if (target?.value && checkedList.length) {
-                    this.props.onAnswerSelected(target, checkedList);
+                    onAnswerSelected(target, checkedList);
                     this.setState({
                       checkedList: [],
-                      back: false,
                       target: undefined,
                     });
                   } else {
@@ -536,7 +528,6 @@ class Quiz extends React.Component {
                 this.props.onBack();
                 this.setState({
                   checkedList: [],
-                  back: true,
                   error: false,
                   target: undefined,
                 });
@@ -571,7 +562,7 @@ class Quiz extends React.Component {
     } else {
       return (
         <div className="container">
-          <span className="info-not-found">Aucun quiz à cette adresse</span>
+          <span>Aucun quiz à cette adresse</span>
         </div>
       );
     }

@@ -101,12 +101,12 @@ class LogInFormBase extends Component {
                 onChange={this.handleChange}
                 value={email || ""}
                 type="email"
-                fullWidth
                 required
                 variant="outlined"
                 size="small"
                 style={{
                   marginBottom: 30,
+                  width: "100%",
                 }}
               />
               <TextField
@@ -117,20 +117,19 @@ class LogInFormBase extends Component {
                 onChange={this.handleChange}
                 value={password || ""}
                 type="password"
-                fullWidth
                 required
                 variant="outlined"
                 size="small"
                 style={{
                   marginBottom: 30,
+                  width: "100%",
                 }}
               />
               <Button
                 /* onClick={this.login} */
                 variant="contained"
                 color="primary"
-                fullWidth
-                style={{ textTransform: "none" }}
+                style={{ textTransform: "none", width: "100%" }}
                 type="submit"
                 disabled={isInvalid}
               >

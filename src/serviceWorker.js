@@ -8,6 +8,8 @@
 // To learn more about the benefits of this model, read https://goo.gl/KwvDNy.
 // This link also includes instructions on opting out of this behavior.
 
+import Notify from "./notify";
+
 const isLocalhost = Boolean(
   window.location.hostname === "localhost" ||
     // [::1] is the IPv6 localhost address.
@@ -38,12 +40,7 @@ export function register(config) {
 
         // Add some additional logging to localhost, pointing developers to the
         // service worker/PWA documentation.
-        navigator.serviceWorker.ready.then(() => {
-          console.log(
-            "This web app is being served cache-first by a service " +
-              "worker. To learn more, visit https://goo.gl/SC7cgQ"
-          );
-        });
+        navigator.serviceWorker.ready.then(() => {});
       } else {
         // Is not local host. Just register service worker
         registerValidSW(swUrl, config);
@@ -65,7 +62,7 @@ function registerValidSW(swUrl, config) {
               // the fresh content will have been added to the cache.
               // It's the perfect time to display a "New content is
               // available; please refresh." message in your web app.
-              console.log("New content is available; please refresh.");
+              Notify("New content is available; please refresh.", "info");
 
               // Execute callback
               if (config.onUpdate) {
@@ -75,7 +72,7 @@ function registerValidSW(swUrl, config) {
               // At this point, everything has been precached.
               // It's the perfect time to display a
               // "Content is cached for offline use." message.
-              console.log("Content is cached for offline use.");
+              Notify("Content is cached for offline use.", "info");
 
               // Execute callback
               if (config.onSuccess) {
@@ -87,7 +84,7 @@ function registerValidSW(swUrl, config) {
       };
     })
     .catch((error) => {
-      console.error("Error during service worker registration:", error);
+      Notify("Error during service worker registration: " + error, "info");
     });
 }
 
@@ -112,8 +109,9 @@ function checkValidServiceWorker(swUrl, config) {
       }
     })
     .catch(() => {
-      console.log(
-        "No internet connection found. App is running in offline mode."
+      Notify(
+        "No internet connection found. App is running in offline mode.",
+        "warning"
       );
     });
 }

@@ -23,6 +23,8 @@ import FormatPaintRoundedIcon from "@material-ui/icons/FormatPaintRounded";
 import EmailRoundedIcon from "@material-ui/icons/EmailRounded";
 import ReceiptIcon from "@material-ui/icons/Receipt";
 
+import { ToastContainer } from "react-toastify";
+
 const AdminPage = () => (
   <AuthUserContext.Consumer>{(authUser) => <Admin />}</AuthUserContext.Consumer>
 );
@@ -108,6 +110,7 @@ class AdminBase extends Component {
       totUsers: 0,
       totQuest: 0,
       totEmail: 0,
+      totSummary: 0,
       loading: false,
     };
   }
@@ -128,6 +131,7 @@ class AdminBase extends Component {
     let db = this.props.firebase.db;
     let responsesRef = db.ref("responses");
     let emailRef = db.ref("email");
+    let summaryRef = db.ref("summary");
     let questionsRef = db.ref("questions");
     responsesRef.on("value", (snap) => {
       let data = snap.val();
@@ -150,6 +154,18 @@ class AdminBase extends Component {
       } else {
         this.setState({
           totEmail: 0,
+        });
+      }
+    });
+    summaryRef.on("value", (snap) => {
+      let data = snap.val();
+      if (data) {
+        this.setState({
+          totSummary: Object.keys(data).length,
+        });
+      } else {
+        this.setState({
+          totSummary: 0,
         });
       }
     });
@@ -274,6 +290,7 @@ class AdminBase extends Component {
                 totUsers={this.state.totUsers}
                 totQuest={this.state.totQuest}
                 totEmail={this.state.totEmail}
+                totSummary={this.state.totSummary}
               />
             )}
           </TabPanel>
@@ -307,6 +324,7 @@ class AdminBase extends Component {
            </Button>
       </TabPanel> */}
         </div>
+        <ToastContainer />
       </MuiThemeProvider>
     );
   }

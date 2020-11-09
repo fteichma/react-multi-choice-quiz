@@ -20,6 +20,8 @@ import OutsideClickHandler from "react-outside-click-handler";
 
 import { green } from "@material-ui/core/colors";
 
+import Notify from "../../notify";
+
 const styles = (theme) => ({
   root: {
     width: "100%",
@@ -96,7 +98,10 @@ class CustomBase extends Component {
         "state_changed",
         (snapshot) => {},
         (error) => {
-          console.log(error);
+          Notify(
+            "Problème lors du téléversement de l'image : " + error,
+            "error"
+          );
         },
         () => {
           storage
@@ -123,9 +128,15 @@ class CustomBase extends Component {
     const { custom } = this.state;
     let db = this.props.firebase.db;
     let questionsRef = db.ref(`custom`);
-    questionsRef.set(custom);
-    this.setState({
-      showSave: false,
+    questionsRef.set(custom, (error) => {
+      if (error) {
+        Notify("Problème lors de la sauvegarde : " + error, "error");
+      } else {
+        this.setState({
+          showSave: false,
+        });
+        Notify("Sauvegardé !", "success");
+      }
     });
   };
 
