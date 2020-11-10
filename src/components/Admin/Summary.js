@@ -3,7 +3,7 @@ import React, { Component } from "react";
 import EditorJs from "react-editor-js";
 
 import {
-  Button,
+  Button as Btn,
   IconButton,
   FormControl,
   Select as SelectMUI,
@@ -31,18 +31,13 @@ import { green } from "@material-ui/core/colors";
 import Embed from "@editorjs/embed";
 import Table from "@editorjs/table";
 import List from "@editorjs/list";
-import Warning from "@editorjs/warning";
-import Code from "@editorjs/code";
-import LinkTool from "@editorjs/link";
-import Image from "@editorjs/image";
+import ImageTool from "@editorjs/image";
 import Raw from "@editorjs/raw";
 import Header from "@editorjs/header";
-import Quote from "@editorjs/quote";
 import Marker from "@editorjs/marker";
-import CheckList from "@editorjs/checklist";
-import Delimiter from "@editorjs/delimiter";
 import InlineCode from "@editorjs/inline-code";
 import SimpleImage from "@editorjs/simple-image";
+import Button from "@ikbenbas/editorjs-button";
 
 import Notify from "../../notify";
 
@@ -112,7 +107,7 @@ const SaveButton = withStyles((theme) => ({
       backgroundColor: green[700],
     },
   },
-}))(Button);
+}))(Btn);
 
 const SummaryPage = (props) => (
   <div>
@@ -122,7 +117,7 @@ const SummaryPage = (props) => (
 
 class SummaryBase extends Component {
   constructor(props) {
-    super();
+    super(props);
     this.state = {
       idList: [],
       id: localStorage.getItem("id-summary")
@@ -131,6 +126,7 @@ class SummaryBase extends Component {
       summary: {},
       loading: true,
       anchorMoreSummary: undefined,
+      reloaded: false,
     };
     this.instanceRef = React.createRef();
     this.getSummary = this.getSummary.bind(this);
@@ -139,18 +135,19 @@ class SummaryBase extends Component {
     this.getSummary().then(() => {
       this.setState({
         loading: false,
+        reloaded: true,
       });
     });
   }
   onSave = async () => {
     const savedData = await this.instanceRef.current.save();
-    let design = savedData;
     let summary = {
-      design,
+      design: savedData,
       html: "",
     };
     this.setState({
       summary,
+      reloaded: false,
     });
     this.saveDb(summary);
   };
@@ -171,6 +168,7 @@ class SummaryBase extends Component {
         } else {
           this.setState({
             showSave: false,
+            reloaded: true,
           });
           Notify("Sauvegardé !", "success");
         }
@@ -263,7 +261,15 @@ class SummaryBase extends Component {
 
   render() {
     const { classes } = this.props;
-    const { id, idList, anchorMoreSummary, loading, summary } = this.state;
+    const { storage } = this.props.firebase;
+    const {
+      id,
+      idList,
+      anchorMoreSummary,
+      loading,
+      summary,
+      reloaded,
+    } = this.state;
     return (
       <>
         {loading ? (
@@ -339,7 +345,7 @@ class SummaryBase extends Component {
                   Supprimer
                 </MenuItem>
               </Menu>
-              <Button
+              <Btn
                 className={classes.button}
                 variant="contained"
                 size="small"
@@ -350,7 +356,7 @@ class SummaryBase extends Component {
                 }}
               >
                 Nouveau
-              </Button>
+              </Btn>
               <SaveButton
                 variant="contained"
                 color="primary"
@@ -362,7 +368,7 @@ class SummaryBase extends Component {
                 Sauvegarder
               </SaveButton>
             </div>
-            {summary && (
+            {summary && reloaded && (
               <EditorJs
                 instanceRef={(instance) =>
                   (this.instanceRef.current = instance)
@@ -370,18 +376,39 @@ class SummaryBase extends Component {
                 enableReInitialize
                 tools={{
                   embed: Embed,
+                  header: Header,
                   table: Table,
                   marker: Marker,
                   list: List,
-                  warning: Warning,
-                  code: Code,
-                  linkTool: LinkTool,
-                  image: Image,
+                  image: {
+                    class: ImageTool,
+                    config: {
+                      uploader: {
+                        async uploadByFile(file) {
+                          const imageRef = storage.ref(`images/${file.name}`);
+                          await imageRef.put(file);
+                          return imageRef.getDownloadURL().then((url) => {
+                            console.log(url);
+                            return {
+                              success: 1,
+                              file: {
+                                url,
+                              },
+                            };
+                          });
+                        },
+                        uploadByUrl(url) {
+                          return {
+                            success: 1,
+                            file: {
+                              url: `${url}`,
+                            },
+                          };
+                        },
+                      },
+                    },
+                  },
                   raw: Raw,
-                  header: Header,
-                  quote: Quote,
-                  checklist: CheckList,
-                  delimiter: Delimiter,
                   inlineCode: InlineCode,
                   simpleImage: SimpleImage,
                 }}

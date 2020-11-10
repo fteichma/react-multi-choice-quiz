@@ -211,37 +211,38 @@ class CustomBase extends Component {
               marginRight: "1em",
             }}
           >
-            Taille (en px.)
+            Taille
           </p>
           <span>{custom?.logo?.width}px</span>
-
-          <Slider
-            style={{
-              width: 250,
-              marginLeft: "2em",
-            }}
-            value={custom?.logo?.width}
-            min={30}
-            step={1}
-            max={200}
-            valueLabelFormat={`${custom?.logo?.width}px`}
-            onChange={(e, newValue) => {
-              if (newValue) {
-                this.setState((state) => ({
-                  showSave: true,
-                  custom: {
-                    ...state.custom,
-                    logo: {
-                      ...state.custom.logo,
-                      width: newValue,
+          {custom?.logo?.width && (
+            <Slider
+              style={{
+                width: 250,
+                marginLeft: "2em",
+              }}
+              value={custom?.logo?.width}
+              defaultValue={custom?.logo?.width}
+              min={20}
+              step={2}
+              max={250}
+              onChange={(e, newValue) => {
+                if (newValue) {
+                  this.setState((state) => ({
+                    showSave: true,
+                    custom: {
+                      ...state.custom,
+                      logo: {
+                        ...state.custom.logo,
+                        width: newValue,
+                      },
                     },
-                  },
-                }));
-              }
-            }}
-            valueLabelDisplay="auto"
-            aria-labelledby="non-linear-slider"
-          />
+                  }));
+                }
+              }}
+              valueLabelDisplay="auto"
+              aria-labelledby="non-linear-slider"
+            />
+          )}
         </div>
 
         <div className="categories-settings">
