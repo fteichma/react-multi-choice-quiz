@@ -240,7 +240,7 @@ class AdminBase extends Component {
             />
             <Tab
               icon={
-                <FormatPaintRoundedIcon
+                <ReceiptIcon
                   style={{
                     marginRight: "0.5em",
                     width: 20,
@@ -248,7 +248,7 @@ class AdminBase extends Component {
                   }}
                 />
               }
-              label="Personnalisation"
+              label="Récapitulatifs"
               {...a11yProps(3)}
               className={classes.tab}
             />
@@ -268,7 +268,7 @@ class AdminBase extends Component {
             />
             <Tab
               icon={
-                <ReceiptIcon
+                <FormatPaintRoundedIcon
                   style={{
                     marginRight: "0.5em",
                     width: 20,
@@ -276,11 +276,10 @@ class AdminBase extends Component {
                   }}
                 />
               }
-              label="Récapitulatifs"
+              label="Personnalisation"
               {...a11yProps(5)}
               className={classes.tab}
             />
-            {/* <Tab label="Mon compte" {...a11yProps(4)} className={classes.tab}/> */}
           </Tabs>
           <TabPanel value={Number(this.state.tab)} index={0}>
             {loading ? (
@@ -306,23 +305,14 @@ class AdminBase extends Component {
             )}
           </TabPanel>
           <TabPanel value={Number(this.state.tab)} index={3}>
-            {loading ? <Loading /> : <Custom />}
+            {loading ? <Loading /> : <Summary />}
           </TabPanel>
           <TabPanel value={Number(this.state.tab)} index={4}>
             {loading ? <Loading /> : <EmailingPage />}
           </TabPanel>
           <TabPanel value={Number(this.state.tab)} index={5}>
-            {loading ? <Loading /> : <Summary />}
+            {loading ? <Loading /> : <Custom />}
           </TabPanel>
-          {/* <TabPanel value={tab} index={4}>
-        <h1>Mon compte</h1>
-        <Button
-             variant="contained"
-             color="primary"
-             style={{ textTransform: "none" }}>
-            Se déconnecter
-           </Button>
-      </TabPanel> */}
         </div>
         <ToastContainer />
       </MuiThemeProvider>
