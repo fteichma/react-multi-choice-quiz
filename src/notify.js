@@ -1,16 +1,14 @@
 import React from "react";
 import { toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import * as Icon from "react-feather";
-
+import {
+  ErrorOutlineRounded,
+  ReportProblemOutlined,
+  CheckCircleOutlineRounded,
+  InfoOutlined,
+  CloseRounded,
+} from "@material-ui/icons";
 const Notify = (txt = "Success!", type = "success", btn, action) => {
-  var autoCloseDelay = 0;
-  if (type === "success") autoCloseDelay = 2000;
-  else if (type === "alert") autoCloseDelay = 5000;
-  else {
-    autoCloseDelay = 5000;
-  }
-
   toast(
     <div
       style={{
@@ -23,38 +21,35 @@ const Notify = (txt = "Success!", type = "success", btn, action) => {
           alignItems: "center",
           marginBottom: "1em",
           fontSize: 14,
+          color: "white",
         }}
       >
         {type === "success" && (
-          <Icon.CheckCircle
-            size={18}
+          <CheckCircleOutlineRounded
             style={{
-              marginRight: "0.75em",
+              marginRight: "0.5em",
             }}
           />
         )}
         {type === "warning" && (
-          <Icon.AlertTriangle
-            size={18}
+          <ReportProblemOutlined
             style={{
-              marginRight: "0.75em",
+              marginRight: "0.5em",
             }}
           />
         )}
 
         {type === "error" && (
-          <Icon.X
-            size={18}
+          <ErrorOutlineRounded
             style={{
-              marginRight: "0.75em",
+              marginRight: "0.5em",
             }}
           />
         )}
         {type === "info" && (
-          <Icon.Info
-            size={18}
+          <InfoOutlined
             style={{
-              marginRight: "0.75em",
+              marginRight: "0.5em",
             }}
           />
         )}
@@ -85,7 +80,7 @@ const Notify = (txt = "Success!", type = "success", btn, action) => {
     {
       position: "top-right",
       transition: Slide,
-      closeButton: <Icon.X size={16} />,
+      closeButton: <CloseRounded fontSize="small" />,
       type:
         type === "success"
           ? toast.TYPE.SUCCESS
@@ -96,10 +91,7 @@ const Notify = (txt = "Success!", type = "success", btn, action) => {
           : type === "info"
           ? toast.TYPE.INFO
           : type === "default",
-      // ? type === 'error'
-      // : toast.TYPE.INFO
-      // ? type === 'info',
-      autoClose: autoCloseDelay,
+      autoClose: 3000,
     }
   );
 };

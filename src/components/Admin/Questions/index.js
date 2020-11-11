@@ -675,7 +675,6 @@ class QuestionsBase extends Component {
     let file = e?.target?.files[0];
     const image = file;
     const name = this.getRandomString(24);
-    console.log(sex);
     if (image) {
       const uploadTask = storage.ref(`images/${name}`).put(image);
       uploadTask.on(
@@ -823,12 +822,12 @@ class QuestionsBase extends Component {
     );
   };
 
-  onSave = () => {
+  async onSave() {
     const { items, variablesItems, id } = this.state;
     let db = this.props.firebase.db;
-    db.ref(`questions/${id}`).set(
-      { questions: items, variables: variablesItems, id },
-      (error) => {
+    await db
+      .ref(`questions/${id}`)
+      .set({ questions: items, variables: variablesItems, id }, (error) => {
         if (error) {
           Notify("Problème lors de la sauvegarde : " + error, "error");
         } else {
@@ -837,18 +836,28 @@ class QuestionsBase extends Component {
           });
           Notify("Sauvegardé !", "success");
         }
-      }
-    );
-  };
+      });
+  }
 
-  onDelete = () => {
+  async onDelete() {
     let db = this.props.firebase.db;
     const { id } = this.state;
     if (id) {
-      let questionsRef = db.ref(`questions/${id}`);
-      questionsRef.remove();
+      await db.ref(`questions/${id}`).remove(() => {
+        const { idList } = this.state;
+        let lg = idList.length - 1;
+        let id = idList[lg >= 0 ? lg : 0].value;
+        this.setState(
+          {
+            id,
+          },
+          () => {
+            this.getQuestionsByRef(id);
+          }
+        );
+      });
     }
-  };
+  }
 
   deleteCondition = (_id, key) => {
     let db = this.props.firebase.db;
@@ -951,9 +960,9 @@ class QuestionsBase extends Component {
     });
   };
 
-  getQuestions = () => {
+  async getQuestions() {
     let db = this.props.firebase.db;
-    db.ref("questions").on("value", (snap) => {
+    await db.ref("questions").on("value", (snap) => {
       let data = snap.val();
       if (data) {
         let questions = Object.keys(data).map((i) => data[i]);
@@ -976,7 +985,7 @@ class QuestionsBase extends Component {
         });
       }
     });
-  };
+  }
 
   getQuestionsByRef(id) {
     let db = this.props.firebase.db;
@@ -1228,13 +1237,12 @@ class QuestionsBase extends Component {
               <MenuItem value="" disabled>
                 Questionnaires
               </MenuItem>
-              {idList &&
-                idList.map((el, id) => (
-                  <MenuItem
-                    key={"questionnaire_" + id}
-                    value={`${el?.value}`}
-                  >{`Questionnaire nº${id + 1}`}</MenuItem>
-                ))}
+              {idList?.map((el, id) => (
+                <MenuItem
+                  key={"questionnaire_" + id}
+                  value={`${el?.value}`}
+                >{`Questionnaire nº${id + 1}`}</MenuItem>
+              ))}
             </Select>
           </FormControl>
           <IconButton
@@ -2390,12 +2398,11 @@ class QuestionsBase extends Component {
                         <MenuItem value="" disabled>
                           Emailing
                         </MenuItem>
-                        {idListEmail &&
-                          idListEmail.map((el, id) => (
-                            <MenuItem key={id} value={el?.value}>{`Email nº${
-                              id + 1
-                            }`}</MenuItem>
-                          ))}
+                        {idListEmail?.map((el, id) => (
+                          <MenuItem key={id} value={el?.value}>{`Email nº${
+                            id + 1
+                          }`}</MenuItem>
+                        ))}
                       </Select>
                       <p
                         style={{
@@ -2427,13 +2434,12 @@ class QuestionsBase extends Component {
                         <MenuItem value="" disabled>
                           Récapitulatifs
                         </MenuItem>
-                        {idListSummary &&
-                          idListSummary.map((el, id) => (
-                            <MenuItem
-                              key={"recap_" + id}
-                              value={el?.value}
-                            >{`Récapitulatif nº${id + 1}`}</MenuItem>
-                          ))}
+                        {idListSummary?.map((el, id) => (
+                          <MenuItem
+                            key={"recap_" + id}
+                            value={el?.value}
+                          >{`Récapitulatif nº${id + 1}`}</MenuItem>
+                        ))}
                       </Select>
                     </div>
                     <hr />

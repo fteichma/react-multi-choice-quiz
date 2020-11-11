@@ -19,6 +19,13 @@ class Quiz extends React.Component {
       error: false,
     };
   }
+  validateEmail = (email) => {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+  };
+  isBlank = (str) => {
+    return !str || /^\s*$/.test(str);
+  };
   onMultiCheck = (e) => {
     const { checkedList } = this.state;
     this.setState({
@@ -197,16 +204,24 @@ class Quiz extends React.Component {
                         onKeyPress={(e) => {
                           let keyCode = e.keyCode || e.charCode;
                           if (keyCode === 13) {
-                            if (e.target.value) {
-                              this.props.onKeyPressed(e.target);
-                              this.setState({
-                                error: false,
-                              });
-                              setTimeout(() => {
+                            if (!this.isBlank(e.target.value)) {
+                              if (
+                                (e.target.type === "email" &&
+                                  this.validateEmail(e.target.value)) ||
+                                e.target.type !== "email"
+                              ) {
+                                this.props.onKeyPressed(e.target);
                                 this.setState({
-                                  target: undefined,
+                                  error: false,
                                 });
-                              }, 300);
+                                setTimeout(() => {
+                                  this.setState({
+                                    target: undefined,
+                                  });
+                                }, 300);
+                              } else {
+                                Notify("Adresse email non valide !", "error");
+                              }
                             } else {
                               this.setState({ error: true });
                               Notify("Veuillez compléter le champ", "error");
@@ -335,17 +350,18 @@ class Quiz extends React.Component {
                   onClick={() => {
                     const { target } = this.state;
                     onAnswerSelected(target);
+                    console.log(target);
                     if (target?.value) {
                       this.setState({
                         checkedList: [],
                         target: undefined,
                       });
                     } else {
+                      Notify("Veuillez compléter le champ", "error");
                       this.setState({
                         error: true,
                         target: undefined,
                       });
-                      Notify("Veuillez compléter le champ", "error");
                     }
                   }}
                 >
@@ -508,7 +524,7 @@ class Quiz extends React.Component {
                     font-weight: 500;
                   `}
                 >
-                  {this.props.questionId === this.props.questionId?.length
+                  {this.props.questionId === this.props.questionTotal
                     ? ` Terminer `
                     : ` Continuer `}
                 </span>

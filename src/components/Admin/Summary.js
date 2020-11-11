@@ -37,34 +37,17 @@ import Header from "@editorjs/header";
 import Marker from "@editorjs/marker";
 import InlineCode from "@editorjs/inline-code";
 import SimpleImage from "@editorjs/simple-image";
-import Button from "@ikbenbas/editorjs-button";
+import edjsParser from "editorjs-parser";
 
 import Notify from "../../notify";
 
-const default_html = `
-`;
-
 const default_design = {
-  time: 1604656400842,
+  time: new Date().getTime(),
   blocks: [
-    {
-      type: "header",
-      data: {
-        text: "Titre principal",
-        level: 1,
-      },
-    },
     {
       type: "paragraph",
       data: {
-        text: "Paragraph",
-      },
-    },
-    {
-      type: "header",
-      data: {
-        text: "Sous-titre",
-        level: 2,
+        text: "",
       },
     },
   ],
@@ -127,6 +110,7 @@ class SummaryBase extends Component {
       loading: true,
       anchorMoreSummary: undefined,
       reloaded: false,
+      showSave: false,
     };
     this.instanceRef = React.createRef();
     this.getSummary = this.getSummary.bind(this);
@@ -140,13 +124,11 @@ class SummaryBase extends Component {
     });
   }
   onSave = async () => {
-    const savedData = await this.instanceRef.current.save();
-    let summary = {
-      design: savedData,
-      html: "",
-    };
+    const design = await this.instanceRef.current.save();
+    const parser = new edjsParser();
+    const html = parser.parse(design);
+    let summary = { design, html };
     this.setState({
-      summary,
       reloaded: false,
     });
     this.saveDb(summary);
@@ -188,6 +170,9 @@ class SummaryBase extends Component {
       createdAt: firebase.database.ServerValue.TIMESTAMP,
       id: newKey,
     });
+    this.setState({
+      reloaded: false,
+    });
     setTimeout(() => {
       this.setState({
         id: newKey,
@@ -196,18 +181,18 @@ class SummaryBase extends Component {
     }, 1000);
   };
 
-  onDelete = () => {
+  async onDelete() {
     let db = this.props.firebase.db;
     const { id } = this.state;
     if (id) {
-      let questionsRef = db.ref(`summary/${id}`);
-      questionsRef.remove();
+      await db.ref(`summary/${id}`).remove();
     }
-  };
+  }
 
   getSummaryByRef = (key) => {
     this.setState({
       id: key,
+      reloaded: true,
     });
     localStorage.setItem("id-summary", key);
   };
@@ -232,6 +217,13 @@ class SummaryBase extends Component {
         });
       }
     });
+    await summaryRef.on("child_removed", (snap, prevKey) => {
+      const { idList } = this.state;
+      let lg = idList.length;
+      this.setState({
+        id: idList[lg]?.value,
+      });
+    });
   }
 
   async newSummary() {
@@ -240,16 +232,23 @@ class SummaryBase extends Component {
     let newSummaryRef = summaryRef.push();
     let newKey = newSummaryRef.key;
     this.setState({
-      refresh: true,
+      reloaded: false,
     });
-    await newSummaryRef.set({
-      summary: {
-        design: default_design,
-        html: default_html,
-      },
-      createdAt: firebase.database.ServerValue.TIMESTAMP,
-      id: newKey,
-    });
+    await newSummaryRef
+      .set({
+        summary: {
+          design: default_design,
+          html: "",
+        },
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        id: newKey,
+      })
+      .then(() => {
+        this.setState({
+          id: newKey,
+          reloaded: true,
+        });
+      });
   }
 
   /*   onLoad = (design) => {
@@ -388,7 +387,6 @@ class SummaryBase extends Component {
                           const imageRef = storage.ref(`images/${file.name}`);
                           await imageRef.put(file);
                           return imageRef.getDownloadURL().then((url) => {
-                            console.log(url);
                             return {
                               success: 1,
                               file: {
