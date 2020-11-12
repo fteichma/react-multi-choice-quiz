@@ -13,6 +13,8 @@ import Loading from "../Loading";
 
 import Notify from "../../notify";
 
+import stringMath from "string-math";
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -34,6 +36,7 @@ class App extends Component {
       notFound: true,
       mainImage: undefined,
       sex: "male",
+      var_answers: {},
     };
     this.handleAnswerSelected = this.handleAnswerSelected.bind(this);
     this.handleKeyPressed = this.handleKeyPressed.bind(this);
@@ -70,9 +73,13 @@ class App extends Component {
       let data = snap.val();
       if (data) {
         let questions = data?.questions;
+        let conditions = data?.conditions;
+        let variables = data?.variables;
         if (questions) {
           this.setState({
             questions,
+            conditions,
+            variables,
             mainImage: questions[0]?.mainImage,
             question: questions[0]?.question,
             answerOptions: questions[0]?.answers,
@@ -138,8 +145,13 @@ class App extends Component {
     let responsesRef = db.ref("responses");
     let newResponseRef = responsesRef.push();
     let date = new Date();
+    let _var_answers = this.getVar();
+    let _answers = answers;
+    for (let i of _var_answers) {
+      _answers.push(i);
+    }
     newResponseRef.set({
-      answers,
+      answers: _answers,
       date: date.toLocaleString(),
       createdAt: firebase.database.ServerValue.TIMESTAMP,
     });
@@ -186,6 +198,38 @@ class App extends Component {
     this.handleAnswerSelected(event);
   }
 
+  getVar() {
+    const { variables, answers } = this.state;
+    let _var_answers = [];
+    for (let i = 0; i < answers.length; i++) {
+      for (let j = 0; j < variables.length; j++) {
+        if (variables[j]?.constants && answers[i]?.question) {
+          for (let k = 0; k < variables[j].constants.length; k++) {
+            if (variables[j].constants[k]?.question === answers[i].question) {
+              let _calc = _var_answers[j]?.value
+                ? _var_answers[j].value.toString()
+                : variables[j].calc.toString();
+              let _name_var = variables[j].constants[k].name.toString();
+              let _name = variables[j].name.toString();
+              let _value = answers[i].value.toString();
+              _calc = _calc.split(_name_var).join(_value);
+              _calc = stringMath(_calc.toString())
+                ? stringMath(_calc.toString()).toString()
+                : _calc.toString();
+              _var_answers[j] = {
+                value: _calc,
+                question: _name,
+                name: _name,
+                type: stringMath(_calc.toString()) ? "number" : "text",
+              };
+            }
+          }
+        }
+      }
+    }
+    return _var_answers;
+  }
+
   setUserAnswer(target, checkedList) {
     if (target.value === "Homme") {
       this.setState({
@@ -196,22 +240,25 @@ class App extends Component {
         sex: "female",
       });
     }
-    this.setState((state, props) => ({
-      answersCount: {
-        ...state.answersCount,
-        [target.value]: (state.answersCount[target.value] || 0) + 1,
-      },
-      answer: target,
-      answers: [
-        ...state.answers,
-        {
-          question: state.question,
-          value: checkedList?.length ? checkedList : target.value,
-          type: target.type,
-          name: target.name,
+    this.setState(
+      (state, props) => ({
+        answersCount: {
+          ...state.answersCount,
+          [target.value]: (state.answersCount[target.value] || 0) + 1,
         },
-      ],
-    }));
+        answer: target,
+        answers: [
+          ...state.answers,
+          {
+            question: state.question,
+            value: checkedList?.length ? checkedList : target.value,
+            type: target.type,
+            name: target.name,
+          },
+        ],
+      }),
+      () => {}
+    );
   }
 
   setBackQuestion = () => {
@@ -300,7 +347,7 @@ class App extends Component {
               notFound={notFound}
             />
           ) : (
-            <Summary answer={this.state.answer} custom={this.state.custom} />
+            <Summary answer={answer} custom={custom} />
           )}
         </div>
       </div>

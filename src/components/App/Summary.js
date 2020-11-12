@@ -1,4 +1,5 @@
 import React from "react";
+import ReactHtmlParser from "react-html-parser";
 
 function Summary(props) {
   return (

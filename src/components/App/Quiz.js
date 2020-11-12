@@ -53,7 +53,7 @@ class Quiz extends React.Component {
     if (e?.target?.checked) {
       let value = e.target.value;
       let _disabledList = [];
-      if (value === "Ailes d'ange" || value === "Culotte de cheval") {
+      /* if (value === "Ailes d'ange" || value === "Culotte de cheval") {
         _disabledList = [
           "Cou",
           "Pli du soutien-gorge",
@@ -98,7 +98,7 @@ class Quiz extends React.Component {
           "Mollets",
         ];
         _disabledList = _disabledList.filter((e) => e !== value);
-      }
+      } */
       let ary = [...checkedList, value];
       this.setState((state) => ({
         checkedList: ary,
@@ -350,7 +350,6 @@ class Quiz extends React.Component {
                   onClick={() => {
                     const { target } = this.state;
                     onAnswerSelected(target);
-                    console.log(target);
                     if (target?.value) {
                       this.setState({
                         checkedList: [],
