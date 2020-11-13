@@ -5,10 +5,12 @@ function Summary(props) {
   return (
     <div
       className="thankYou"
-      style={{ backgroundColor: props?.custom?.bgColor }}
+      style={{
+        backgroundColor: props?.custom?.bgColor,
+        color: props?.custom?.textColor?.title,
+      }}
     >
-      <h2>Merci pour votre participation !</h2>
-      <p>Vous recevrez un email récapitulatif d'ici quelques instants !</p>
+      {ReactHtmlParser(props.summaryHtml ?? "")}
     </div>
   );
 }

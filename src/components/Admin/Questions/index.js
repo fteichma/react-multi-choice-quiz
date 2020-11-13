@@ -2383,12 +2383,12 @@ class QuestionsBase extends Component {
                         }}
                         inputProps={{ "aria-label": "Without label" }}
                         displayEmpty
-                        value={conditions[id]?.sendEmail?.id || ""}
+                        value={conditions[id]?.sendEmail || ""}
                         onChange={(e) => {
-                          const { conditions, email } = this.state;
+                          const { conditions } = this.state;
                           let cp = conditions;
                           let index = e.target.value;
-                          cp[id].sendEmail = email[index];
+                          cp[id].sendEmail = index;
                           this.setState({
                             conditions: cp,
                             saveConditions: true,
@@ -2419,12 +2419,12 @@ class QuestionsBase extends Component {
                         }}
                         inputProps={{ "aria-label": "Without label" }}
                         displayEmpty
-                        value={conditions[id]?.showSummary?.id || ""}
+                        value={conditions[id]?.showSummary || ""}
                         onChange={(e) => {
-                          const { conditions, summary } = this.state;
+                          const { conditions } = this.state;
                           let cp = conditions;
                           let index = e.target.value;
-                          cp[id].showSummary = summary[index];
+                          cp[id].showSummary = index;
                           this.setState({
                             conditions: cp,
                             saveConditions: true,

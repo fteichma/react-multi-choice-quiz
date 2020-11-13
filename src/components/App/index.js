@@ -37,6 +37,10 @@ class App extends Component {
       mainImage: undefined,
       sex: "male",
       var_answers: {},
+      email: undefined,
+      custom: undefined,
+      summary: undefined,
+      summaryHtml: "",
     };
     this.handleAnswerSelected = this.handleAnswerSelected.bind(this);
     this.handleKeyPressed = this.handleKeyPressed.bind(this);
@@ -44,6 +48,8 @@ class App extends Component {
 
   componentDidMount() {
     this.getQuestions();
+    this.getEmail();
+    this.getSummary();
     this.getCustom();
   }
 
@@ -53,10 +59,10 @@ class App extends Component {
     this.getQuestionsByRef(params?.id);
   }
 
-  getCustom() {
+  async getCustom() {
     let db = this.props.firebase.db;
-    let questionsRef = db.ref(`custom`);
-    questionsRef.on("value", (snap) => {
+    let customRef = db.ref(`custom`);
+    await customRef.on("value", (snap) => {
       let data = snap.val();
       if (data) {
         this.setState({
@@ -66,10 +72,36 @@ class App extends Component {
     });
   }
 
-  getQuestionsByRef(id) {
+  async getSummary() {
+    let db = this.props.firebase.db;
+    let summaryRef = db.ref(`summary`);
+    await summaryRef.on("value", (snap) => {
+      let data = snap.val();
+      if (data) {
+        this.setState({
+          summary: data,
+        });
+      }
+    });
+  }
+
+  async getEmail() {
+    let db = this.props.firebase.db;
+    let emailRef = db.ref(`email`);
+    await emailRef.on("value", (snap) => {
+      let data = snap.val();
+      if (data) {
+        this.setState({
+          email: data,
+        });
+      }
+    });
+  }
+
+  async getQuestionsByRef(id) {
     let db = this.props.firebase.db;
     let questionsRef = db.ref(`questions/${id}`);
-    questionsRef.on("value", (snap) => {
+    await questionsRef.on("value", (snap) => {
       let data = snap.val();
       if (data) {
         let questions = data?.questions;
@@ -140,25 +172,30 @@ class App extends Component {
   };
 
   setAnswersDb = () => {
-    const { answers } = this.state;
+    const { answers, email, variables, conditions, summary } = this.state;
     let db = this.props.firebase.db;
     let responsesRef = db.ref("responses");
     let newResponseRef = responsesRef.push();
     let date = new Date();
-    let _var_answers = this.getVar();
+    // GET CUSTOMS VARIABLES AND ADD TO ANSWERS
     let _answers = answers;
-    for (let i of _var_answers) {
-      _answers.push(i);
+    if (variables) {
+      let _var_answers = this.getVar(variables);
+      for (let i of _var_answers) {
+        _answers.push(i);
+      }
     }
     newResponseRef.set({
       answers: _answers,
       date: date.toLocaleString(),
       createdAt: firebase.database.ServerValue.TIMESTAMP,
     });
-    let email = Object.keys(answers).filter((el, key) => {
-      return answers[key].type === "email";
-    });
-    let listAnswers =
+    let receiver_email = Object.keys(answers)
+      .filter((el, key) => {
+        return answers[key].type === "email";
+      })
+      .toString();
+    /* let listAnswers =
       "<table>" +
       "<thead>" +
       "<tr>" +
@@ -181,14 +218,96 @@ class App extends Component {
         );
       })
       .join("");
-    listAnswers += "</tbody></table>";
+    listAnswers += "</tbody></table>"; */
+    let _id = this.getConditionIndex(_answers);
+    let id_email = conditions[_id]?.sendEmail;
+    let id_summary = conditions[_id]?.showSummary;
+    let emailHtml = email[id_email]?.email?.html;
+    let summaryHtml = summary[id_summary]?.summary?.html;
     this.sendEmail(
-      answers[email.toString()]?.value,
+      answers[receiver_email]?.value,
       "DELEO - Quiz complété avec succès !",
       JSON.stringify(answers),
-      listAnswers.toString(),
+      emailHtml ? emailHtml.toString() : "",
       "Manon"
     );
+    this.setState({
+      summaryHtml: summaryHtml ?? "",
+    });
+  };
+
+  getConditionIndex = (answers) => {
+    const { conditions } = this.state;
+    let bool = false;
+    for (let i = 0; i < conditions.length; i++) {
+      let _conditions = conditions[i]?.conditions;
+      for (let j = 0; j < _conditions.length; j++) {
+        bool = false;
+        let operator = _conditions[j]?.operator;
+        let index = answers.findIndex(
+          (answer) => answer?.question === _conditions[j]?.question
+        );
+        let value1 = _conditions[j].value;
+        let value2 = answers[index].value;
+        if (Array.isArray(value1) || Array.isArray(value2)) {
+          value1 = value1.sort().map((v) => v.toString().toLowerCase());
+          value2 = value2.sort().map((v) => v.toString().toLowerCase());
+        } else {
+          value1 = value1.toString().toLowerCase();
+          value2 = value2.toString().toLowerCase();
+        }
+        if (operator === "===") {
+          if (_conditions[j]?.question === answers[index]?.question) {
+            if (value1 === value2) {
+              bool = true;
+            } else {
+              bool = false;
+              break;
+            }
+          }
+        } else if (operator === ">=") {
+          if (_conditions[j]?.question === answers[index]?.question) {
+            if (value1 >= value2) {
+              bool = true;
+            } else {
+              bool = false;
+              break;
+            }
+          }
+        } else if (operator === "<=") {
+          if (_conditions[j]?.question === answers[index]?.question) {
+            if (value1 <= value2) {
+              bool = true;
+            } else {
+              bool = false;
+              break;
+            }
+          }
+        } else if (operator === "<") {
+          if (_conditions[j]?.question === answers[index]?.question) {
+            if (value1 < value2) {
+              bool = true;
+            } else {
+              bool = false;
+              break;
+            }
+          }
+        } else if (operator === ">") {
+          if (_conditions[j]?.question === answers[index]?.question) {
+            if (value1 > value2) {
+              bool = true;
+            } else {
+              bool = false;
+              break;
+            }
+          }
+        }
+      }
+      if (bool) {
+        return i;
+      }
+    }
+    return "default";
   };
 
   handleKeyPressed(event) {
@@ -198,8 +317,8 @@ class App extends Component {
     this.handleAnswerSelected(event);
   }
 
-  getVar() {
-    const { variables, answers } = this.state;
+  getVar(variables) {
+    const { answers } = this.state;
     let _var_answers = [];
     for (let i = 0; i < answers.length; i++) {
       for (let j = 0; j < variables.length; j++) {
@@ -240,41 +359,35 @@ class App extends Component {
         sex: "female",
       });
     }
-    this.setState(
-      (state, props) => ({
-        answersCount: {
-          ...state.answersCount,
-          [target.value]: (state.answersCount[target.value] || 0) + 1,
+    this.setState((state) => ({
+      answersCount: {
+        ...state.answersCount,
+        [target.value]: (state.answersCount[target.value] || 0) + 1,
+      },
+      answer: target,
+      answers: [
+        ...state.answers,
+        {
+          question: state.question,
+          value: checkedList?.length ? checkedList : target.value,
+          type: target.type,
+          name: target.name,
         },
-        answer: target,
-        answers: [
-          ...state.answers,
-          {
-            question: state.question,
-            value: checkedList?.length ? checkedList : target.value,
-            type: target.type,
-            name: target.name,
-          },
-        ],
-      }),
-      () => {}
-    );
+      ],
+    }));
   }
 
   setBackQuestion = () => {
-    const counter = this.state.counter - 1;
-    const questionId = this.state.questionId - 1;
-    const questions = this.state.questions;
-    const answers = this.state.answers;
+    const { answers } = this.state;
     answers.pop();
-    this.setState((state, props) => ({
-      counter: counter,
-      questionId: questionId,
-      question: questions[counter].question,
-      description: questions[counter].description,
-      answerOptions: questions[counter].answers,
-      mainImage: questions[counter].mainImage,
-      type: questions[counter].type,
+    this.setState((state) => ({
+      counter: state.counter - 1,
+      questionId: state.questionId - 1,
+      question: state.questions[state.counter - 1].question,
+      description: state.questions[state.counter - 1].description,
+      answerOptions: state.questions[state.counter - 1].answers,
+      mainImage: state.questions[state.counter - 1].mainImage,
+      type: state.questions[state.counter - 1].type,
       answers,
       answer: "",
       error: false,
@@ -286,19 +399,16 @@ class App extends Component {
   };
 
   setNextQuestion() {
-    const counter = this.state.counter + 1;
-    const questionId = this.state.questionId + 1;
-    const questions = this.state.questions;
-    this.setState({
-      counter: counter,
-      questionId: questionId,
-      question: questions[counter].question,
-      description: questions[counter].description,
-      type: questions[counter].type,
-      answerOptions: questions[counter].answers,
-      mainImage: questions[counter].mainImage,
+    this.setState((state) => ({
+      counter: state.counter + 1,
+      questionId: state.questionId + 1,
+      question: state.questions[state.counter + 1].question,
+      description: state.questions[state.counter + 1].description,
+      type: state.questions[state.counter + 1].type,
+      answerOptions: state.questions[state.counter + 1].answers,
+      mainImage: state.questions[state.counter + 1].mainImage,
       answer: "",
-    });
+    }));
   }
 
   render() {
@@ -317,6 +427,8 @@ class App extends Component {
       notFound,
       questions,
       sex,
+      email,
+      summaryHtml,
     } = this.state;
     return loading ? (
       <Loading />
@@ -347,7 +459,12 @@ class App extends Component {
               notFound={notFound}
             />
           ) : (
-            <Summary answer={answer} custom={custom} />
+            <Summary
+              answer={answer}
+              custom={custom}
+              email={email}
+              summaryHtml={summaryHtml}
+            />
           )}
         </div>
       </div>
