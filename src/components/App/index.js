@@ -106,11 +106,13 @@ class App extends Component {
       if (data) {
         let questions = data?.questions;
         let conditions = data?.conditions;
+        let byDefault = data?.byDefault;
         let variables = data?.variables;
         if (questions) {
           this.setState({
             questions,
             conditions,
+            byDefault,
             variables,
             mainImage: questions[0]?.mainImage,
             question: questions[0]?.question,
@@ -172,7 +174,14 @@ class App extends Component {
   };
 
   setAnswersDb = () => {
-    const { answers, email, variables, conditions, summary } = this.state;
+    const {
+      answers,
+      email,
+      variables,
+      conditions,
+      summary,
+      byDefault,
+    } = this.state;
     let db = this.props.firebase.db;
     let responsesRef = db.ref("responses");
     let newResponseRef = responsesRef.push();
@@ -220,8 +229,10 @@ class App extends Component {
       .join("");
     listAnswers += "</tbody></table>"; */
     let _id = this.getConditionIndex(_answers);
-    let id_email = conditions[_id]?.sendEmail;
-    let id_summary = conditions[_id]?.showSummary;
+    let id_email =
+      _id !== -1 ? conditions[_id]?.sendEmail : byDefault?.sendEmail;
+    let id_summary =
+      _id !== -1 ? conditions[_id]?.showSummary : byDefault?.showSummary;
     let emailHtml = email[id_email]?.email?.html;
     let summaryHtml = summary[id_summary]?.summary?.html;
     this.sendEmail(
@@ -247,18 +258,18 @@ class App extends Component {
         let index = answers.findIndex(
           (answer) => answer?.question === _conditions[j]?.question
         );
-        let value1 = _conditions[j].value;
-        let value2 = answers[index].value;
-        if (Array.isArray(value1) || Array.isArray(value2)) {
-          value1 = value1.sort().map((v) => v.toString().toLowerCase());
-          value2 = value2.sort().map((v) => v.toString().toLowerCase());
-        } else {
-          value1 = value1.toString().toLowerCase();
-          value2 = value2.toString().toLowerCase();
-        }
+        let value1 = _conditions[j]?.value;
+        let value2 = answers[index]?.value;
+        let question1 = _conditions[j]?.question;
+        let question2 = answers[index]?.question;
         if (operator === "===") {
-          if (_conditions[j]?.question === answers[index]?.question) {
-            if (value1 === value2) {
+          if (question1 === question2) {
+            if (
+              value1.toString().toLowerCase() ===
+                value2.toString().toLowerCase() ||
+              JSON.stringify(value1.sort()) === JSON.stringify(value2.sort())
+            ) {
+              console.log("yeah");
               bool = true;
             } else {
               bool = false;
@@ -266,7 +277,7 @@ class App extends Component {
             }
           }
         } else if (operator === ">=") {
-          if (_conditions[j]?.question === answers[index]?.question) {
+          if (question1 === question2) {
             if (value1 >= value2) {
               bool = true;
             } else {
@@ -275,7 +286,7 @@ class App extends Component {
             }
           }
         } else if (operator === "<=") {
-          if (_conditions[j]?.question === answers[index]?.question) {
+          if (question1 === question2) {
             if (value1 <= value2) {
               bool = true;
             } else {
@@ -284,7 +295,7 @@ class App extends Component {
             }
           }
         } else if (operator === "<") {
-          if (_conditions[j]?.question === answers[index]?.question) {
+          if (question1 === question2) {
             if (value1 < value2) {
               bool = true;
             } else {
@@ -293,7 +304,7 @@ class App extends Component {
             }
           }
         } else if (operator === ">") {
-          if (_conditions[j]?.question === answers[index]?.question) {
+          if (question1 === question2) {
             if (value1 > value2) {
               bool = true;
             } else {
@@ -304,10 +315,11 @@ class App extends Component {
         }
       }
       if (bool) {
+        console.log("boool!" + i);
         return i;
       }
     }
-    return "default";
+    return -1;
   };
 
   handleKeyPressed(event) {

@@ -250,6 +250,7 @@ class QuestionsBase extends Component {
       anchorMore: undefined,
       saveConditions: false,
       sex: "male",
+      byDefault: {},
     };
     this.onDragEnd = this.onDragEnd.bind(this);
     this.handleChangeNewQuestionAnswers = this.handleChangeNewQuestionAnswers.bind(
@@ -303,6 +304,7 @@ class QuestionsBase extends Component {
     cp[id].conditions[key].value = value;
     this.setState({
       conditions: cp,
+      saveConditions: true,
     });
   };
 
@@ -586,10 +588,11 @@ class QuestionsBase extends Component {
     });
   };
 
-  onSaveConditions = () => {
-    const { id, conditions } = this.state;
+  async onSaveConditions() {
+    const { id, conditions, byDefault } = this.state;
     let db = this.props.firebase.db;
-    let questionsRef = db.ref(`questions/${id}/conditions/`);
+    let conditionsRef = db.ref(`questions/${id}/conditions`);
+    let byDefaultRef = db.ref(`questions/${id}/byDefault`);
     let j = 0;
     let filtered = Object.keys(conditions).reduce((obj, key) => {
       if (conditions[key]) {
@@ -598,17 +601,23 @@ class QuestionsBase extends Component {
       }
       return obj;
     }, []);
-    questionsRef.set(filtered, (error) => {
+    await conditionsRef.set(filtered, (error) => {
       if (error) {
         Notify("Problème lors de la sauvegarde : " + error, "error");
-      } else {
-        this.setState({
-          saveConditions: false,
-        });
-        Notify("Sauvegardé !", "success");
+        return;
       }
     });
-  };
+    await byDefaultRef.set(byDefault, (error) => {
+      if (error) {
+        Notify("Problème lors de la sauvegarde : " + error, "error");
+        return;
+      }
+    });
+    this.setState({
+      saveConditions: false,
+    });
+    Notify("Sauvegardé !", "success");
+  }
 
   //edit
   editQuestion = () => {
@@ -938,6 +947,11 @@ class QuestionsBase extends Component {
     newQuestionsRef.set({
       questions: {},
       conditions: {},
+      byDefault: {
+        sendEmail: "",
+        showSummary: "",
+      },
+      variables: {},
       createdAt: firebase.database.ServerValue.TIMESTAMP,
       id: newKey,
     });
@@ -995,6 +1009,7 @@ class QuestionsBase extends Component {
       let questions = data?.questions ?? [];
       let conditions = data?.conditions ?? [];
       let variables = data?.variables ?? [];
+      let byDefault = data?.byDefault ?? [];
       let items = JSON.parse(JSON.stringify(questions)) ?? [];
       let variablesItems = JSON.parse(JSON.stringify(variables)) ?? [];
       this.setState({
@@ -1002,6 +1017,7 @@ class QuestionsBase extends Component {
         questions,
         conditions,
         variables,
+        byDefault,
         variablesItems,
         items,
       });
@@ -1198,6 +1214,7 @@ class QuestionsBase extends Component {
       newVariable,
       newQuestion,
       sex,
+      byDefault,
     } = this.state;
     return loading ? (
       <Loading />
@@ -2233,10 +2250,7 @@ class QuestionsBase extends Component {
                               );
                             })}
                           </Select>
-                        ) : conditions[id]?.conditions[key]?.operator !==
-                            "><" &&
-                          conditions[id]?.conditions[key]?.operator !==
-                            ">><<" ? (
+                        ) : (
                           <TextField
                             size="small"
                             style={{ marginLeft: "0.5em", height: 40 }}
@@ -2263,68 +2277,6 @@ class QuestionsBase extends Component {
                             variant="outlined"
                             value={conditions[id]?.conditions[key]?.value || ""}
                           />
-                        ) : (
-                          <>
-                            <TextField
-                              size="small"
-                              style={{ marginLeft: "0.5em", height: 40 }}
-                              type={
-                                items[
-                                  items.findIndex(
-                                    (item) =>
-                                      item?.question ===
-                                      conditions[id]?.conditions[key]?.question
-                                  )
-                                ]?.type || "text"
-                              }
-                              onChange={(e) => {
-                                const { conditions } = this.state;
-                                let cp = conditions;
-                                let value = e.target.value;
-                                cp[id].conditions[key].value[0] = value;
-                                this.setState({
-                                  conditions: cp,
-                                  saveConditions: true,
-                                });
-                              }}
-                              variant="outlined"
-                              placeholder="Réponse"
-                              value={
-                                conditions[id]?.conditions[key]?.value[0] || ""
-                              }
-                            />
-                            <b style={{ textAlign: "center", margin: "0.5em" }}>
-                              et
-                            </b>
-                            <TextField
-                              size="small"
-                              placeholder="Réponse"
-                              style={{ marginLeft: "0.5em", height: 40 }}
-                              type={
-                                items[
-                                  items.findIndex(
-                                    (item) =>
-                                      item?.question ===
-                                      conditions[id]?.conditions[key]?.question
-                                  )
-                                ]?.type || "text"
-                              }
-                              onChange={(e) => {
-                                const { conditions } = this.state;
-                                let cp = conditions;
-                                let value = e.target.value;
-                                cp[id].conditions[key].value[1] = value;
-                                this.setState({
-                                  conditions: cp,
-                                  saveConditions: true,
-                                });
-                              }}
-                              variant="outlined"
-                              value={
-                                conditions[id]?.conditions[key]?.value[1] || ""
-                              }
-                            />
-                          </>
                         )}
                         <IconButton
                           style={{ marginLeft: "0.5em" }}
@@ -2446,6 +2398,78 @@ class QuestionsBase extends Component {
                   </>
                 ))
               )}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <p>Par défaut, envoyer :</p>
+                <Select
+                  size="small"
+                  variant="outlined"
+                  style={{
+                    marginLeft: "0.5em",
+                  }}
+                  inputProps={{ "aria-label": "Without label" }}
+                  displayEmpty
+                  value={byDefault?.sendEmail || ""}
+                  onChange={(e) => {
+                    const { byDefault } = this.state;
+                    let cp = byDefault;
+                    cp.sendEmail = e.target.value;
+                    this.setState({
+                      byDefault: cp,
+                      saveConditions: true,
+                    });
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    Emailing
+                  </MenuItem>
+                  {idListEmail?.map((el, id) => (
+                    <MenuItem key={id} value={el?.value}>{`Email nº${
+                      id + 1
+                    }`}</MenuItem>
+                  ))}
+                </Select>
+                <p
+                  style={{
+                    marginLeft: "0.5em",
+                  }}
+                >
+                  et afficher :
+                </p>
+                <Select
+                  size="small"
+                  variant="outlined"
+                  style={{
+                    marginLeft: "0.5em",
+                  }}
+                  inputProps={{ "aria-label": "Without label" }}
+                  displayEmpty
+                  value={byDefault?.showSummary || ""}
+                  onChange={(e) => {
+                    const { byDefault } = this.state;
+                    let cp = byDefault;
+                    cp.showSummary = e.target.value;
+                    this.setState({
+                      byDefault: cp,
+                      saveConditions: true,
+                    });
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    Récapitulatifs
+                  </MenuItem>
+                  {idListSummary?.map((el, id) => (
+                    <MenuItem
+                      key={"recap_" + id}
+                      value={el?.value}
+                    >{`Récapitulatif nº${id + 1}`}</MenuItem>
+                  ))}
+                </Select>
+              </div>
             </div>
           </Paper>
           <Button
