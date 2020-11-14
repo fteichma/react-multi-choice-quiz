@@ -109,7 +109,6 @@ class SummaryBase extends Component {
       summary: {},
       loading: true,
       anchorMoreSummary: undefined,
-      reloaded: false,
       showSave: false,
     };
     this.instanceRef = React.createRef();
@@ -119,43 +118,31 @@ class SummaryBase extends Component {
     this.getSummary().then(() => {
       this.setState({
         loading: false,
-        reloaded: true,
       });
     });
   }
-  onSave = async () => {
+  async onSave() {
     const design = await this.instanceRef.current.save();
     const parser = new edjsParser();
     const html = parser.parse(design);
     let summary = { design, html };
-    this.setState({
-      reloaded: false,
-    });
-    this.saveDb(summary);
-  };
+    await this.saveDb(summary);
+  }
 
   saveDb = (summary) => {
     const { id } = this.state;
     let db = this.props.firebase.db;
-    let summaryRef = db.ref(`summary/${id}`);
-    summaryRef.set(
-      {
-        summary,
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
-        id,
-      },
-      (error) => {
-        if (error) {
-          Notify("Problème lors de la sauvegarde : " + error, "error");
-        } else {
-          this.setState({
-            showSave: false,
-            reloaded: true,
-          });
-          Notify("Sauvegardé !", "success");
-        }
+    let summaryRef = db.ref(`summary/${id}/summary`);
+    summaryRef.set(summary, (error) => {
+      if (error) {
+        Notify("Problème lors de la sauvegarde : " + error, "error");
+      } else {
+        this.setState({
+          showSave: false,
+        });
+        Notify("Sauvegardé !", "success");
       }
-    );
+    });
   };
 
   onDuplicate = () => {
@@ -169,9 +156,6 @@ class SummaryBase extends Component {
       summary: current,
       createdAt: firebase.database.ServerValue.TIMESTAMP,
       id: newKey,
-    });
-    this.setState({
-      reloaded: false,
     });
     setTimeout(() => {
       this.setState({
@@ -192,7 +176,6 @@ class SummaryBase extends Component {
   getSummaryByRef = (key) => {
     this.setState({
       id: key,
-      reloaded: true,
     });
     localStorage.setItem("id-summary", key);
   };
@@ -231,22 +214,18 @@ class SummaryBase extends Component {
     let summaryRef = db.ref("summary");
     let newSummaryRef = summaryRef.push();
     let newKey = newSummaryRef.key;
-    this.setState({
-      reloaded: false,
-    });
+    const parser = new edjsParser();
+    const html = parser.parse(default_design);
+    let summary = { design: default_design, html };
     await newSummaryRef
       .set({
-        summary: {
-          design: default_design,
-          html: "",
-        },
+        summary,
         createdAt: firebase.database.ServerValue.TIMESTAMP,
         id: newKey,
       })
       .then(() => {
         this.setState({
           id: newKey,
-          reloaded: true,
         });
       });
   }
@@ -261,14 +240,7 @@ class SummaryBase extends Component {
   render() {
     const { classes } = this.props;
     const { storage } = this.props.firebase;
-    const {
-      id,
-      idList,
-      anchorMoreSummary,
-      loading,
-      summary,
-      reloaded,
-    } = this.state;
+    const { id, idList, anchorMoreSummary, loading, summary } = this.state;
     return (
       <>
         {loading ? (
@@ -367,7 +339,7 @@ class SummaryBase extends Component {
                 Sauvegarder
               </SaveButton>
             </div>
-            {summary && reloaded && (
+            {summary && (
               <EditorJs
                 instanceRef={(instance) =>
                   (this.instanceRef.current = instance)

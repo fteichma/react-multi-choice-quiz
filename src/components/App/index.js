@@ -262,14 +262,19 @@ class App extends Component {
         let value2 = answers[index]?.value;
         let question1 = _conditions[j]?.question;
         let question2 = answers[index]?.question;
+        if (Array.isArray(value1)) {
+          value1 = JSON.stringify(value1.sort());
+        } else {
+          value1 = value1.toString().toLowerCase();
+        }
+        if (Array.isArray(value2)) {
+          value2 = JSON.stringify(value2.sort());
+        } else {
+          value2 = value2.toString().toLowerCase();
+        }
         if (operator === "===") {
           if (question1 === question2) {
-            if (
-              value1.toString().toLowerCase() ===
-                value2.toString().toLowerCase() ||
-              JSON.stringify(value1.sort()) === JSON.stringify(value2.sort())
-            ) {
-              console.log("yeah");
+            if (value1 === value2) {
               bool = true;
             } else {
               bool = false;
@@ -278,7 +283,7 @@ class App extends Component {
           }
         } else if (operator === ">=") {
           if (question1 === question2) {
-            if (value1 >= value2) {
+            if (value2 >= value1) {
               bool = true;
             } else {
               bool = false;
@@ -287,7 +292,7 @@ class App extends Component {
           }
         } else if (operator === "<=") {
           if (question1 === question2) {
-            if (value1 <= value2) {
+            if (value2 <= value1) {
               bool = true;
             } else {
               bool = false;
@@ -296,7 +301,7 @@ class App extends Component {
           }
         } else if (operator === "<") {
           if (question1 === question2) {
-            if (value1 < value2) {
+            if (value2 < value1) {
               bool = true;
             } else {
               bool = false;
@@ -305,7 +310,7 @@ class App extends Component {
           }
         } else if (operator === ">") {
           if (question1 === question2) {
-            if (value1 > value2) {
+            if (value2 > value1) {
               bool = true;
             } else {
               bool = false;
@@ -315,7 +320,6 @@ class App extends Component {
         }
       }
       if (bool) {
-        console.log("boool!" + i);
         return i;
       }
     }
