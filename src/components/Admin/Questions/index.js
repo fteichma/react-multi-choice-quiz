@@ -805,17 +805,17 @@ class QuestionsBase extends Component {
     );
   };
 
-  editVariable = () => {
+  async editVariable() {
     const { id, editVariableIndex, variables } = this.state;
     let db = this.props.firebase.db;
     let q = variables[editVariableIndex];
     let ref = db.ref(`questions/${id}/variables/${editVariableIndex}`);
-    ref.set(q);
+    await ref.set(q);
     this.setState({
       openEditVariableDialog: false,
     });
     this.resetVariable();
-  };
+  }
 
   editItem = () => {
     const { items } = this.state;
@@ -832,43 +832,52 @@ class QuestionsBase extends Component {
   };
 
   async onSave() {
-    const { items, variablesItems, id } = this.state;
+    const { items, variablesItems, id, conditions, byDefault } = this.state;
     let db = this.props.firebase.db;
     await db
       .ref(`questions/${id}`)
-      .set({ questions: items, variables: variablesItems, id }, (error) => {
-        if (error) {
-          Notify("Problème lors de la sauvegarde : " + error, "error");
-        } else {
-          this.setState({
-            dragged: false,
-          });
-          Notify("Sauvegardé !", "success");
+      .set(
+        {
+          questions: items,
+          variables: variablesItems,
+          conditions,
+          byDefault,
+          id,
+        },
+        (error) => {
+          if (error) {
+            Notify("Problème lors de la sauvegarde : " + error, "error");
+          } else {
+            this.setState({
+              dragged: false,
+            });
+            Notify("Sauvegardé !", "success");
+          }
         }
-      });
+      );
   }
 
   async onDelete() {
     let db = this.props.firebase.db;
     const { id } = this.state;
     if (id) {
-      await db.ref(`questions/${id}`).remove(() => {
-        const { idList } = this.state;
-        let lg = idList.length - 1;
-        let id = idList[lg >= 0 ? lg : 0].value;
-        this.setState(
-          {
-            id,
-          },
-          () => {
+      await db.ref(`questions/${id}`).remove((error) => {
+        if (error) {
+          Notify("Problème lors de la suppression : " + error, "error");
+        } else {
+          Notify("Questionnaire supprimé !", "success");
+          const { idList } = this.state;
+          let lg = idList.length - 1;
+          let id = idList[lg >= 0 ? lg : 0].value;
+          this.setState({ id }, () => {
             this.getQuestionsByRef(id);
-          }
-        );
+          });
+        }
       });
     }
   }
 
-  deleteCondition = (_id, key) => {
+  async deleteCondition(_id, key) {
     let db = this.props.firebase.db;
     const { id, conditions } = this.state;
     let cp = JSON.parse(JSON.stringify(conditions));
@@ -887,12 +896,24 @@ class QuestionsBase extends Component {
         conditions: cp,
       });
       let ref = db.ref(`questions/${id}/conditions/${_id}/conditions`);
-      ref.set(filtered);
+      await ref.set(filtered, (error) => {
+        if (error) {
+          Notify("Problème lors de la suppression : " + error, "error");
+        } else {
+          Notify("Condition supprimée !", "success");
+        }
+      });
     } else {
       let ref = db.ref(`questions/${id}/conditions/${_id}`);
-      ref.remove();
+      await ref.remove((error) => {
+        if (error) {
+          Notify("Problème lors de la suppression : " + error, "error");
+        } else {
+          Notify("Condition supprimée !", "success");
+        }
+      });
     }
-  };
+  }
 
   deleteConstance = (_id, key) => {
     let db = this.props.firebase.db;
@@ -947,11 +968,11 @@ class QuestionsBase extends Component {
     newQuestionsRef.set({
       questions: {},
       conditions: {},
+      variables: {},
       byDefault: {
         sendEmail: "",
         showSummary: "",
       },
-      variables: {},
       createdAt: firebase.database.ServerValue.TIMESTAMP,
       id: newKey,
     });
@@ -4082,17 +4103,14 @@ class QuestionsBase extends Component {
                     <MenuItem value="" disabled>
                       Question
                     </MenuItem>
-                    {items.map(
-                      (item, id) =>
-                        item?.type === "number" && (
-                          <MenuItem
-                            value={item?.question}
-                            key={"item_question_" + id}
-                          >
-                            {item?.question}
-                          </MenuItem>
-                        )
-                    )}
+                    {items.map((item, id) => (
+                      <MenuItem
+                        value={item?.question}
+                        key={"item_question_" + id}
+                      >
+                        {item?.question}
+                      </MenuItem>
+                    ))}
                   </Select>
                   {id > 0 && (
                     <IconButton

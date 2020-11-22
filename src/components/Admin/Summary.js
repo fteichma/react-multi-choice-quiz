@@ -6,7 +6,7 @@ import {
   Button as Btn,
   IconButton,
   FormControl,
-  Select as SelectMUI,
+  Select,
   Menu,
   MenuItem,
 } from "@material-ui/core";
@@ -257,7 +257,7 @@ class SummaryBase extends Component {
               }}
             >
               <FormControl required className={classes.formControl}>
-                <SelectMUI
+                <Select
                   id="demo-simple-select"
                   variant="outlined"
                   style={{
@@ -277,7 +277,7 @@ class SummaryBase extends Component {
                       id + 1
                     }`}</MenuItem>
                   ))}
-                </SelectMUI>
+                </Select>
               </FormControl>
               <IconButton
                 aria-controls="menu-summary"
