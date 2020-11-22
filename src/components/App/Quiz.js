@@ -300,14 +300,30 @@ class Quiz extends React.Component {
                           }}
                         />
                         {array[key].image && (
-                          <img
-                            src={array[key].image}
-                            className="answerImage"
-                            alt="Answer"
-                            width="50%"
-                          />
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              position: "absolute",
+                              margin: "auto",
+                              width: "100%",
+                              height: "100px",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <img
+                              src={array[key].image}
+                              className="answerImage"
+                              alt="Answer"
+                              width="100%"
+                            />
+                          </div>
                         )}
                         <label
+                          style={{
+                            paddingTop: array[key].image ? 120 : "1.5rem",
+                          }}
                           css={css`
                             &::before {
                               background: ${custom?.select?.primary};

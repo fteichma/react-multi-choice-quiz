@@ -226,17 +226,18 @@ class EmailingBase extends Component {
       !this.isEditorLoaded ||
       !this.isComponentMounted ||
       !design ||
-      !this.editor
+      !this.editor ||
+      !this.editor.current
     )
       return;
-    this.editor.current.loadDesign(design ?? null);
+    this.editor.current.loadDesign(design);
   };
 
   render() {
     const { classes } = this.props;
-    const { id, idList, anchorMoreEmailing, email } = this.state;
-    let design = null;
-    if (email) {
+    const { id, idList, anchorMoreEmailing, email, loading } = this.state;
+    let design = undefined;
+    if (email && !loading) {
       design = email[id]?.email?.design;
       design = JSON.parse(design);
     }
@@ -335,10 +336,7 @@ class EmailingBase extends Component {
               Sauvegarder
             </SaveButton>
           </div>
-          <EmailEditor
-            ref={this.editor}
-            onLoad={email && this.onLoad(design)}
-          />
+          <EmailEditor ref={this.editor} onLoad={this.onLoad(design)} />
         </>
       </>
     );
