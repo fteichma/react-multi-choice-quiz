@@ -96,7 +96,7 @@ class EmailingBase extends Component {
   }
   componentDidMount() {
     this.isComponentMounted = true;
-    this.getEmailing();
+    this.getEmailing().then(() => {});
   }
 
   onSave = () => {
@@ -218,7 +218,9 @@ class EmailingBase extends Component {
 
   onLoad = (design) => {
     this.isEditorLoaded = true;
-    this.loadTemplate(design);
+    if (design) {
+      this.loadTemplate(design);
+    }
   };
 
   loadTemplate = (design) => {
@@ -230,14 +232,22 @@ class EmailingBase extends Component {
       !this.editor.current
     )
       return;
-    this.editor.current.loadDesign(design);
+    this.loadDesign(design);
+  };
+
+  loadDesign = (design) => {
+    if (this.editor !== undefined) {
+      this.editor.current.loadDesign(design);
+    } else {
+      setTimeout(() => this.editor.current.loadDesign(design), 3000);
+    }
   };
 
   render() {
     const { classes } = this.props;
     const { id, idList, anchorMoreEmailing, email, loading } = this.state;
-    let design = undefined;
-    if (email && !loading) {
+    let design = null;
+    if (email && id && email[id]) {
       design = email[id]?.email?.design;
       design = JSON.parse(design);
     }
@@ -336,7 +346,10 @@ class EmailingBase extends Component {
               Sauvegarder
             </SaveButton>
           </div>
-          <EmailEditor ref={this.editor} onLoad={this.onLoad(design)} />
+          <EmailEditor
+            ref={this.editor}
+            onLoad={design && this.onLoad(design)}
+          />
         </>
       </>
     );
