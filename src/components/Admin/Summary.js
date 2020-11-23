@@ -122,9 +122,11 @@ class SummaryBase extends Component {
     });
   }
   async onSave() {
-    const design = await this.instanceRef.current.save();
+    let design = await this.instanceRef.current.save();
     const parser = new edjsParser();
-    const html = parser.parse(design);
+    let html = parser.parse(design);
+    design = JSON.stringify(design);
+    html = JSON.stringify(html);
     let summary = { design, html };
     await this.saveDb(summary);
   }
@@ -215,8 +217,10 @@ class SummaryBase extends Component {
     let newSummaryRef = summaryRef.push();
     let newKey = newSummaryRef.key;
     const parser = new edjsParser();
-    const html = parser.parse(default_design);
-    let summary = { design: default_design, html };
+    let html = parser.parse(default_design);
+    html = JSON.stringify(html);
+    let design = JSON.stringify(default_design);
+    let summary = { design, html };
     await newSummaryRef
       .set({
         summary,
@@ -230,6 +234,11 @@ class SummaryBase extends Component {
       });
   }
 
+  htmlDecode(input) {
+    var doc = new DOMParser().parseFromString(input, "text/html");
+    return doc.documentElement.textContent;
+  }
+
   /*   onLoad = (design) => {
     let editor = this.summaryEditorRef?.current?.editor;
     if (editor && design) {
@@ -241,6 +250,10 @@ class SummaryBase extends Component {
     const { classes } = this.props;
     const { storage } = this.props.firebase;
     const { id, idList, anchorMoreSummary, loading, summary } = this.state;
+    let data = null;
+    if (summary[id]?.summary?.design) {
+      data = JSON.parse(this.htmlDecode(summary[id]?.summary?.design));
+    }
     return (
       <>
         {loading ? (
@@ -359,19 +372,21 @@ class SummaryBase extends Component {
                           const imageRef = storage.ref(`images/${file.name}`);
                           await imageRef.put(file);
                           return imageRef.getDownloadURL().then((url) => {
+                            let _url = encodeURIComponent(url);
                             return {
                               success: 1,
                               file: {
-                                url,
+                                _url,
                               },
                             };
                           });
                         },
                         uploadByUrl(url) {
+                          let _url = encodeURIComponent(url);
                           return {
                             success: 1,
                             file: {
-                              url: `${url}`,
+                              _url,
                             },
                           };
                         },
@@ -382,7 +397,7 @@ class SummaryBase extends Component {
                   inlineCode: InlineCode,
                   simpleImage: SimpleImage,
                 }}
-                data={summary[id]?.summary?.design}
+                data={data}
               />
             )}
           </>

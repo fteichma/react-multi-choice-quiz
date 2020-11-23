@@ -55,6 +55,11 @@ hr {
   text-align: center;
   border-radius: 0.5em;
   border: 1px solid rgb(228, 228, 228);
+  max-width: 750px;
+}
+
+#editor-js img {
+  max-width: 50%;
 }
 
 .ce-block__content,
@@ -72,6 +77,10 @@ hr {
   position: relative;
   margin: auto;
   height: 100vh;
+}
+
+.image-tool__image-picture {
+  margin: auto;
 }
 
 .answerImage {
