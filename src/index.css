@@ -58,8 +58,28 @@ hr {
   max-width: 750px;
 }
 
-#editor-js img {
-  max-width: 50%;
+.thankYou {
+  width: 750px;
+  max-width: 80%;
+  margin: auto;
+}
+
+.image-tool__image-picture {
+  width: 200px;
+}
+
+.image-tool--stretched {
+  width: 100%;
+  max-width: 100%;
+}
+
+.thankYou .img {
+  width: 200px;
+}
+
+.thankYou .img-fullwidth {
+  width: 100%;
+  max-width: 100%;
 }
 
 .ce-block__content,

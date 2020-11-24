@@ -107,9 +107,6 @@ class EmailingBase extends Component {
         design: _design,
         html: html,
       };
-      /* this.setState({
-        email,
-      }); */
       this.saveDb(email);
     });
   };

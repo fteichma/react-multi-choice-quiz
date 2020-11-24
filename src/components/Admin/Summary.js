@@ -234,10 +234,10 @@ class SummaryBase extends Component {
       });
   }
 
-  htmlDecode(input) {
+  htmlDecode = (input) => {
     var doc = new DOMParser().parseFromString(input, "text/html");
     return doc.documentElement.textContent;
-  }
+  };
 
   /*   onLoad = (design) => {
     let editor = this.summaryEditorRef?.current?.editor;
@@ -252,7 +252,8 @@ class SummaryBase extends Component {
     const { id, idList, anchorMoreSummary, loading, summary } = this.state;
     let data = null;
     if (summary[id]?.summary?.design) {
-      data = JSON.parse(this.htmlDecode(summary[id]?.summary?.design));
+      data = this.htmlDecode(summary[id]?.summary?.design);
+      data = JSON.parse(data);
     }
     return (
       <>
@@ -372,21 +373,19 @@ class SummaryBase extends Component {
                           const imageRef = storage.ref(`images/${file.name}`);
                           await imageRef.put(file);
                           return imageRef.getDownloadURL().then((url) => {
-                            let _url = encodeURIComponent(url);
                             return {
                               success: 1,
                               file: {
-                                _url,
+                                url,
                               },
                             };
                           });
                         },
                         uploadByUrl(url) {
-                          let _url = encodeURIComponent(url);
                           return {
                             success: 1,
                             file: {
-                              _url,
+                              url,
                             },
                           };
                         },

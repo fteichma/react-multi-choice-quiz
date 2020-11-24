@@ -1,7 +1,16 @@
 import React from "react";
 import ReactHtmlParser from "react-html-parser";
 
+function htmlDecode(input) {
+  if (input) {
+    var doc = new DOMParser().parseFromString(input, "text/html");
+    return doc.documentElement.textContent;
+  }
+  return;
+}
+
 function Summary(props) {
+  console.log(props.summaryHTML);
   return (
     <div
       className="thankYou"
@@ -10,7 +19,7 @@ function Summary(props) {
         color: props?.custom?.textColor?.title,
       }}
     >
-      {ReactHtmlParser(props.summaryHtml ?? "")}
+      {props.summaryHtml ? ReactHtmlParser(JSON.parse(props.summaryHtml)) : ""}
     </div>
   );
 }

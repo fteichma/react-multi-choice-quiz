@@ -554,12 +554,6 @@ class QuestionsBase extends Component {
       openNewQuestionDialog: false,
     });
     this.resetNewQuestion();
-    setTimeout(() => {
-      this.setState({
-        id,
-      });
-      this.getQuestionsByRef(id);
-    }, 1000);
   };
 
   addNewVariable = () => {
@@ -834,27 +828,25 @@ class QuestionsBase extends Component {
   async onSave() {
     const { items, variablesItems, id, conditions, byDefault } = this.state;
     let db = this.props.firebase.db;
-    await db
-      .ref(`questions/${id}`)
-      .set(
-        {
-          questions: items,
-          variables: variablesItems,
-          conditions,
-          byDefault,
-          id,
-        },
-        (error) => {
-          if (error) {
-            Notify("Problème lors de la sauvegarde : " + error, "error");
-          } else {
-            this.setState({
-              dragged: false,
-            });
-            Notify("Sauvegardé !", "success");
-          }
+    await db.ref(`questions/${id}`).set(
+      {
+        questions: items,
+        variables: variablesItems,
+        conditions,
+        byDefault,
+        id,
+      },
+      (error) => {
+        if (error) {
+          Notify("Problème lors de la sauvegarde : " + error, "error");
+        } else {
+          this.setState({
+            dragged: false,
+          });
+          Notify("Sauvegardé !", "success");
         }
-      );
+      }
+    );
   }
 
   async onDelete() {

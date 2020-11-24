@@ -14,6 +14,7 @@ import Loading from "../Loading";
 import Notify from "../../notify";
 
 import stringMath from "string-math";
+import { cond } from "lodash";
 
 class App extends Component {
   constructor(props) {
@@ -250,77 +251,79 @@ class App extends Component {
   getConditionIndex = (answers) => {
     const { conditions } = this.state;
     let bool = false;
-    for (let i = 0; i < conditions.length; i++) {
-      let _conditions = conditions[i]?.conditions;
-      for (let j = 0; j < _conditions.length; j++) {
-        bool = false;
-        let operator = _conditions[j]?.operator;
-        let index = answers.findIndex(
-          (answer) => answer?.question === _conditions[j]?.question
-        );
-        let value1 = _conditions[j]?.value;
-        let value2 = answers[index]?.value;
-        let question1 = _conditions[j]?.question;
-        let question2 = answers[index]?.question;
-        if (Array.isArray(value1)) {
-          value1 = JSON.stringify(value1.sort());
-        } else {
-          value1 = value1.toString().toLowerCase();
+    if (conditions) {
+      for (let i = 0; i < conditions.length; i++) {
+        let _conditions = conditions[i]?.conditions;
+        for (let j = 0; j < _conditions.length; j++) {
+          bool = false;
+          let operator = _conditions[j]?.operator;
+          let index = answers.findIndex(
+            (answer) => answer?.question === _conditions[j]?.question
+          );
+          let value1 = _conditions[j]?.value;
+          let value2 = answers[index]?.value;
+          let question1 = _conditions[j]?.question;
+          let question2 = answers[index]?.question;
+          if (Array.isArray(value1)) {
+            value1 = JSON.stringify(value1.sort());
+          } else {
+            value1 = value1.toString().toLowerCase();
+          }
+          if (Array.isArray(value2)) {
+            value2 = JSON.stringify(value2.sort());
+          } else {
+            value2 = value2.toString().toLowerCase();
+          }
+          if (operator === "===") {
+            if (question1 === question2) {
+              if (value1 === value2) {
+                bool = true;
+              } else {
+                bool = false;
+                break;
+              }
+            }
+          } else if (operator === ">=") {
+            if (question1 === question2) {
+              if (value2 >= value1) {
+                bool = true;
+              } else {
+                bool = false;
+                break;
+              }
+            }
+          } else if (operator === "<=") {
+            if (question1 === question2) {
+              if (value2 <= value1) {
+                bool = true;
+              } else {
+                bool = false;
+                break;
+              }
+            }
+          } else if (operator === "<") {
+            if (question1 === question2) {
+              if (value2 < value1) {
+                bool = true;
+              } else {
+                bool = false;
+                break;
+              }
+            }
+          } else if (operator === ">") {
+            if (question1 === question2) {
+              if (value2 > value1) {
+                bool = true;
+              } else {
+                bool = false;
+                break;
+              }
+            }
+          }
         }
-        if (Array.isArray(value2)) {
-          value2 = JSON.stringify(value2.sort());
-        } else {
-          value2 = value2.toString().toLowerCase();
+        if (bool) {
+          return i;
         }
-        if (operator === "===") {
-          if (question1 === question2) {
-            if (value1 === value2) {
-              bool = true;
-            } else {
-              bool = false;
-              break;
-            }
-          }
-        } else if (operator === ">=") {
-          if (question1 === question2) {
-            if (value2 >= value1) {
-              bool = true;
-            } else {
-              bool = false;
-              break;
-            }
-          }
-        } else if (operator === "<=") {
-          if (question1 === question2) {
-            if (value2 <= value1) {
-              bool = true;
-            } else {
-              bool = false;
-              break;
-            }
-          }
-        } else if (operator === "<") {
-          if (question1 === question2) {
-            if (value2 < value1) {
-              bool = true;
-            } else {
-              bool = false;
-              break;
-            }
-          }
-        } else if (operator === ">") {
-          if (question1 === question2) {
-            if (value2 > value1) {
-              bool = true;
-            } else {
-              bool = false;
-              break;
-            }
-          }
-        }
-      }
-      if (bool) {
-        return i;
       }
     }
     return -1;
