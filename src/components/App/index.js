@@ -1,20 +1,17 @@
 import React, { Component } from "react";
 import Quiz from "./Quiz";
-import Summary from "./Summary";
 import axios from "axios";
 import "../../App.css";
 import "animate.css";
 
 import { withFirebase } from "../Firebase";
 import firebase from "firebase/app";
-import queryString from "query-string";
 
 import Loading from "../Loading";
 
 import Notify from "../../notify";
 
 import stringMath from "string-math";
-import { cond } from "lodash";
 
 class App extends Component {
   constructor(props) {
@@ -40,8 +37,7 @@ class App extends Component {
       var_answers: {},
       email: undefined,
       custom: undefined,
-      summary: undefined,
-      summaryHtml: "",
+      summaryUrl: undefined,
     };
     this.handleAnswerSelected = this.handleAnswerSelected.bind(this);
     this.handleKeyPressed = this.handleKeyPressed.bind(this);
@@ -50,14 +46,13 @@ class App extends Component {
   componentDidMount() {
     this.getQuestions();
     this.getEmail();
-    this.getSummary();
     this.getCustom();
   }
 
   getQuestions() {
-    let url = this.props.location.search;
-    let params = queryString.parse(url);
-    this.getQuestionsByRef(params?.id);
+    let params = new URL(document.location).searchParams;
+    let id = params.get("id");
+    this.getQuestionsByRef(id);
   }
 
   async getCustom() {
@@ -68,19 +63,6 @@ class App extends Component {
       if (data) {
         this.setState({
           custom: data,
-        });
-      }
-    });
-  }
-
-  async getSummary() {
-    let db = this.props.firebase.db;
-    let summaryRef = db.ref(`summary`);
-    await summaryRef.on("value", (snap) => {
-      let data = snap.val();
-      if (data) {
-        this.setState({
-          summary: data,
         });
       }
     });
@@ -175,14 +157,7 @@ class App extends Component {
   };
 
   setAnswersDb = () => {
-    const {
-      answers,
-      email,
-      variables,
-      conditions,
-      summary,
-      byDefault,
-    } = this.state;
+    const { answers, email, variables, conditions, byDefault } = this.state;
     let db = this.props.firebase.db;
     let responsesRef = db.ref("responses");
     let newResponseRef = responsesRef.push();
@@ -205,37 +180,12 @@ class App extends Component {
         return answers[key].type === "email";
       })
       .toString();
-    /* let listAnswers =
-      "<table>" +
-      "<thead>" +
-      "<tr>" +
-      "<th>Question</th>" +
-      "<th>Réponse(s)</th>" +
-      "</tr>" +
-      "</thead>" +
-      "<tbody>";
-    listAnswers += Object.keys(answers)
-      .map((el) => {
-        return (
-          "<tr>" +
-          "<td>" +
-          answers[el]?.question +
-          "</td>" +
-          "<td>" +
-          answers[el]?.value +
-          "</td>" +
-          "</tr>"
-        );
-      })
-      .join("");
-    listAnswers += "</tbody></table>"; */
     let _id = this.getConditionIndex(_answers);
     let id_email =
       _id !== -1 ? conditions[_id]?.sendEmail : byDefault?.sendEmail;
-    let id_summary =
+    let summaryUrl =
       _id !== -1 ? conditions[_id]?.showSummary : byDefault?.showSummary;
     let emailHtml = email[id_email]?.email?.html;
-    let summaryHtml = summary[id_summary]?.summary?.html;
     this.sendEmail(
       answers[receiver_email]?.value,
       "DELEO - Quiz complété avec succès !",
@@ -244,7 +194,7 @@ class App extends Component {
       "Manon"
     );
     this.setState({
-      summaryHtml: summaryHtml ?? "",
+      summaryUrl,
     });
   };
 
@@ -446,9 +396,11 @@ class App extends Component {
       notFound,
       questions,
       sex,
-      email,
-      summaryHtml,
+      summaryUrl,
     } = this.state;
+    if (end) {
+      window.location.replace(summaryUrl ?? "#");
+    }
     return loading ? (
       <Loading />
     ) : (
@@ -459,7 +411,7 @@ class App extends Component {
         }}
       >
         <div className="Quiz">
-          {!end ? (
+          {!end && (
             <Quiz
               answer={answer}
               sex={sex}
@@ -476,13 +428,6 @@ class App extends Component {
               onBack={this.setBackQuestion}
               error={error}
               notFound={notFound}
-            />
-          ) : (
-            <Summary
-              answer={answer}
-              custom={custom}
-              email={email}
-              summaryHtml={summaryHtml}
             />
           )}
         </div>
