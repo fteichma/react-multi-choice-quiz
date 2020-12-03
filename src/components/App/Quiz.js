@@ -593,7 +593,9 @@ class Quiz extends React.Component {
     } else {
       return (
         <div className="container">
-          <span>Aucun quiz à cette adresse</span>
+          <span style={{ fontWeight: 600, color: "#000000cc" }}>
+            Aucun quiz à cette adresse
+          </span>
         </div>
       );
     }

@@ -161,6 +161,43 @@ hr {
   max-width: 100vw;
 }
 
+@media (max-width: 1048px) {
+  .react-cookienotice-wrapper {
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+  }
+}
+
+.react-cookienotice-icon:before {
+  content: unset !important;
+  font-size: 0 !important;
+}
+
+.react-cookienotice-wrapper {
+  margin-bottom: 20px !important;
+  background: #ffffffcc !important;
+}
+
+.react-cookienotice-read-more-button {
+  font-size: 14px !important;
+}
+
+.react-cookienotice-read-more-button:hover {
+  border-color: #00000099 !important;
+  color: #000000cc !important;
+}
+
+.react-cookienotice-accept-button {
+  font-size: 14px !important;
+  background-color: white !important;
+  color: #000000cc !important;
+}
+
+.react-cookienotice-text {
+  color: #000000cc !important;
+  font-size: 13px !important;
+}
+
 .thankYou {
   text-align: center;
   display: flex;
@@ -505,6 +542,7 @@ body {
   list-style-type: none;
   width: auto;
   width: fit-content;
+  white-space: nowrap;
   padding: 4px 10px;
   background: white;
   opacity: 0.9;
@@ -513,6 +551,10 @@ body {
   border: none;
   box-shadow: 0 4px 8px #00000010;
   z-index: 9;
+}
+
+.cookies-allowed {
+  display: none !important;
 }
 
 .bodySelect:hover {

@@ -9,9 +9,9 @@ import firebase from "firebase/app";
 
 import Loading from "../Loading";
 
-import Notify from "../../notify";
-
 import stringMath from "string-math";
+
+import CookieNotice from "react-cookienotice";
 
 class App extends Component {
   constructor(props) {
@@ -122,10 +122,11 @@ class App extends Component {
     });
   }
 
-  sendEmail = (email, name, message, html, name_sender) => {
-    axios({
+  async sendEmail(email, name, message, html, name_sender) {
+    let url = window.location.origin;
+    await axios({
       method: "post",
-      url: `https://pascalecoulon.com/sendemail/index.php`,
+      url: `${url}/sendemail/index.php`,
       headers: { "content-type": "application/json" },
       data: JSON.stringify({
         email: email,
@@ -134,10 +135,18 @@ class App extends Component {
         html: html,
         name_sender: name_sender,
       }),
-    }).catch((error) => {
-      Notify("Problème lors de l'envoi de l'email : " + error, "error");
-    });
-  };
+    })
+      .then((result) => {
+        if (result.data.sent) {
+          console.log("send");
+        } else {
+          console.log(result.data);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
 
   handleAnswerSelected = (target, checkedList) => {
     this.setState({ error: false });
@@ -188,13 +197,12 @@ class App extends Component {
     let emailHtml = email[id_email]?.email?.html;
     this.sendEmail(
       answers[receiver_email]?.value,
-      "DELEO - Quiz complété avec succès !",
+      "DELEO - Votre programme personnalisé",
       JSON.stringify(answers),
       emailHtml ? emailHtml.toString() : "",
       "Manon"
-    );
-    this.setState({
-      summaryUrl,
+    ).then(() => {
+      window.location.replace(summaryUrl);
     });
   };
 
@@ -396,11 +404,7 @@ class App extends Component {
       notFound,
       questions,
       sex,
-      summaryUrl,
     } = this.state;
-    if (end) {
-      window.location.replace(summaryUrl ?? "#");
-    }
     return loading ? (
       <Loading />
     ) : (
@@ -430,6 +434,13 @@ class App extends Component {
               notFound={notFound}
             />
           )}
+          <CookieNotice
+            borderRadius={10}
+            acceptButtonLabel="Accepter"
+            readMoreButtonLabel="En savoir plus..."
+            readMoreButtonLink="https://www.deleo.fr/politiques-de-confidentialite/"
+            cookieTextLabel="Nous utilisons les cookies afin de fournir les services et fonctionnalités proposés sur notre site et afin d’améliorer l’expérience de nos utilisateurs. Les cookies sont des données qui sont téléchargées ou stockées sur votre ordinateur ou sur tout autre appareil."
+          />
         </div>
       </div>
     );
