@@ -1,0 +1,37 @@
+[debug] [2020-12-03T12:17:30.942Z] ----------------------------------------------------------------------
+[debug] [2020-12-03T12:17:30.944Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy
+[debug] [2020-12-03T12:17:30.944Z] CLI Version:   8.14.1
+[debug] [2020-12-03T12:17:30.945Z] Platform:      darwin
+[debug] [2020-12-03T12:17:30.945Z] Node Version:  v12.16.3
+[debug] [2020-12-03T12:17:30.946Z] Time:          Thu Dec 03 2020 13:17:30 GMT+0100 (GMT+01:00)
+[debug] [2020-12-03T12:17:30.946Z] ----------------------------------------------------------------------
+[debug] [2020-12-03T12:17:30.946Z] 
+[debug] [2020-12-03T12:17:30.956Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2020-12-03T12:17:30.957Z] > authorizing via signed-in user
+[debug] [2020-12-03T12:17:30.957Z] [iam] checking project deleo-93c9d for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2020-12-03T12:17:30.959Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2020-12-03T12:17:30.960Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+ <request body omitted>
+[debug] [2020-12-03T12:17:31.204Z] <<< HTTP RESPONSE 200 {"date":"Thu, 03 Dec 2020 12:17:31 GMT","expires":"Mon, 01 Jan 1990 00:00:00 GMT","pragma":"no-cache","cache-control":"no-cache, no-store, max-age=0, must-revalidate","content-type":"application/json; charset=utf-8","vary":"X-Origin, Referer, Origin,Accept-Encoding","server":"scaffolding on HTTPServer2","x-xss-protection":"0","x-frame-options":"SAMEORIGIN","x-content-type-options":"nosniff","alt-svc":"h3-29=\":443\"; ma=2592000,h3-T051=\":443\"; ma=2592000,h3-Q050=\":443\"; ma=2592000,h3-Q046=\":443\"; ma=2592000,h3-Q043=\":443\"; ma=2592000,quic=\":443\"; ma=2592000; v=\"46,43\"","accept-ranges":"none","transfer-encoding":"chunked"}
+[debug] [2020-12-03T12:17:31.218Z] >>> HTTP REQUEST POST https://cloudresourcemanager.googleapis.com/v1/projects/deleo-93c9d:testIamPermissions  
+ {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2020-12-03T12:17:31.965Z] <<< HTTP RESPONSE 200 {"content-type":"application/json; charset=UTF-8","vary":"X-Origin, Referer, Origin,Accept-Encoding","date":"Thu, 03 Dec 2020 12:17:31 GMT","server":"ESF","cache-control":"private","x-xss-protection":"0","x-frame-options":"SAMEORIGIN","x-content-type-options":"nosniff","server-timing":"gfet4t7; dur=569","alt-svc":"h3-29=\":443\"; ma=2592000,h3-T051=\":443\"; ma=2592000,h3-Q050=\":443\"; ma=2592000,h3-Q046=\":443\"; ma=2592000,h3-Q043=\":443\"; ma=2592000,quic=\":443\"; ma=2592000; v=\"46,43\"","accept-ranges":"none","transfer-encoding":"chunked"}
+[debug] [2020-12-03T12:17:31.968Z] >>> HTTP REQUEST GET https://firebase.googleapis.com/v1beta1/projects/deleo-93c9d  
+ 
+[debug] [2020-12-03T12:17:32.270Z] <<< HTTP RESPONSE 200 {"content-type":"application/json; charset=UTF-8","vary":"X-Origin, Referer, Origin,Accept-Encoding","date":"Thu, 03 Dec 2020 12:17:32 GMT","server":"ESF","cache-control":"private","x-xss-protection":"0","x-frame-options":"SAMEORIGIN","x-content-type-options":"nosniff","alt-svc":"h3-29=\":443\"; ma=2592000,h3-T051=\":443\"; ma=2592000,h3-Q050=\":443\"; ma=2592000,h3-Q046=\":443\"; ma=2592000,h3-Q043=\":443\"; ma=2592000,quic=\":443\"; ma=2592000; v=\"46,43\"","accept-ranges":"none","transfer-encoding":"chunked"}
+[info] 
+[info] === Deploying to 'deleo-93c9d'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2020-12-03T12:17:32.275Z] >>> HTTP REQUEST POST https://firebasehosting.googleapis.com/v1beta1/sites/deleo-93c9d/versions  
+ {"config":{"rewrites":[{"glob":"**","path":"/index.html"}],"headers":[{"glob":"/service-worker.js","headers":{"Cache-Control":"no-cache"}}]},"labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2020-12-03T12:17:33.687Z] <<< HTTP RESPONSE 200 {"content-type":"application/json; charset=UTF-8","vary":"X-Origin, Referer, Origin,Accept-Encoding","date":"Thu, 03 Dec 2020 12:17:33 GMT","server":"ESF","cache-control":"private","x-xss-protection":"0","x-frame-options":"SAMEORIGIN","x-content-type-options":"nosniff","alt-svc":"h3-29=\":443\"; ma=2592000,h3-T051=\":443\"; ma=2592000,h3-Q050=\":443\"; ma=2592000,h3-Q046=\":443\"; ma=2592000,h3-Q043=\":443\"; ma=2592000,quic=\":443\"; ma=2592000; v=\"46,43\"","accept-ranges":"none","transfer-encoding":"chunked"}
+[info] i  hosting[deleo-93c9d]: beginning deploy... 
+[info] i  hosting[deleo-93c9d]: found 17 files in build 
+[debug] [2020-12-03T12:17:34.223Z] [hosting] hash cache [YnVpbGQ] stored for 17 files
+[debug] [2020-12-03T12:17:34.224Z] [hosting][hash queue][FINAL] {"max":519,"min":9,"avg":45.05882352941177,"active":0,"complete":17,"success":17,"errored":0,"retried":0,"total":17,"elapsed":526}
+[debug] [2020-12-03T12:17:34.224Z] >>> HTTP REQUEST POST https://firebasehosting.googleapis.com/v1beta1/sites/deleo-93c9d/versions/febb17b9f58c3119:populateFiles  
+ <request body omitted>
+[debug] [2020-12-03T12:17:35.188Z] <<< HTTP RESPONSE 200 {"content-type":"application/json; charset=UTF-8","vary":"X-Origin, Referer, Origin,Accept-Encoding","date":"Thu, 03 Dec 2020 12:17:35 GMT","server":"ESF","cache-control":"private","x-xss-protection":"0","x-frame-options":"SAMEORIGIN","x-content-type-options":"nosniff","alt-svc":"h3-29=\":443\"; ma=2592000,h3-T051=\":443\"; ma=2592000,h3-Q050=\":443\"; ma=2592000,h3-Q046=\":443\"; ma=2592000,h3-Q043=\":443\"; ma=2592000,quic=\":443\"; ma=2592000; v=\"46,43\"","accept-ranges":"none","transfer-encoding":"chunked"}
+[debug] [2020-12-03T12:17:35.193Z] [hosting][populate queue][FINAL] {"max":966,"min":966,"avg":966,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":970}
+[debug] [2020-12-03T12:17:35.193Z] [hosting] uploads queued: 8

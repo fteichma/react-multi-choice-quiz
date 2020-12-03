@@ -1,6 +1,13 @@
 import React, { Component } from "react";
 import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import { Box, withStyles, Tab, Tabs, Container } from "@material-ui/core";
+import {
+  Box,
+  withStyles,
+  Tab,
+  Tabs,
+  Container,
+  Button,
+} from "@material-ui/core";
 
 import Questions from "./Questions";
 import Responses from "./Responses";
@@ -13,6 +20,7 @@ import { withFirebase } from "../Firebase";
 
 import { compose } from "recompose";
 
+import TextField from "@material-ui/core/TextField";
 import DashboardRoundedIcon from "@material-ui/icons/DashboardRounded";
 import QuestionAnswerRoundedIcon from "@material-ui/icons/QuestionAnswerRounded";
 import HelpRoundedIcon from "@material-ui/icons/HelpRounded";
@@ -20,6 +28,7 @@ import FormatPaintRoundedIcon from "@material-ui/icons/FormatPaintRounded";
 import EmailRoundedIcon from "@material-ui/icons/EmailRounded";
 
 import { ToastContainer } from "react-toastify";
+import Notify from "../../notify";
 
 const AdminPage = () => <Admin />;
 
@@ -105,7 +114,15 @@ class AdminBase extends Component {
       totQuest: 0,
       totEmail: 0,
       loading: false,
+      token: undefined,
     };
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const token = urlParams.get("token");
+    if (token) {
+      console.log("token : ", token);
+      localStorage.setItem("token", token);
+    }
   }
   componentDidMount() {
     this.setState({
@@ -119,6 +136,18 @@ class AdminBase extends Component {
   handleChange = (e, newValue) => {
     this.setState({ tab: newValue });
     localStorage.setItem("tab", newValue);
+  };
+  onSubmit = (e) => {
+    const { token } = this.state;
+    e.preventDefault();
+    if (token) {
+      localStorage.setItem("token", token);
+      if (token === process.env.REACT_APP_TOKEN) {
+        window.location.reload();
+      } else {
+        Notify("Le token d'accès est incorrect", "error");
+      }
+    }
   };
   getDb() {
     let db = this.props.firebase.db;
@@ -165,119 +194,158 @@ class AdminBase extends Component {
   render() {
     const { classes } = this.props;
     const { loading } = this.state;
-    return (
-      <MuiThemeProvider theme={theme}>
-        <div className={classes.root} id="Admin">
-          <Tabs
-            orientation="vertical"
-            variant="scrollable"
-            value={Number(this.state.tab)}
-            onChange={this.handleChange}
-            aria-label="Vertical tabs example"
-            className={classes.tabs}
-          >
-            <Tab
-              icon={
-                <DashboardRoundedIcon
-                  style={{
-                    marginRight: "0.5em",
-                    width: 20,
-                    height: 20,
-                  }}
-                />
-              }
-              label="Dashboard"
-              {...a11yProps(0)}
-              className={classes.tab}
-            />
-            <Tab
-              icon={
-                <QuestionAnswerRoundedIcon
-                  style={{
-                    marginRight: "0.5em",
-                    width: 20,
-                    height: 20,
-                  }}
-                />
-              }
-              label="Réponses"
-              {...a11yProps(1)}
-              className={classes.tab}
-            />
-            <Tab
-              icon={
-                <HelpRoundedIcon
-                  style={{
-                    marginRight: "0.5em",
-                    width: 20,
-                    height: 20,
-                  }}
-                />
-              }
-              label="Questions"
-              {...a11yProps(2)}
-              className={classes.tab}
-            />
-            <Tab
-              icon={
-                <EmailRoundedIcon
-                  style={{
-                    marginRight: "0.5em",
-                    width: 20,
-                    height: 20,
-                  }}
-                />
-              }
-              label="Emailing"
-              {...a11yProps(3)}
-              className={classes.tab}
-            />
-            <Tab
-              icon={
-                <FormatPaintRoundedIcon
-                  style={{
-                    marginRight: "0.5em",
-                    width: 20,
-                    height: 20,
-                  }}
-                />
-              }
-              label="Personnalisation"
-              {...a11yProps(4)}
-              className={classes.tab}
-            />
-          </Tabs>
-          <TabPanel value={Number(this.state.tab)} index={0}>
-            {loading ? (
-              <Loading />
-            ) : (
-              <Dashboard
-                totUsers={this.state.totUsers}
-                totQuest={this.state.totQuest}
-                totEmail={this.state.totEmail}
+    let token = localStorage.getItem("token");
+    if (token === process.env.REACT_APP_TOKEN) {
+      return (
+        <MuiThemeProvider theme={theme}>
+          <div className={classes.root} id="Admin">
+            <Tabs
+              orientation="vertical"
+              variant="scrollable"
+              value={Number(this.state.tab)}
+              onChange={this.handleChange}
+              aria-label="Vertical tabs example"
+              className={classes.tabs}
+            >
+              <Tab
+                icon={
+                  <DashboardRoundedIcon
+                    style={{
+                      marginRight: "0.5em",
+                      width: 20,
+                      height: 20,
+                    }}
+                  />
+                }
+                label="Dashboard"
+                {...a11yProps(0)}
+                className={classes.tab}
               />
-            )}
-          </TabPanel>
-          <TabPanel value={Number(this.state.tab)} index={1}>
-            <h2>Réponses</h2>
-            {loading ? <Loading /> : <Responses answers={this.state.answers} />}
-          </TabPanel>
-          <TabPanel value={Number(this.state.tab)} index={2}>
-            {loading ? (
-              <Loading />
-            ) : (
-              <Questions questions={this.state.questions} />
-            )}
-          </TabPanel>
-          <TabPanel value={Number(this.state.tab)} index={3}>
-            {loading ? <Loading /> : <EmailingPage />}
-          </TabPanel>
-          <TabPanel value={Number(this.state.tab)} index={4}>
-            {loading ? <Loading /> : <Custom />}
-          </TabPanel>
-        </div>
+              <Tab
+                icon={
+                  <QuestionAnswerRoundedIcon
+                    style={{
+                      marginRight: "0.5em",
+                      width: 20,
+                      height: 20,
+                    }}
+                  />
+                }
+                label="Réponses"
+                {...a11yProps(1)}
+                className={classes.tab}
+              />
+              <Tab
+                icon={
+                  <HelpRoundedIcon
+                    style={{
+                      marginRight: "0.5em",
+                      width: 20,
+                      height: 20,
+                    }}
+                  />
+                }
+                label="Questions"
+                {...a11yProps(2)}
+                className={classes.tab}
+              />
+              <Tab
+                icon={
+                  <EmailRoundedIcon
+                    style={{
+                      marginRight: "0.5em",
+                      width: 20,
+                      height: 20,
+                    }}
+                  />
+                }
+                label="Emailing"
+                {...a11yProps(3)}
+                className={classes.tab}
+              />
+              <Tab
+                icon={
+                  <FormatPaintRoundedIcon
+                    style={{
+                      marginRight: "0.5em",
+                      width: 20,
+                      height: 20,
+                    }}
+                  />
+                }
+                label="Personnalisation"
+                {...a11yProps(4)}
+                className={classes.tab}
+              />
+            </Tabs>
+            <TabPanel value={Number(this.state.tab)} index={0}>
+              {loading ? (
+                <Loading />
+              ) : (
+                <Dashboard
+                  totUsers={this.state.totUsers}
+                  totQuest={this.state.totQuest}
+                  totEmail={this.state.totEmail}
+                />
+              )}
+            </TabPanel>
+            <TabPanel value={Number(this.state.tab)} index={1}>
+              <h2>Réponses</h2>
+              {loading ? (
+                <Loading />
+              ) : (
+                <Responses answers={this.state.answers} />
+              )}
+            </TabPanel>
+            <TabPanel value={Number(this.state.tab)} index={2}>
+              {loading ? (
+                <Loading />
+              ) : (
+                <Questions questions={this.state.questions} />
+              )}
+            </TabPanel>
+            <TabPanel value={Number(this.state.tab)} index={3}>
+              {loading ? <Loading /> : <EmailingPage />}
+            </TabPanel>
+            <TabPanel value={Number(this.state.tab)} index={4}>
+              {loading ? <Loading /> : <Custom />}
+            </TabPanel>
+          </div>
+          <ToastContainer />
+        </MuiThemeProvider>
+      );
+    }
+    return (
+      <form
+        autoComplete="off"
+        noValidate
+        onSubmit={(e) => this.onSubmit(e)}
+        style={{ margin: "2em" }}
+      >
+        <h2>Plugin quizz</h2>
+        <p>
+          Pour accéder à l'interface d'administration, veuillez fournir le token
+          d'accès ci-dessous...
+        </p>
+        <TextField
+          id="token"
+          label="Token d'accès"
+          variant="outlined"
+          size={"small"}
+          onChange={(e) => {
+            this.setState({ token: e.target.value });
+          }}
+        />
+        <Button
+          style={{ marginLeft: "1em" }}
+          variant="contained"
+          color="primary"
+          onClick={(e) => this.onSubmit(e)}
+        >
+          Valider
+        </Button>
         <ToastContainer />
-      </MuiThemeProvider>
+      </form>
     );
   }
 }
